@@ -29,7 +29,8 @@ SentryGuardian 以**开源项目的高标准**建设：代码、文档、测试�
 
 ### 静态检查
 
-- 启用 lint、format、typecheck（具体工具随技术栈在 `package.json` 定义）
+- 启用 lint、format、typecheck、spellcheck（具体工具随技术栈在 `package.json` 定义）
+- 文档拼写：`pnpm spellcheck`（[cspell](https://cspell.org/)，配置见 `.cspell/`；`awesome/` 参考代码已排除）
 - CI 中与本地使用相同命令，避免「本地过、CI 挂」
 - AI 任务结束前跑通**与改动相关**的检查，不全仓盲目 `--fix`
 

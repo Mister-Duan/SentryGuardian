@@ -11,3 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Project initialization with AI collaboration guidelines
 - Open-source development standards and delivery checklist
+- cspell configuration and `pnpm spellcheck` script for documentation spell checking
+
+### Changed
+
+- Consolidate cspell configuration under `.cspell/` directory
