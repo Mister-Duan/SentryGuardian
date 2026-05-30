@@ -1,0 +1,38 @@
+---
+description: 开源高标准约束（代码质量、文档、安全、可维护性）
+alwaysApply: true
+---
+
+# 开源高标准
+
+本项目以**开源项目的高标准**开发与交付。AI 产出须达到「可直接合并到公开仓库」的质量。
+
+## 质量底线
+
+- **可运行**：改动不破坏现有构建与测试；任务结束前跑通相关 lint / test / typecheck
+- **可测试**：行为变更须附带或更新测试；禁止只改实现不改测试
+- **可文档化**：公开 API、配置项、部署步骤变更须同步文档
+- **可审查**：diff 聚焦、命名清晰、无调试代码与注释掉的废代码
+- **可安全**：无密钥/token/`.env`；用户输入校验；依赖选型注意许可证兼容
+
+## 提交与版本
+
+- Commit message 遵循 [Conventional Commits](https://www.conventionalcommits.org/)：`feat` / `fix` / `docs` / `test` / `chore` 等
+- 用户可见变更写入 `CHANGELOG.md`（或对应包 CHANGELOG）
+- 破坏性变更须在 commit body 与文档中标注 `BREAKING CHANGE`
+
+## 公开 API 与 SDK
+
+- SDK 对外接口保持稳定；删除或改签名视为 breaking change
+- 公共导出须有 JSDoc / TSDoc；示例见各包 README
+- 新增配置项说明默认值、类型与迁移方式
+
+## 依赖与许可证
+
+- 优先 MIT / Apache-2.0 / BSD 等宽松许可证依赖
+- 引入新依赖前评估：体积、维护状态、与「低成本部署」目标是否冲突
+- 禁止复制无许可证或许可证不明的代码
+
+## 详细规范
+
+完整清单见 `docs/ai-guide/open-source.md`；代码改动交付闭环见 `delivery-checklist.mdc`。

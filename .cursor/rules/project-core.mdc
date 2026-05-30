@@ -1,0 +1,28 @@
+---
+description: SentryGuardian 项目全局约束与工作区边界
+alwaysApply: true
+---
+
+# SentryGuardian 全局规则
+
+## 项目定位
+
+- **SentryGuardian**：轻量级前端监控成套系统（SDK → 接收 → Issue 聚合 → 控制台 → 告警），面向个人 / 小企业低成本自托管
+- **开发标准**：以开源项目高标准交付——见 `docs/ai-guide/open-source.md`
+- 自研实现写在仓库自有目录（如 `packages/`）；规范见 `docs/overview.md`
+- 优先轻量、独立，避免复制 Sentry 全量复杂度
+
+## 强制交付
+
+代码改动完成前执行交付三件套（审核 + 测试 + 文档），见 `delivery-checklist.mdc` 与 `docs/ai-guide/delivery-checklist.md`。
+
+## 工作流
+
+- 改动范围最小化，匹配周边代码风格
+- 未经用户明确要求：不 commit、不 push、不创建 PR
+- 不要编辑用户计划文件（`.cursor/plans/*.plan.md`）除非用户明确要求
+
+## 语言
+
+- 面向用户的文档与注释：简体中文
+- 代码标识符、类型、commit message、CHANGELOG：英文

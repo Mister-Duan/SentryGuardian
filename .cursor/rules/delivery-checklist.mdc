@@ -1,0 +1,40 @@
+---
+description: 代码改动交付闭环（开源标准，任务完成前强制）
+alwaysApply: true
+---
+
+# 交付闭环（强制）
+
+任何**代码改动**任务完成前（含用户要求 commit 之前）须执行：
+
+```text
+分析 → 基线测试通过 → 实施 → ① 审核 diff → ② 测试跑通 → ③ 文档同步 → 完成
+```
+
+## ① 审核（本次 diff）
+
+- 功能正确性、边界与错误路径
+- 与周边代码风格、命名、目录约定一致
+- 无密钥、无无关重构、无临时调试代码
+- 对话中附简要审核结论（通过项 / 已修复 / 已知限制）
+
+## ② 测试
+
+| 变更类型 | 要求 |
+|----------|------|
+| 新功能 / Bug 修复 | 新增或更新对应用例，定向跑通 |
+| 重构（行为不变） | 基线先绿，重构后仍绿 |
+| 纯文档 / 配置注释 | 说明无需测试的理由 |
+
+以 `package.json` scripts 为权威；提交前至少跑**与改动相关的** test + lint + typecheck。
+
+## ③ 文档同步
+
+| 改了什么 | 更新什么 |
+|----------|----------|
+| 公开 API / SDK 选项 | 包 README、`docs/` API 说明 |
+| 部署 / 环境变量 | `docs/` 部署文档、`.env.example` |
+| 用户可见行为 | `CHANGELOG.md` |
+| 架构 / 目录约定 | `docs/overview.md` 或 `docs/architecture.md` |
+
+细则见 [docs/ai-guide/delivery-checklist.md](../docs/ai-guide/delivery-checklist.md)。

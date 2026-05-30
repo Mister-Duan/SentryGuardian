@@ -1,0 +1,71 @@
+---
+description: Git 提交与 Co-authored-by 约定（AI 创建 commit 时必遵）
+alwaysApply: true
+---
+
+# Git 提交规则
+
+## 何时提交
+
+- **仅**在用户明确要求时创建 commit；不要主动提交。
+
+## Commit message 格式
+
+遵循 [Conventional Commits](https://www.conventionalcommits.org/)：
+
+```text
+<type>(<scope>): <subject>
+
+[optional body]
+
+Co-authored-by: duan <blockchain07@163.com>
+```
+
+- **type**：`feat` | `fix` | `docs` | `test` | `refactor` | `chore` | `ci` | `perf`
+- **scope**（可选）：`sdk` | `server` | `web` | `docs` 等
+- **subject**：英文，祈使句，≤72 字符
+- 破坏性变更：type 加 `!` 或 body 写 `BREAKING CHANGE: …`
+
+示例：
+
+```bash
+git commit -m "$(cat <<'EOF'
+feat(sdk): capture unhandled promise rejections
+
+Co-authored-by: duan <blockchain07@163.com>
+EOF
+)"
+```
+
+## Co-authored-by（强制）
+
+用户要求提交时，**每条 commit message 末尾**仅追加**一条**协作署名（与正文之间空一行）：
+
+```text
+Co-authored-by: duan <blockchain07@163.com>
+```
+
+### 禁止 Cursor 自动署名
+
+- **不得**在 commit message 中加入 `Co-authored-by: Cursor <cursoragent@cursor.com>` 或任何 Cursor Agent / `cursoragent@cursor.com` 变体。
+- 若 `git commit` / `git commit --amend` 后 `git log -1` 仍出现上述行，说明环境会自动注入 trailer；应改用 `git commit-tree` 重写提交信息（不改 tree），再 `git reset --hard <新 commit>`。
+- 已推送且需修正历史时，**仅**在用户明确同意后使用 `git push --force-with-lease`（勿 force push `main`/`master`）。
+
+`git commit-tree` 示例（保留 duan 署名、去掉 Cursor）：
+
+```bash
+TREE=$(git rev-parse 'HEAD^{tree}')
+PARENT=$(git rev-parse 'HEAD^')
+NEW=$(git commit-tree "$TREE" -p "$PARENT" -m "$(cat <<'EOF'
+chore: describe why this change is needed.
+
+Co-authored-by: duan <blockchain07@163.com>
+EOF
+)")
+git reset --hard "$NEW"
+```
+
+## 其他
+
+- 不修改 git config；不 force push `main`/`master`；未经用户明确要求不 push
+- 见用户规则中的 Git Safety Protocol（amend、hook 失败等）
