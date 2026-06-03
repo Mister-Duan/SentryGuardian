@@ -125,7 +125,7 @@ AI 开发须完整执行 [delivery-checklist.md](../ai-guide/delivery-checklist.
 ## 当前状态
 
 - [x] 仓库初始化、AI 协作规范、项目介绍文档
-- [ ] 技术栈与 Monorepo 目录结构定稿
+- [x] 技术栈与 Monorepo 目录结构定稿（见 [architecture.md](./architecture.md) 草稿）
 - [ ] 前端 SDK 最小上报（JS Error）
 - [ ] 接收 API 与事件存储
 - [ ] Issue 指纹聚合
@@ -136,4 +136,5 @@ AI 开发须完整执行 [delivery-checklist.md](../ai-guide/delivery-checklist.
 ## 相关文档
 
 - [README.md](../README.md) — 仓库首页
+- [architecture.md](./architecture.md) — 系统架构、Monorepo 与协议草案
 - [AGENTS.md](../AGENTS.md) — AI 协作规范
