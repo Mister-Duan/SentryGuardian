@@ -4,6 +4,24 @@
 >
 > 架构：[architecture.md](../architecture.md) · 决策：[decisions.md](./decisions.md)
 
+## 维护规则（强制）
+
+**每完成一个步骤 ID（如 P2-03）或合并完成一小批步骤后，必须在任务结束前更新本文件**，再向用户汇报。不得只改代码不更新进度。
+
+| 更新项 | 操作 |
+|--------|------|
+| 顶部 `当前步骤` | 写明刚完成的 ID + 下一步 ID（或「Phase N 已完成，下一步 Px-01」） |
+| 对应 checkbox | `- [ ]` → `- [x]` |
+| 「进度概览」表 | 该 Phase 状态改为「进行中」或「**已完成**」 |
+| 「变更日志」 | 新增一行：日期、步骤 ID、1～3 行交付摘要 |
+| Phase 验证命令 | 若该 Phase 全部完成，确认文内验证命令已可执行 |
+
+可选：用户要求 commit 时，步骤 ID 写入 commit body 便于对照（如 `P2-04: computeFingerprint`）。
+
+**本文件是 MVP 进度的唯一真相来源**；不要只更新 `.cursor/plans/` 中的计划副本。
+
+---
+
 ## 进度概览
 
 | Phase | 名称　　　　　　 | 步骤　　　　　 | 状态　　　 |
@@ -161,6 +179,7 @@
 | 2026-06-03 | P0-01 | 创建 docs/plans/ 三文件；docs/README.md 增加实施计划链接 |
 | 2026-06-03 | P0-02～P0-07 | workspace、tsconfig、eslint、prettier、vitest、CI、architecture §11 已决 |
 | 2026-06-03 | P1-01～P1-08 | `@sentry-guardian/types` 协议类型、tsup 构建、快照测试 |
+| 2026-06-03 | （规范） | 中英文 JSDoc 规范 `doc-comments.md`；本文件增加 §维护规则 |
 
 ---
 

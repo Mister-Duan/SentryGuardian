@@ -15,8 +15,9 @@ SentryGuardian 以**开源高标准**开发，同时支持多种 AI 辅助工具
 所有 AI 工具在本仓库产出代码时，须满足：
 
 1. **交付三件套**：审核 diff → 测试跑通 → 文档/CHANGELOG 同步（[delivery-checklist.md](./delivery-checklist.md)）
-2. **开源质量**：见 [open-source.md](./open-source.md)；公开 API 文档注释须中英文双语，见 [doc-comments.md](./doc-comments.md)
-3. **提交规范**：Conventional Commits（[git-commit.mdc](../../.cursor/rules/git-commit.mdc)）
+2. **MVP 进度**：每步完成后更新 [plans/mvp-implementation.md](../plans/mvp-implementation.md)
+3. **开源质量**：见 [open-source.md](./open-source.md)；公开 API 文档注释须中英文双语，见 [doc-comments.md](./doc-comments.md)
+4. **提交规范**：Conventional Commits（[git-commit.mdc](../../.cursor/rules/git-commit.mdc)）
 
 **不得以用户未明确要求为由跳过测试或文档。**
 

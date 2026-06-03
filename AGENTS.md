@@ -21,6 +21,10 @@
 
 细则见 [docs/ai-guide/delivery-checklist.md](./docs/ai-guide/delivery-checklist.md) 与 `.cursor/rules/delivery-checklist.mdc`。
 
+## MVP 实施进度
+
+按 [docs/plans/mvp-implementation.md](./docs/plans/mvp-implementation.md) 分步推进。**每完成一个步骤 ID，必须在汇报前更新该文件**（勾选 checkbox、更新「当前步骤」与「变更日志」），见该文 §维护规则。
+
 ## 工作区边界
 
 ```text
@@ -57,6 +61,8 @@ SentryGuardian/
 | 文档 | 说明 |
 |------|------|
 | [docs/overview.md](./docs/overview.md) | 项目简介与设计原则 |
+| [docs/plans/mvp-implementation.md](./docs/plans/mvp-implementation.md) | MVP 主清单（**每步完成后必须更新**） |
+| [docs/plans/README.md](./docs/plans/README.md) | 实施计划索引 |
 | [docs/ai-guide/doc-comments.md](./docs/ai-guide/doc-comments.md) | 代码文档注释（中英文双语） |
 | [docs/ai-guide/open-source.md](./docs/ai-guide/open-source.md) | 开源开发标准 |
 | [docs/ai-guide/delivery-checklist.md](./docs/ai-guide/delivery-checklist.md) | 强制交付检查清单 |

@@ -37,5 +37,6 @@ alwaysApply: true
 | 部署 / 环境变量 | `docs/` 部署文档、`.env.example` |
 | 用户可见行为 | `CHANGELOG.md` |
 | 架构 / 目录约定 | `docs/overview.md` 或 `docs/architecture.md` |
+| MVP 计划步骤完成 | `docs/plans/mvp-implementation.md`（§维护规则） |
 
 细则见 [docs/ai-guide/delivery-checklist.md](../docs/ai-guide/delivery-checklist.md)。

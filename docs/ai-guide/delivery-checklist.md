@@ -78,6 +78,7 @@ pnpm typecheck               # 类型检查
 | 部署方式 | 部署文档、`docker-compose` 注释 |
 | 用户可见行为 | `CHANGELOG.md` Unreleased |
 | 架构决策 | `docs/overview.md` 或 `docs/architecture.md` |
+| MVP 计划某步骤完成 | [plans/mvp-implementation.md](../plans/mvp-implementation.md)（勾选、当前步骤、变更日志） |
 
 ### 何时可省略
 
@@ -91,6 +92,7 @@ pnpm typecheck               # 类型检查
 - 改了行为未跑测试或虚报通过
 - 改了公开 API 未更新文档
 - 用户可见变更未记 CHANGELOG
+- 完成 MVP 计划步骤却未更新 `docs/plans/mvp-implementation.md`
 - diff 含密钥、调试代码或无关大范围格式化
 
 ## 与 Git 提交的关系
