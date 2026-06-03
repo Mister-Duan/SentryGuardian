@@ -93,7 +93,7 @@
 面向个人与小企业的部署约束：
 
 1. **单机可运行**：接收、API、控制台、定时聚合任务可在同一进程或同一 Compose 栈内完成
-2. **最小依赖**：默认 SQLite 或单 PostgreSQL 实例；Redis 可选（缓存 / 队列），非强制
+2. **最小依赖**：Lite 档默认单 **PostgreSQL** 实例（见 [architecture.md](./architecture.md) §7.3）；Redis 可选（缓存 / 队列），非 MVP 必需；SQLite 仅作远期本地实验选项
 3. **低配置友好**：基础版目标 **1 核 2G** 内存可运行
 4. **安装简单**：Docker Compose 或单二进制 + 配置文件（规划）
 5. **无多租户复杂度**：初期支持单组织 / 少量 Project，满足小企业够用即可

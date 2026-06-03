@@ -8,6 +8,7 @@ SentryGuardian 项目文档索引。
 |------|------|
 | [overview.md](./overview.md) | 项目简介、目标用户、成套架构与路线图 |
 | [architecture.md](./architecture.md) | Monorepo 结构、模块职责、协议与 MVP 边界 |
+| [plans/README.md](./plans/README.md) | **MVP 实施计划**（分步清单与进度） |
 | [../README.md](../README.md) | 仓库首页 |
 
 ## AI 协作
