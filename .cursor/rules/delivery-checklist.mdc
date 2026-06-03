@@ -16,6 +16,7 @@ alwaysApply: true
 - 功能正确性、边界与错误路径
 - 与周边代码风格、命名、目录约定一致
 - 无密钥、无无关重构、无临时调试代码
+- 公开导出具备中英文双语文档注释（见 `docs/ai-guide/doc-comments.md`）
 - 对话中附简要审核结论（通过项 / 已修复 / 已知限制）
 
 ## ② 测试
@@ -32,7 +33,7 @@ alwaysApply: true
 
 | 改了什么 | 更新什么 |
 |----------|----------|
-| 公开 API / SDK 选项 | 包 README、`docs/` API 说明 |
+| 公开 API / SDK 选项 | 包 README、`docs/` API 说明、双语 JSDoc/TSDoc |
 | 部署 / 环境变量 | `docs/` 部署文档、`.env.example` |
 | 用户可见行为 | `CHANGELOG.md` |
 | 架构 / 目录约定 | `docs/overview.md` 或 `docs/architecture.md` |

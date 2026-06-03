@@ -22,6 +22,7 @@
 | `.cursor/rules/` | Cursor | 始终应用的细粒度规则 |
 | `.github/copilot-instructions.md` | GitHub Copilot | Copilot 项目指南 |
 | `docs/ai-guide/open-source.md` | 全员 | 开源标准详细说明 |
+| `docs/ai-guide/doc-comments.md` | 全员 | 代码文档注释（中英文双语） |
 | `docs/ai-guide/delivery-checklist.md` | 全员 | 交付检查清单 |
 
 规则冲突时：**用户明确指令 > Team Rules > Project Rules（本目录）**；开源交付标准默认不可降级。

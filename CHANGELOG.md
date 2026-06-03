@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Consolidate cspell configuration under `.cspell/` directory
+
 ### Added
 
 - Project initialization with AI collaboration guidelines
 - Open-source development standards and delivery checklist
 - cspell configuration and `pnpm spellcheck` script for documentation spell checking
-
-### Changed
-
-- Consolidate cspell configuration under `.cspell/` directory
+- `@sentry-guardian/types` package: `ErrorEvent`, `Envelope`, `Issue`, API DTOs, stack/breadcrumb types
+- Bilingual (EN + zh-CN) JSDoc/TSDoc convention in `docs/ai-guide/doc-comments.md` and AI collaboration rules

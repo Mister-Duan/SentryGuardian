@@ -24,7 +24,7 @@ alwaysApply: true
 ## 公开 API 与 SDK
 
 - SDK 对外接口保持稳定；删除或改签名视为 breaking change
-- 公共导出须有 JSDoc / TSDoc；示例见各包 README
+- 公共导出须有 **中英文双语** JSDoc / TSDoc（见 `docs/ai-guide/doc-comments.md`）；示例见各包 README
 - 新增配置项说明默认值、类型与迁移方式
 
 ## 依赖与许可证

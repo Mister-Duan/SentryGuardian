@@ -1,6 +1,6 @@
 # MVP 实施主清单
 
-> **当前步骤**：Phase 0 已完成，下一步 **P1-01**（待你确认后开始）
+> **当前步骤**：Phase 1 已完成，下一步 **P2-01**（待你确认后开始）
 >
 > 架构：[architecture.md](../architecture.md) · 决策：[decisions.md](./decisions.md)
 
@@ -9,7 +9,7 @@
 | Phase | 名称　　　　　　 | 步骤　　　　　 | 状态　　　 |
 | -------| ------------------| ----------------| ------------|
 | 0     | 工程底座　　　　 | P0-01～P0-07　 | **已完成** |
-| 1     | packages/types　 | P1-01～P1-08　 | 待开始　　 |
+| 1     | packages/types　 | P1-01～P1-08　 | **已完成** |
 | 2     | packages/utils　 | P2-01～P2-05　 | 待开始　　 |
 | 3     | packages/core　　| P3-01～P3-12　 | 待开始　　 |
 | 4     | browser SDK　　　| P4-01～P4-14　 | 待开始　　 |
@@ -36,14 +36,16 @@
 
 ## Phase 1 — packages/types
 
-- [ ] **P1-01** 包脚手架
-- [ ] **P1-02** StackFrame、Breadcrumb
-- [ ] **P1-03** ErrorEvent
-- [ ] **P1-04** Envelope
-- [ ] **P1-05** Issue
-- [ ] **P1-06** API DTO
-- [ ] **P1-07** 导出 + build
-- [ ] **P1-08** Vitest 快照
+- [x] **P1-01** 包脚手架
+- [x] **P1-02** StackFrame、Breadcrumb
+- [x] **P1-03** ErrorEvent
+- [x] **P1-04** Envelope
+- [x] **P1-05** Issue
+- [x] **P1-06** API DTO
+- [x] **P1-07** 导出 + build
+- [x] **P1-08** Vitest 快照
+
+**Phase 1 验证**：`pnpm --filter @sentry-guardian/types build && pnpm test`
 
 ## Phase 2 — packages/utils
 
@@ -158,7 +160,7 @@
 |------|------|----------|
 | 2026-06-03 | P0-01 | 创建 docs/plans/ 三文件；docs/README.md 增加实施计划链接 |
 | 2026-06-03 | P0-02～P0-07 | workspace、tsconfig、eslint、prettier、vitest、CI、architecture §11 已决 |
-| 2026-06-03 | 回退 | 撤销 Phase 1+ 超前实现（packages/、apps/、docker/），保留 Phase 0 |
+| 2026-06-03 | P1-01～P1-08 | `@sentry-guardian/types` 协议类型、tsup 构建、快照测试 |
 
 ---
 

@@ -1,0 +1,32 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ErrorEvent fixture > matches minimal error event shape 1`] = `
+{
+  "event_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+  "exception": {
+    "values": [
+      {
+        "stacktrace": {
+          "frames": [
+            {
+              "filename": "app.js",
+              "function": "main",
+              "in_app": true,
+              "lineno": 1,
+            },
+          ],
+        },
+        "type": "Error",
+        "value": "test error",
+      },
+    ],
+  },
+  "level": "error",
+  "platform": "javascript",
+  "sdk": {
+    "name": "sentry-guardian.javascript.browser",
+    "version": "0.1.0",
+  },
+  "timestamp": "2026-06-03T12:00:00.000Z",
+}
+`;

@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Envelope fixture > matches minimal envelope shape 1`] = `
+{
+  "header": {
+    "sdk": {
+      "name": "sentry-guardian.javascript.browser",
+      "version": "0.1.0",
+    },
+    "sent_at": "2026-06-03T12:00:00.000Z",
+  },
+  "items": [
+    {
+      "header": {
+        "content_type": "application/json",
+        "type": "event",
+      },
+      "payload": {
+        "event_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "level": "error",
+        "platform": "javascript",
+        "sdk": {
+          "name": "sentry-guardian.javascript.browser",
+          "version": "0.1.0",
+        },
+        "timestamp": "2026-06-03T12:00:00.000Z",
+      },
+    },
+  ],
+}
+`;

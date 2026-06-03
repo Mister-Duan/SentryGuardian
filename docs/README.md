@@ -16,6 +16,7 @@ SentryGuardian 项目文档索引。
 | 文档 | 说明 |
 |------|------|
 | [../AGENTS.md](../AGENTS.md) | AI 项目级入口规范 |
+| [ai-guide/doc-comments.md](./ai-guide/doc-comments.md) | 代码文档注释（中英文双语） |
 | [ai-guide/open-source.md](./ai-guide/open-source.md) | 开源开发标准 |
 | [ai-guide/delivery-checklist.md](./ai-guide/delivery-checklist.md) | 强制交付检查清单 |
 | [ai-guide/collaboration.md](./ai-guide/collaboration.md) | Cursor / Copilot / Claude 多工具协作 |

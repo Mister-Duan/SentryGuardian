@@ -41,7 +41,7 @@ SentryGuardian/
 4. **成本意识**：架构与依赖选择优先考虑个人 / 小企业单机部署，避免引入不必要的重型组件
 5. **开源质量**：行为变更必测、公开 API 必文档、用户可见变更必 CHANGELOG
 6. **不 over-engineer**：避免为单行逻辑抽 helper、过度抽象
-7. **注释**：只解释非显而易见的业务或技术细节
+7. **注释**：公开 API 须**中英文双语文档注释**（见 `docs/ai-guide/doc-comments.md`）；行内注释仅解释非显而易见逻辑，建议同样双语
 
 ## 禁止事项
 
@@ -57,6 +57,7 @@ SentryGuardian/
 | 文档 | 说明 |
 |------|------|
 | [docs/overview.md](./docs/overview.md) | 项目简介与设计原则 |
+| [docs/ai-guide/doc-comments.md](./docs/ai-guide/doc-comments.md) | 代码文档注释（中英文双语） |
 | [docs/ai-guide/open-source.md](./docs/ai-guide/open-source.md) | 开源开发标准 |
 | [docs/ai-guide/delivery-checklist.md](./docs/ai-guide/delivery-checklist.md) | 强制交付检查清单 |
 | [docs/README.md](./docs/README.md) | 文档索引 |

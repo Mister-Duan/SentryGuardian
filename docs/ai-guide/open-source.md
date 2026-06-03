@@ -89,10 +89,11 @@ chore: bump eslint to 9.x
 
 ## SDK 与公开 API
 
--  semver：MAJOR 仅在不兼容变更时递增
+- semver：MAJOR 仅在不兼容变更时递增
 - 废弃 API：先 `@deprecated` + 文档 + CHANGELOG，至少保留一个 MINOR 再移除
 - 配置项须有类型、默认值与示例
 - 浏览器 SDK 注意体积与 tree-shaking
+- **文档注释**：所有公开导出须**英文 + 简体中文**双语，格式与范围见 [doc-comments.md](./doc-comments.md)
 
 ## UI / 控制台（适用时）
 
@@ -108,9 +109,11 @@ AI 在本仓库开发时，除一般开源规范外还须：
 2. **不降低标准**：不因「用户未提」而省略测试或文档
 3. **PR 思维**：单次改动宜小、可审查、附验证说明
 4. **规范同步**：变更协作流程时同步 `AGENTS.md`、`.cursor/rules/`、本文件
+5. **双语文档注释**：公开 API 的 JSDoc/TSDoc 须中英文并存，见 [doc-comments.md](./doc-comments.md)
 
 ## 相关文档
 
+- [doc-comments.md](./doc-comments.md) — 代码文档注释（中英文双语）
 - [delivery-checklist.md](./delivery-checklist.md) — 强制交付检查清单
 - [collaboration.md](./collaboration.md) — 多工具协作
 - [../AGENTS.md](../AGENTS.md) — AI 入口

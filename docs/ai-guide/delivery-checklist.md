@@ -32,6 +32,7 @@
 | 安全 | 输入校验、鉴权相关逻辑、日志不泄露敏感字段 |
 | 类型与 Lint | 相关 typecheck、lint 通过 |
 | 一致性 | 与同类实现、仓库既有约定对齐 |
+| 文档注释 | 公开导出是否具备**中英文双语** JSDoc/TSDoc（见 [doc-comments.md](./doc-comments.md)） |
 | 依赖 | 新依赖许可证与体积可接受 |
 
 ### 审核产出（对话中简要说明）
@@ -72,7 +73,7 @@ pnpm typecheck               # 类型检查
 
 | 变更 | 文档 |
 |------|------|
-| SDK 公开 API | 包 `README.md` + 使用示例 |
+| SDK 公开 API | 包 `README.md` + 使用示例 + 双语 JSDoc/TSDoc（[doc-comments.md](./doc-comments.md)） |
 | HTTP API / 配置项 | `docs/` 对应章节 + `.env.example` |
 | 部署方式 | 部署文档、`docker-compose` 注释 |
 | 用户可见行为 | `CHANGELOG.md` Unreleased |
