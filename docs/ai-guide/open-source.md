@@ -93,7 +93,7 @@ chore: bump eslint to 9.x
 - 废弃 API：先 `@deprecated` + 文档 + CHANGELOG，至少保留一个 MINOR 再移除
 - 配置项须有类型、默认值与示例
 - 浏览器 SDK 注意体积与 tree-shaking
-- **文档注释**：所有公开导出须**英文 + 简体中文**双语，格式与范围见 [doc-comments.md](./doc-comments.md)
+- **文档注释**：双语 JSDoc；**函数**须含 Input/Output `@example`，见 [doc-comments.md](./doc-comments.md)
 
 ## UI / 控制台（适用时）
 

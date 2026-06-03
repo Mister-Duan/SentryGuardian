@@ -36,4 +36,4 @@ pnpm --filter @sentry-guardian/types build
 
 协议变更须同步 [CHANGELOG.md](../../CHANGELOG.md) 与 [docs/architecture.md](../../docs/architecture.md)。
 
-公开类型与接口的 **JSDoc/TSDoc 须中英文双语**，见 [docs/ai-guide/doc-comments.md](../../docs/ai-guide/doc-comments.md)。
+公开类型须 **中英文双语** JSDoc；接口建议含典型数据 `@example`，函数须含 Input/Output 示例，见 [doc-comments.md](../../docs/ai-guide/doc-comments.md)。

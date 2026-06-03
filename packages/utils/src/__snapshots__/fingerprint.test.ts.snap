@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`computeFallbackFingerprint > hashes type and message 1`] = `"9d7afa8e2342016ccf3cab3c53ca9debea6d69e108cac30e50df389e6003bca0"`;
+
+exports[`computeFingerprint > produces stable hash for same frames 1`] = `"1526a98580507a93895be696a181894ca7a25c58d9de72f3e20704640a5c6cf9"`;

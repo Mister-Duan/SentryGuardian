@@ -1,6 +1,6 @@
 # MVP 实施主清单
 
-> **当前步骤**：Phase 1 已完成，下一步 **P2-01**（待你确认后开始）
+> **当前步骤**：Phase 2 已完成，下一步 **P3-01**（待你确认后开始）
 >
 > 架构：[architecture.md](../architecture.md) · 决策：[decisions.md](./decisions.md)
 
@@ -28,7 +28,7 @@
 | -------| ------------------| ----------------| ------------|
 | 0     | 工程底座　　　　 | P0-01～P0-07　 | **已完成** |
 | 1     | packages/types　 | P1-01～P1-08　 | **已完成** |
-| 2     | packages/utils　 | P2-01～P2-05　 | 待开始　　 |
+| 2     | packages/utils　 | P2-01～P2-05　 | **已完成** |
 | 3     | packages/core　　| P3-01～P3-12　 | 待开始　　 |
 | 4     | browser SDK　　　| P4-01～P4-14　 | 待开始　　 |
 | 5     | 数据库　　　　　 | P5-01～P5-06　 | 待开始　　 |
@@ -67,11 +67,13 @@
 
 ## Phase 2 — packages/utils
 
-- [ ] **P2-01** 包脚手架
-- [ ] **P2-02** normalizeTimestamp、truncate
-- [ ] **P2-03** 安全序列化
-- [ ] **P2-04** computeFingerprint
-- [ ] **P2-05** scrubUrl / 脱敏
+- [x] **P2-01** 包脚手架
+- [x] **P2-02** normalizeTimestamp、truncate
+- [x] **P2-03** 安全序列化
+- [x] **P2-04** computeFingerprint
+- [x] **P2-05** scrubUrl / 脱敏
+
+**Phase 2 验证**：`pnpm --filter @sentry-guardian/utils build && pnpm --filter @sentry-guardian/utils test`
 
 ## Phase 3 — packages/core
 
@@ -180,6 +182,8 @@
 | 2026-06-03 | P0-02～P0-07 | workspace、tsconfig、eslint、prettier、vitest、CI、architecture §11 已决 |
 | 2026-06-03 | P1-01～P1-08 | `@sentry-guardian/types` 协议类型、tsup 构建、快照测试 |
 | 2026-06-03 | （规范） | 中英文 JSDoc 规范 `doc-comments.md`；本文件增加 §维护规则 |
+| 2026-06-03 | P2-01～P2-05 | `@sentry-guardian/utils` 指纹/序列化/脱敏、golden 测试 |
+| 2026-06-03 | （规范） | JSDoc 函数须含 Input/Output `@example`；utils/types 示例补全 |
 
 ---
 

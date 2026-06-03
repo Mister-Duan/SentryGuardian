@@ -17,4 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Open-source development standards and delivery checklist
 - cspell configuration and `pnpm spellcheck` script for documentation spell checking
 - `@sentry-guardian/types` package: `ErrorEvent`, `Envelope`, `Issue`, API DTOs, stack/breadcrumb types
+- `@sentry-guardian/utils` package: fingerprint, safeSerialize, scrub, timestamp helpers
 - Bilingual (EN + zh-CN) JSDoc/TSDoc convention in `docs/ai-guide/doc-comments.md` and AI collaboration rules
+- JSDoc `@example` with Input/Output samples required for exported functions

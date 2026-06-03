@@ -26,6 +26,6 @@ alwaysApply: true
 
 ## 语言
 
-- **文档注释**（JSDoc / TSDoc）：**英文 + 简体中文**双语，格式见 [docs/ai-guide/doc-comments.md](./docs/ai-guide/doc-comments.md)
+- **文档注释**（JSDoc / TSDoc）：**英文 + 简体中文**；**函数**须含 Input/Output `@example`，见 [doc-comments.md](./docs/ai-guide/doc-comments.md)
 - **用户文档**（`docs/`、`README`）：简体中文为主
 - **代码标识符**、类型名、commit message、CHANGELOG：英文

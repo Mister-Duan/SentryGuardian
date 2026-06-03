@@ -50,6 +50,19 @@ export interface ExceptionValue {
 /**
  * Error event payload sent by the SDK.
  * SDK 上报的错误事件载荷。
+ *
+ * @example
+ * ```ts
+ * // Sample / 示例（Input shape / 输入形态）
+ * const event: ErrorEvent = {
+ *   event_id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+ *   timestamp: '2026-06-03T12:00:00.000Z',
+ *   platform: 'javascript',
+ *   level: 'error',
+ *   exception: { values: [{ type: 'Error', value: 'test' }] },
+ *   sdk: { name: 'sentry-guardian.javascript.browser', version: '0.1.0' },
+ * };
+ * ```
  */
 export interface ErrorEvent {
   event_id: string;

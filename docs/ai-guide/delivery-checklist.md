@@ -32,7 +32,7 @@
 | 安全 | 输入校验、鉴权相关逻辑、日志不泄露敏感字段 |
 | 类型与 Lint | 相关 typecheck、lint 通过 |
 | 一致性 | 与同类实现、仓库既有约定对齐 |
-| 文档注释 | 公开导出是否具备**中英文双语** JSDoc/TSDoc（见 [doc-comments.md](./doc-comments.md)） |
+| 文档注释 | 双语 JSDoc；**函数**是否含 Input/Output `@example`（见 [doc-comments.md](./doc-comments.md)） |
 | 依赖 | 新依赖许可证与体积可接受 |
 
 ### 审核产出（对话中简要说明）

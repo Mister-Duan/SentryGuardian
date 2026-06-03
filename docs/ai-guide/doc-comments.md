@@ -1,71 +1,118 @@
-# 代码文档注释规范（中英文）
+# 代码文档注释规范（中英文 + 输入/输出示例）
 
-本仓库**公开 API** 与**协议类型**的文档注释（JSDoc / TSDoc）须同时包含**英文**与**简体中文**，便于开源协作与国内团队阅读。
+本仓库**公开 API** 的文档注释（JSDoc / TSDoc）须：
+
+1. 同时包含**英文**与**简体中文**说明；
+2. **导出函数**须包含**输入示例**与**输出示例**（`@example`）；
+3. **导出类型/接口**建议包含典型数据结构的 `@example`（当作「输入形态」示例）。
 
 ## 适用范围
 
-| 须双语 | 可不双语 |
+| 须遵守 | 可不遵守 |
 |--------|----------|
-| `packages/*` 对外导出（`export`）的类型、函数、类、常量 | 仅 `export` 的 `index.ts` 再导出（注释留在定义处） |
-| `apps/*` 对外 REST DTO、公开 Service 方法 | 私有函数、实现细节、测试用 helper |
-| 配置项、环境变量说明（代码内 JSDoc） | 行内「为什么」注释（仍建议双语，见下） |
+| `packages/*` 对外导出的函数、类方法 | 私有函数、测试 helper |
+| `packages/*` 对外导出的类型、接口（建议有示例对象） | 纯 re-export 的 `index.ts` |
+| `apps/*` 对外 Service / Controller 公开方法 | 内部实现细节 |
 
-**用户可见 Markdown 文档**（`README`、`docs/`）以中文为主，可附英文摘要；与本节「代码内文档注释」分工不同。
+**用户可见 Markdown**（`README`、`docs/`）以中文为主；与代码内 JSDoc 分工不同。
 
 ## 格式（强制）
 
-**块注释**：先英文一行，再中文一行，语义一致、简洁对等。
+### 双语说明
+
+块注释：**先英文一行，再中文一行**。
 
 ```typescript
 /**
- * Stack frame in an exception stacktrace.
- * 异常堆栈中的栈帧。
+ * Truncate string to max length with ellipsis.
+ * 将字符串截断到最大长度并追加省略号。
  */
-export interface StackFrame {
-  /** Source file path. 源文件路径。 */
-  filename?: string;
-}
 ```
 
-**单行**（仅用于极短说明）：
+### 函数：输入/输出示例（强制）
+
+使用 `@example`，在代码块内用注释标出 **Input / 输入** 与 **Output / 输出**（各一行调用或字面量即可）。
 
 ```typescript
-/** Event severity level. 事件严重级别。 */
-export type EventLevel = 'fatal' | 'error' | 'warning' | 'info' | 'debug';
+/**
+ * Truncate string to max length with ellipsis.
+ * 将字符串截断到最大长度并追加省略号。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * truncate('hello world', 8)
+ * // Output / 输出
+ * 'hello...'
+ * ```
+ */
+export function truncate(value: string, maxLength: number): string;
+```
+
+**要求**
+
+| 项 | 说明 |
+|----|------|
+| 必须有 `@example` | 每个 `export function` / 公开方法至少 1 个 |
+| 必须标 Input / Output | 中英标签各写一次（见上） |
+| 示例可运行 | 与实现一致；输出为真实返回值或字面量 |
+| 多参数 | Input 写完整调用；Output 写返回值 |
+| 无返回值 | Output 写 `undefined` 或副作用说明 |
+
+**多个场景**：可用多个 `@example` 块（如边界情况），每个块仍含 Input/Output。
+
+### 类型 / 接口：典型数据示例（建议）
+
+无「输出」时，用 `@example` 展示符合类型的 JSON/对象即可：
+
+```typescript
+/**
+ * Error event payload sent by the SDK.
+ * SDK 上报的错误事件载荷。
+ *
+ * @example
+ * ```ts
+ * // Sample / 示例
+ * const event: ErrorEvent = {
+ *   event_id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+ *   timestamp: '2026-06-03T12:00:00.000Z',
+ *   platform: 'javascript',
+ *   level: 'error',
+ *   sdk: { name: 'sentry-guardian.javascript.browser', version: '0.1.0' },
+ * };
+ * ```
+ */
+export interface ErrorEvent { ... }
 ```
 
 ### 禁止
 
-- 仅英文或仅中文（公开 API）
-- 中英文描述矛盾或无关
+- 仅英文或仅中文（公开 API 说明）
+- 函数无 `@example` 或无 Input/Output 标注
+- 示例与实现不符、误导性输出
 - 用机器翻译堆砌、重复第三语言
 
-### 字段注释
-
-- 公开接口的**非显而易见**字段应写双语 `@` 或 `/** */`
-- 自解释字段（如 `email: string`）可只在类型上写块注释，不必每个字段都写
-
-## 语言分工（与 project-core 一致）
+## 语言分工
 
 | 内容 | 语言 |
 |------|------|
-| 文档注释（JSDoc/TSDoc） | 英文 + 简体中文 |
-| 标识符、类型名、文件名 | 英文 |
-| Commit message、CHANGELOG | 英文 |
+| JSDoc 说明与 Input/Output 标签 | 英文 + 简体中文 |
+| 标识符、类型名、commit | 英文 |
 | `docs/` 用户文档 | 简体中文为主 |
 
 ## AI 协作要求
 
-1. 新增或修改**公开导出**时，同步补全/更新双语文档注释。
-2. 审查 diff 时检查：是否仅有单语、是否遗漏导出符号。
-3. 不要求为消 diff 而给私有实现补冗长注释；**公开 API 不可缺**。
+1. 新增或修改**公开导出函数**时：双语说明 + `@example`（Input/Output）**同步提交**。
+2. 审查 diff：检查是否缺示例、示例是否可对照实现跑通。
+3. 私有实现不强制；**公开 API 不可缺**。
 
-## 示例包
+## 参考实现
 
-参考 [@sentry-guardian/types](../../packages/types/src/) 各模块。
+- 函数示例：[@sentry-guardian/utils](../../packages/utils/src/)
+- 类型示例：[@sentry-guardian/types](../../packages/types/src/event.ts)
 
 ## 相关文档
 
-- [open-source.md](./open-source.md) — SDK 与公开 API
-- [AGENTS.md](../../AGENTS.md) — AI 入口
-- [.cursor/rules/project-core.mdc](../../.cursor/rules/project-core.mdc) — 全局语言规则
+- [open-source.md](./open-source.md)
+- [AGENTS.md](../../AGENTS.md)
+- [delivery-checklist.md](./delivery-checklist.md)

@@ -45,7 +45,7 @@ SentryGuardian/
 4. **成本意识**：架构与依赖选择优先考虑个人 / 小企业单机部署，避免引入不必要的重型组件
 5. **开源质量**：行为变更必测、公开 API 必文档、用户可见变更必 CHANGELOG
 6. **不 over-engineer**：避免为单行逻辑抽 helper、过度抽象
-7. **注释**：公开 API 须**中英文双语文档注释**（见 `docs/ai-guide/doc-comments.md`）；行内注释仅解释非显而易见逻辑，建议同样双语
+7. **注释**：公开 API 须**中英文双语** JSDoc，**导出函数**须含 **Input/Output `@example`**（见 `docs/ai-guide/doc-comments.md`）
 
 ## 禁止事项
 
