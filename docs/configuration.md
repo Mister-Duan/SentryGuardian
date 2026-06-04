@@ -80,24 +80,33 @@ VITE_API_URL=https://monitor.example.com pnpm --filter @sentry-guardian/frontend
 ## DSN 格式
 
 ```text
-https://{publicKey}@{host}/api/{projectId}
+{scheme}://{publicKey}@{host}/api/{projectId}
 ```
 
 | 部分 | 说明 |
 |------|------|
+| `scheme` | `http` 或 `https`；见下表「协议约定」 |
 | `publicKey` | 项目公钥，存于 `projects.public_key` |
-| `host` | ingest 服务地址，如 `localhost:3001` 或 `ingest.example.com` |
+| `host` | ingest 服务地址，如 `localhost:3001` 或 `ingest.example.com`（**不要**带路径） |
 | `projectId` | 项目 ID（cuid），非 slug |
 
-SDK 实际上报：
+### 协议约定（本地 vs 生产）
+
+| 场景 | DSN / 上报 URL | 说明 |
+|------|----------------|------|
+| 本地开发（`localhost`、`127.0.0.1`、`::1`） | `http://...@localhost:3001/api/...` | ingest 默认仅 HTTP；`db:seed` 的 `buildDsn` 生成 `http://` |
+| 生产（自定义域名） | `https://...@ingest.example.com/api/...` | 前置 TLS 终结；`buildDsn` 对非回环主机使用 `https://` |
+| DSN 误写 `https://...@localhost` | SDK 仍上报 **`http://localhost:.../envelope/`** | `parseDsn` 对回环主机强制 HTTP（需使用已含该逻辑的 `@sentry-guardian/core` 构建产物） |
+
+SDK 实际上报（`parseDsn` 解析后的 `envelopeUrl`）：
 
 ```text
-POST https://{host}/api/{projectId}/envelope
+POST {scheme}://{host}/api/{projectId}/envelope/
 Content-Type: application/x-sentry-guardian-envelope
 X-Sentry-Guardian-Public-Key: {publicKey}
 ```
 
-解析逻辑见 `packages/core/src/dsn.ts` 的 `parseDsn`。
+实现：`packages/core/src/dsn.ts`（`parseDsn`、`ingestScheme`）、`apps/backend/libs/database/src/dsn.ts`（`buildDsn`）。
 
 ---
 
@@ -164,7 +173,7 @@ X-Sentry-Guardian-Public-Key: {publicKey}
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  dsn: 'https://<publicKey>@localhost:3001/api/<projectId>',
+  dsn: 'http://<publicKey>@localhost:3001/api/<projectId>',
   environment: import.meta.env.MODE,
   release: 'my-app@1.2.0',
   sampleRate: 1,

@@ -23,15 +23,27 @@ export function generateEventId(): string {
 }
 
 /**
+ * Resolve ingest URL scheme for a DSN host (loopback always uses HTTP).
+ * 根据 DSN 主机解析上报协议（回环地址强制 HTTP）。
+ */
+function ingestScheme(host: string, scheme: 'http' | 'https'): 'http' | 'https' {
+  const hostname = host.split(':')[0]?.toLowerCase() ?? '';
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+    return 'http';
+  }
+  return scheme;
+}
+
+/**
  * Parse DSN into ingest URL parts.
  * 解析 DSN 为上报 URL 组成部分。
  *
  * @example
  * ```ts
- * // Input / 输入
- * parseDsn('https://publicKey@host.example/api/my-project')
+ * // Input / 输入（本地常见误写 https，仍解析为 http 上报）
+ * parseDsn('https://publicKey@localhost:3001/api/my-project')
  * // Output / 输出
- * { publicKey: 'publicKey', projectId: 'my-project', envelopeUrl: 'https://host.example/api/my-project/envelope/' }
+ * { publicKey: 'publicKey', projectId: 'my-project', envelopeUrl: 'http://localhost:3001/api/my-project/envelope/' }
  * ```
  */
 export function parseDsn(dsn: string): {
@@ -39,14 +51,15 @@ export function parseDsn(dsn: string): {
   projectId: string;
   envelopeUrl: string;
 } {
-  const match = dsn.match(/^https?:\/\/([^@]+)@([^/]+)\/api\/([^/]+)/);
+  const match = dsn.match(/^(https?):\/\/([^@]+)@([^/]+)\/api\/([^/]+)/);
   if (!match) {
     throw new Error(`Invalid DSN: ${dsn}`);
   }
-  const [, publicKey, host, projectId] = match;
+  const [, scheme, publicKey, host, projectId] = match;
+  const resolvedScheme = ingestScheme(host, scheme as 'http' | 'https');
   return {
     publicKey: publicKey!,
     projectId: projectId!,
-    envelopeUrl: `https://${host}/api/${projectId}/envelope/`,
+    envelopeUrl: `${resolvedScheme}://${host}/api/${projectId}/envelope/`,
   };
 }

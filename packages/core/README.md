@@ -34,7 +34,7 @@ pnpm --filter @sentry-guardian/core test
 import { init, captureException } from '@sentry-guardian/core';
 
 const client = init({
-  dsn: 'https://publicKey@localhost/api/demo',
+  dsn: 'http://publicKey@localhost:3001/api/demo',
   sdkName: 'sentry-guardian.javascript',
   sdkVersion: '0.1.0',
 });

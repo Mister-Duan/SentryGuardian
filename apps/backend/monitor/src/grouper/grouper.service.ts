@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 import { PrismaService } from '@sentry-guardian/nest-prisma';
 import type { ErrorEvent } from '@sentry-guardian/types';
 import { eventCulprit, eventFingerprint, eventTitle } from './grouper.logic.js';
@@ -11,13 +11,13 @@ const POLL_MS = Number(process.env.GROUPER_POLL_MS ?? 3000);
  * 轮询未聚合事件并 upsert Issue。
  */
 @Injectable()
-export class GrouperService implements OnModuleInit, OnModuleDestroy {
+export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(GrouperService.name);
   private timer: ReturnType<typeof setInterval> | undefined;
 
   constructor(private readonly prisma: PrismaService) {}
 
-  onModuleInit(): void {
+  onApplicationBootstrap(): void {
     void this.processBatch();
     this.timer = setInterval(() => void this.processBatch(), POLL_MS);
   }

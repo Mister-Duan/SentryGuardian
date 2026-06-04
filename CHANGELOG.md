@@ -33,8 +33,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JSDoc `@example` with Input/Output samples required for exported functions
 - `docs/packages.md` and `docs/development.md` for package status and local dev commands
 
+### Fixed
+
+- `backend-dsn` / `backend-monitor`: exclude `*.test.ts` / `*.e2e.test.ts` from `tsc` build; `predev` / `prebuild` build workspace dependencies (fixes `Cannot find module '@sentry-guardian/core'`)
+- `parseDsn` uses HTTP for loopback hosts even when DSN says `https://` (fixes local `ERR_SSL_PROTOCOL_ERROR`)
+- `buildDsn` uses `http://` for localhost / loopback hosts
+
 ### Changed
 
+- Docs: DSN 本地 HTTP/生产 HTTPS、`pnpm dev` 与 vanilla 示例故障排查（`getting-started`、`configuration`、`development`、`examples/vanilla`）
+- `backend-dsn` / `backend-monitor` `dev` scripts: compile with `tsc` + `node --watch` (fixes Nest DI under `tsx`; loads root `.env` via `--env-file`)
+- `GrouperService` starts polling on `onApplicationBootstrap` (after Prisma connects)
 - Consolidate cspell configuration under `.cspell/` directory
 - Align README, overview, and architecture with MVP Phase 0–10 completion
 - Browser `FetchTransport` sends `X-Sentry-Guardian-Public-Key` for ingest auth

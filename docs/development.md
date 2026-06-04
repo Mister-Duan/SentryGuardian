@@ -37,6 +37,23 @@ cp .env.example .env
 | `@sentry-guardian/backend-dsn` | `pnpm --filter @sentry-guardian/backend-dsn dev` | 3001 |
 | `@sentry-guardian/backend-monitor` | `pnpm --filter @sentry-guardian/backend-monitor dev` | 3002 |
 | `@sentry-guardian/frontend-monitor` | `pnpm --filter @sentry-guardian/frontend-monitor dev` | 5173 |
+| `@sentry-guardian/example-vanilla` | `cd examples/vanilla && pnpm dev` | 5174 |
+
+### 后端 `dev` 说明
+
+- 使用 `tsc --watch` 编译到 `dist/`，再用 `node --watch dist/main.js` 运行（**不要**用 `tsx watch src/main.ts` 跑 Nest：`emitDecoratorMetadata` 无效会导致 `PrismaService` 等注入为 `undefined`）。
+- 通过 `node --env-file=../../../.env` 加载**仓库根目录** `.env`（含 `DATABASE_URL`）；执行 `pnpm dev` 前请 `cp .env.example .env`。
+- `predev` / `prebuild` 会自动 `pnpm --filter <app>^... run build`，构建 workspace 依赖（如 `@sentry-guardian/core` 的 `dist/`），避免 `Cannot find module '@sentry-guardian/core'`。
+- `tsconfig` 已排除 `*.test.ts` / `*.e2e.test.ts`；契约测试用根目录 `pnpm test` + Vitest。
+
+### 修改 SDK 后
+
+若改了 `packages/core` 或 `packages/browser`，示例页与后端 ingest 需重新构建后再测：
+
+```bash
+pnpm --filter @sentry-guardian/core build
+pnpm --filter @sentry-guardian/browser build
+```
 
 ## 数据库
 

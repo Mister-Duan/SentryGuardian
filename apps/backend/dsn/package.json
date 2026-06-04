@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "pnpm --filter @sentry-guardian/backend-dsn^... run build",
     "build": "tsc -p tsconfig.json",
-    "dev": "tsx watch src/main.ts",
+    "predev": "pnpm --filter @sentry-guardian/backend-dsn^... run build",
+    "dev": "sh -c 'tsc -p tsconfig.json && tsc -p tsconfig.json -w --preserveWatchOutput & exec node --watch --env-file=../../../.env dist/main.js'",
     "start": "node dist/main.js",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
