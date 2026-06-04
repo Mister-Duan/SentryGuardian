@@ -1,0 +1,131 @@
+// Prisma schema for SentryGuardian Lite (PostgreSQL).
+// SentryGuardian Lite 元数据与 Event 存储（PostgreSQL）。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Console login boundary (MVP: single org per instance).
+/// 控制台登录边界（MVP：每实例通常一个组织）。
+model Organization {
+  id        String   @id @default(cuid())
+  /// Display name shown in the console. 控制台展示名称。
+  name      String
+  /// URL-safe unique slug. URL 安全的唯一标识。
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users    User[]
+  projects Project[]
+
+  @@map("organizations")
+}
+
+/// Console user; credentials separate from DSN keys.
+/// 控制台用户；凭据与 DSN Key 分离。
+model User {
+  id           String   @id @default(cuid())
+  organizationId String @map("organization_id")
+  /// Login email (unique per instance). 登录邮箱（实例内唯一）。
+  email        String   @unique
+  /// bcrypt password hash. bcrypt 密码哈希。
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("users")
+}
+
+/// Monitored application; owns ingest DSN and issues.
+/// 被监控的应用；持有 ingest DSN 与 Issue。
+model Project {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  /// Human-readable project name. 项目名称。
+  name           String
+  /// URL-safe slug unique within the organization. 组织内唯一的 slug。
+  slug           String
+  /// Public key embedded in the DSN (ingest auth). DSN 中的 public key（ingest 鉴权）。
+  publicKey      String   @unique @map("public_key")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  issues       Issue[]
+  events       Event[]
+
+  @@unique([organizationId, slug])
+  @@map("projects")
+}
+
+/// Aggregated error group after grouper runs.
+/// Grouper 聚合后的错误分组。
+model Issue {
+  id          String      @id @default(cuid())
+  projectId   String      @map("project_id")
+  /// Grouping fingerprint (hash). 聚合指纹（哈希）。
+  fingerprint String
+  /// Short display title (usually exception message). 展示标题（通常为异常消息）。
+  title       String
+  status      IssueStatus @default(UNRESOLVED)
+  /// Max severity seen on the issue. 该 Issue 出现的最高严重级别。
+  level       String      @default("error")
+  firstSeen   DateTime    @map("first_seen")
+  lastSeen    DateTime    @map("last_seen")
+  /// Number of distinct events merged into this issue. 合并进该 Issue 的事件数。
+  eventCount  Int         @default(0) @map("event_count")
+  /// Distinct users affected (MVP counter). 受影响用户数（MVP 计数）。
+  usersSeen   Int         @default(0) @map("users_seen")
+  /// Primary source location for UI. UI 展示的主要来源位置。
+  culprit     String?
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  events  Event[]
+
+  @@unique([projectId, fingerprint])
+  @@index([projectId, status, lastSeen])
+  @@map("issues")
+}
+
+/// Raw ErrorEvent payload from the SDK (Lite: PostgreSQL JSONB).
+/// SDK 上报的原始 ErrorEvent（Lite：PostgreSQL JSONB）。
+model Event {
+  id           String    @id @default(cuid())
+  projectId    String    @map("project_id")
+  /// SDK-generated event_id for idempotent ingest. SDK 生成的 event_id（ingest 幂等）。
+  eventId      String    @map("event_id")
+  issueId      String?   @map("issue_id")
+  /// Full ErrorEvent JSON. 完整 ErrorEvent JSON。
+  payload      Json
+  /// Event timestamp from the SDK. SDK 事件时间戳。
+  timestamp    DateTime
+  /// Set when grouper has processed this row. Grouper 处理完成时间。
+  aggregatedAt DateTime? @map("aggregated_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  issue   Issue?  @relation(fields: [issueId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, eventId])
+  @@index([projectId, timestamp])
+  @@index([aggregatedAt])
+  @@map("events")
+}
+
+/// Issue lifecycle status. Issue 生命周期状态。
+enum IssueStatus {
+  UNRESOLVED
+  RESOLVED
+  IGNORED
+}

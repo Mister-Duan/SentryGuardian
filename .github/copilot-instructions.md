@@ -11,7 +11,7 @@ GitHub Copilot 在本仓库中应遵循的项目级指令。与 `AGENTS.md`、`.
 ## 编码原则
 
 1. 最小改动，匹配现有风格
-2. 公开 API：双语 JSDoc；**函数**须含 Input/Output `@example`（见 `docs/ai-guide/doc-comments.md`）
+2. 公开 API：用途/作用 + 双语 JSDoc；**函数** Input/Output `@example`；**类型每个字段**用途说明；改函数/字段须同步更新（见 `docs/ai-guide/doc-comments.md`）
 3. 行为变更须测试；公开 API 须文档；用户可见变更须 CHANGELOG
 4. 任务结束前跑通相关 test / lint / typecheck
 5. 执行 MVP 计划步骤时，更新 `docs/plans/mvp-implementation.md` 后再汇报

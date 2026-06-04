@@ -11,7 +11,8 @@
     "awesome/**",
     "**/pnpm-lock.yaml",
     "**/package-lock.json",
-    "**/yarn.lock"
+    "**/yarn.lock",
+    "**/prisma/migrations/**"
   ],
   "dictionaryDefinitions": [
     {

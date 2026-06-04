@@ -8,7 +8,7 @@
 - **目标用户**：个人开发者、小型团队、小企业（前端为主、预算有限、需自托管）
 - **部署目标**：单机 / Docker 低成本运行，依赖精简，无按量 SaaS 费用
 - **开发标准**：开源高质量——可测试、可文档化、可审查、Conventional Commits、SemVer
-- **当前阶段**：初始化；业务代码待落地，协作规范与文档已就绪
+- **当前阶段**：MVP（Phase 0～10）已闭环，可本地 E2E（见 [mvp-implementation.md](./docs/plans/mvp-implementation.md)）
 - **本仓库追踪内容**：SentryGuardian 自研代码、文档、AI 协作配置
 
 ## 强制交付闭环
@@ -45,7 +45,7 @@ SentryGuardian/
 4. **成本意识**：架构与依赖选择优先考虑个人 / 小企业单机部署，避免引入不必要的重型组件
 5. **开源质量**：行为变更必测、公开 API 必文档、用户可见变更必 CHANGELOG
 6. **不 over-engineer**：避免为单行逻辑抽 helper、过度抽象
-7. **注释**：公开 API 须**中英文双语** JSDoc，**导出函数**须含 **Input/Output `@example`**（见 `docs/ai-guide/doc-comments.md`）
+7. **注释**：公开 API 须写清**用途/作用**、**中英文双语**；**导出函数**须 **Input/Output `@example`**；**导出类型/接口的每个字段**须用途说明；**调整函数/字段时须同步更新**注释与示例（见 [doc-comments.md](./docs/ai-guide/doc-comments.md)）
 
 ## 禁止事项
 
@@ -63,6 +63,8 @@ SentryGuardian/
 | [docs/overview.md](./docs/overview.md) | 项目简介与设计原则 |
 | [docs/plans/mvp-implementation.md](./docs/plans/mvp-implementation.md) | MVP 主清单（**每步完成后必须更新**） |
 | [docs/plans/README.md](./docs/plans/README.md) | 实施计划索引 |
+| [docs/packages.md](./docs/packages.md) | 已实现 npm 包 |
+| [docs/development.md](./docs/development.md) | 本地开发命令 |
 | [docs/ai-guide/doc-comments.md](./docs/ai-guide/doc-comments.md) | 代码文档注释（中英文双语） |
 | [docs/ai-guide/open-source.md](./docs/ai-guide/open-source.md) | 开源开发标准 |
 | [docs/ai-guide/delivery-checklist.md](./docs/ai-guide/delivery-checklist.md) | 强制交付检查清单 |

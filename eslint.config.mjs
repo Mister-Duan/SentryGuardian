@@ -7,6 +7,12 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   prettier,
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', 'awesome/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/coverage/**',
+      'awesome/**',
+      'examples/**',
+    ],
   },
 );

@@ -2,7 +2,9 @@
 
 **轻量级前端监控成套系统，专为个人开发者与小企业低成本自托管部署。**
 
-借鉴 [Sentry](https://sentry.io) 的成熟体验，提供从 **浏览器 SDK → 数据接收 → Issue 聚合 → 可视化控制台 → 告警通知** 的完整链路。无需 SaaS 订阅，默认单机即可跑通；业务代码落地中，架构与协作规范已就绪。
+借鉴 [Sentry](https://sentry.io) 的成熟体验，提供从 **浏览器 SDK → 数据接收 → Issue 聚合 → 可视化控制台 → 告警通知** 的完整链路。无需 SaaS 订阅，默认单机即可跑通。
+
+**当前进度**：MVP（Phase 0～10）已闭环——SDK、ingest、Issue 聚合、控制台均可本地运行。详见 [实施计划](./docs/plans/mvp-implementation.md)。
 
 ## 一句话介绍
 
@@ -67,7 +69,7 @@ SentryGuardian 不是单一 SDK 或单一后台，而是一套可独立部署的
 - **Release 追踪**：按版本对比错误率，辅助发布回归
 - **低成本部署**：Lite 档单机 Docker，目标 1C2G 可运行
 
-> **当前状态**：Monorepo 架构与文档已定稿；`packages/`、`apps/` 业务代码尚未落地。MVP 目标见下方「路线图」。
+> **当前状态**：MVP 全栈已落地（SDK + PostgreSQL + dsn + monitor + 控制台）。详见 [packages 状态](./docs/packages.md) 与 [实施计划](./docs/plans/mvp-implementation.md)。
 
 ## 为什么选择 SentryGuardian
 
@@ -98,63 +100,74 @@ SentryGuardian 不是单一 SDK 或单一后台，而是一套可独立部署的
 
 ```text
 SentryGuardian/
-├── packages/                 # 可发布 SDK
-│   ├── types/                # Event / Issue / Envelope 等协议类型
-│   ├── utils/                # 指纹、序列化、脱敏等纯函数
-│   ├── core/                 # Client、Scope、Integration、Transport
-│   ├── browser-utils/        # 浏览器环境工具（internal）
-│   ├── browser/              # 浏览器 SDK 主入口 @sentry-guardian/browser
-│   └── vue/                  # Vue 2/3 适配 @sentry-guardian/vue
+├── packages/
+│   ├── types/                # ✅ 协议类型
+│   ├── utils/                # ✅ 指纹、序列化、脱敏
+│   ├── core/                 # ✅ SDK 内核
+│   ├── browser-utils/        # ✅ 内部：getFetch
+│   ├── browser/              # ✅ 浏览器 SDK 主入口
+│   └── vue/                  # ⏳ Vue 适配（MVP 外）
 ├── apps/
-│   ├── backend/
-│   │   ├── dsn/              # Ingest：鉴权、校验、落库
-│   │   └── monitor/          # API、Issue 聚合、Source Map、告警
-│   └── frontend/
-│       └── monitor/          # Web 监控控制台
-├── examples/                 # 接入示例（规划）
-├── docker/                   # Compose 与镜像（规划）
+│   ├── backend/dsn           # ✅ Ingest（3001）
+│   ├── backend/monitor       # ✅ API + Grouper（3002）
+│   └── frontend/monitor      # ✅ React 控制台（5173）
+├── examples/vanilla          # ✅ SDK 示例
+├── docker/compose.yml        # ✅ PostgreSQL
 ├── docs/                     # 项目文档
-├── AGENTS.md                 # AI 协作入口
+├── AGENTS.md
 └── CHANGELOG.md
 ```
 
 ## 路线图
 
-- [x] 仓库初始化、AI 协作规范、开源交付标准
-- [x] 系统架构与 Monorepo 目录定稿（[architecture.md](./docs/architecture.md)）
-- [ ] pnpm workspace 与 `packages/types` 脚手架
-- [ ] 前端 SDK 最小上报（JS Error → Envelope）
-- [ ] backend/dsn 接收与持久化
-- [ ] backend/monitor Issue 指纹聚合
-- [ ] frontend/monitor Issue 列表与详情 MVP
-- [ ] Docker Compose Lite 单机部署
-- [ ] 基础告警（Webhook）
+与 [docs/plans/mvp-implementation.md](./docs/plans/mvp-implementation.md) 同步：
+
+- [x] 工程底座（workspace、CI、lint、测试）
+- [x] `@sentry-guardian/types` 协议类型
+- [x] `@sentry-guardian/utils` 工具函数
+- [x] `@sentry-guardian/core` SDK 内核
+- [x] `@sentry-guardian/browser` 浏览器 SDK（Phase 4）
+- [x] `@sentry-guardian/database` + Docker Postgres（Phase 5）
+- [x] backend/dsn ingest（Phase 6）
+- [x] backend/monitor Issue 聚合 + API（Phase 7）
+- [x] frontend/monitor 控制台 MVP（Phase 8）
+- [x] 端到端示例与 `pnpm dev`（Phase 9）
+- [x] CI 分包构建 / Changesets（Phase 10）
+- [ ] 基础告警 Webhook（P2 能力，MVP 外）
 
 **MVP 闭环**：`browser` 捕获错误 → `dsn` 落库 → `monitor` 聚合 Issue → 控制台展示堆栈。
 
-## 快速开始
-
-> SDK 与服务端尚未发布，以下为规划中的接入方式。
+## 快速开始（本地 Lite）
 
 ```bash
-# 安装 SDK（待发布）
-pnpm add @sentry-guardian/browser
+git clone <repo-url> SentryGuardian && cd SentryGuardian
+pnpm install && pnpm build
 
-# Vue 项目额外安装（待发布）
-pnpm add @sentry-guardian/vue
+cp .env.example .env
+docker compose -f docker/compose.yml up -d postgres
+pnpm --filter @sentry-guardian/database db:migrate
+pnpm --filter @sentry-guardian/database db:seed   # 记下输出的 DSN
+
+# 三个服务（或根目录 pnpm dev）
+pnpm --filter @sentry-guardian/backend-dsn dev      # :3001
+pnpm --filter @sentry-guardian/backend-monitor dev  # :3002
+pnpm --filter @sentry-guardian/frontend-monitor dev # :5173
 ```
+
+控制台：`http://localhost:5173` · 默认账号 `admin@localhost` / `adminadmin`
+
+SDK 接入（monorepo 内）：
 
 ```javascript
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  dsn: 'https://<publicKey>@your-host/api/<projectId>',
-  release: '1.0.0',
+  dsn: 'https://<publicKey>@localhost:3001/api/<projectId>',
   environment: 'production',
 });
 ```
 
-自托管部署步骤见 [docs/architecture.md](./docs/architecture.md)（Docker Compose 文档随实现补充）。
+示例页：`examples/vanilla` · 分步说明见 [docs/getting-started.md](./docs/getting-started.md) · 配置查 [docs/configuration.md](./docs/configuration.md)。
 
 ## 本地开发
 
@@ -164,12 +177,13 @@ Sentry.init({
 git clone <repo-url> SentryGuardian
 cd SentryGuardian
 pnpm install
-
-# 文档拼写检查
+pnpm build    # 构建全仓 workspace
+pnpm test     # 全仓测试
+pnpm lint
 pnpm spellcheck
 ```
 
-Monorepo 工程化（workspace、CI、各包 build/test）随 `packages/`、`apps/` 落地后补充。
+完整说明见 [docs/development.md](./docs/development.md)。
 
 ## 开源承诺
 
@@ -181,8 +195,14 @@ Monorepo 工程化（workspace、CI、各包 build/test）随 `packages/`、`app
 
 | 文档 | 说明 |
 |------|------|
+| [docs/getting-started.md](./docs/getting-started.md) | **入门**：30 分钟本地跑通 |
+| [docs/configuration.md](./docs/configuration.md) | **配置**：环境变量、DSN、SDK、API |
+| [docs/learn/README.md](./docs/learn/README.md) | **学习路径**与概念、数据流、自托管 |
 | [docs/overview.md](./docs/overview.md) | 项目简介、目标用户、路线图 |
-| [docs/architecture.md](./docs/architecture.md) | Monorepo 结构、数据流、协议与 MVP 边界 |
+| [docs/architecture.md](./docs/architecture.md) | Monorepo 结构、协议与 MVP 边界 |
+| [docs/packages.md](./docs/packages.md) | 已实现 npm 包 |
+| [docs/development.md](./docs/development.md) | 贡献者：构建、测试命令 |
+| [docs/plans/mvp-implementation.md](./docs/plans/mvp-implementation.md) | MVP 实施清单 |
 | [docs/README.md](./docs/README.md) | 文档中心索引 |
 | [AGENTS.md](./AGENTS.md) | AI 协作规范 |
 | [docs/ai-guide/open-source.md](./docs/ai-guide/open-source.md) | 开源开发标准 |

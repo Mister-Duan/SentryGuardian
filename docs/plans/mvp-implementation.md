@@ -1,6 +1,6 @@
 # MVP 实施主清单
 
-> **当前步骤**：Phase 2 已完成，下一步 **P3-01**（待你确认后开始）
+> **当前步骤**：MVP Phase 0～10 **已完成**
 >
 > 架构：[architecture.md](../architecture.md) · 决策：[decisions.md](./decisions.md)
 
@@ -22,6 +22,22 @@
 
 ---
 
+## 已实现能力摘要（Phase 0～10）
+
+| 模块 | 能力 |
+|------|------|
+| SDK | `types` → `utils` → `core` → `browser`（P0 集成、Fetch Transport） |
+| 数据库 | Prisma、`organizations` / `users` / `projects` / `issues` / `events` |
+| backend/dsn | Nest ingest、`POST /api/:projectId/envelope`、DSN 鉴权、幂等、脱敏 |
+| backend/monitor | JWT 登录、Issue CRUD、Grouper worker、Projects + DSN |
+| frontend/monitor | React 控制台：登录、Issue 列表/详情 |
+| 端到端 | `examples/vanilla`、`docker/compose.yml`、根 `pnpm dev` |
+| CI | Postgres 服务、分包 build/test、Changesets 配置 |
+
+本地验证：`pnpm build && pnpm test`（详见 [development.md](../development.md)）。
+
+---
+
 ## 进度概览
 
 | Phase | 名称　　　　　　 | 步骤　　　　　 | 状态　　　 |
@@ -29,14 +45,14 @@
 | 0     | 工程底座　　　　 | P0-01～P0-07　 | **已完成** |
 | 1     | packages/types　 | P1-01～P1-08　 | **已完成** |
 | 2     | packages/utils　 | P2-01～P2-05　 | **已完成** |
-| 3     | packages/core　　| P3-01～P3-12　 | 待开始　　 |
-| 4     | browser SDK　　　| P4-01～P4-14　 | 待开始　　 |
-| 5     | 数据库　　　　　 | P5-01～P5-06　 | 待开始　　 |
-| 6     | backend/dsn　　　| P6-01～P6-09　 | 待开始　　 |
-| 7     | backend/monitor　| P7-01～P7-12　 | 待开始　　 |
-| 8     | frontend/monitor | P8-01～P8-10　 | 待开始　　 |
-| 9     | 端到端　　　　　 | P9-01～P9-06　 | 待开始　　 |
-| 10    | CI 收尾　　　　　| P10-01～P10-04 | 待开始　　 |
+| 3     | packages/core　　| P3-01～P3-12　 | **已完成** |
+| 4     | browser SDK　　　| P4-01～P4-14　 | **已完成** |
+| 5     | 数据库　　　　　 | P5-01～P5-06　 | **已完成** |
+| 6     | backend/dsn　　　| P6-01～P6-09　 | **已完成** |
+| 7     | backend/monitor　| P7-01～P7-12　 | **已完成** |
+| 8     | frontend/monitor | P8-01～P8-10　 | **已完成** |
+| 9     | 端到端　　　　　 | P9-01～P9-06　 | **已完成** |
+| 10    | CI 收尾　　　　　| P10-01～P10-04 | **已完成** |
 
 ---
 
@@ -77,100 +93,116 @@
 
 ## Phase 3 — packages/core
 
-- [ ] **P3-01** 包脚手架
-- [ ] **P3-02** Integration
-- [ ] **P3-03** Scope
-- [ ] **P3-04** Client 骨架
-- [ ] **P3-05** EventProcessor
-- [ ] **P3-06** Envelope 编码
-- [ ] **P3-07** Transport 抽象
-- [ ] **P3-08** buffer + 429 退避
-- [ ] **P3-09** dedupe 占位
-- [ ] **P3-10** sampleRate / ignoreErrors
-- [ ] **P3-11** flush / close
-- [ ] **P3-12** init 工厂
+- [x] **P3-01** 包脚手架
+- [x] **P3-02** Integration
+- [x] **P3-03** Scope
+- [x] **P3-04** Client 骨架
+- [x] **P3-05** EventProcessor
+- [x] **P3-06** Envelope 编码
+- [x] **P3-07** Transport 抽象
+- [x] **P3-08** buffer + 429 退避
+- [x] **P3-09** dedupe 占位
+- [x] **P3-10** sampleRate / ignoreErrors
+- [x] **P3-11** flush / close
+- [x] **P3-12** init 工厂
+
+**Phase 3 验证**：`pnpm --filter @sentry-guardian/core build && pnpm --filter @sentry-guardian/core test`
 
 ## Phase 4 — browser SDK
 
-- [ ] **P4-01** browser-utils 脚手架
-- [ ] **P4-02** getFetch
-- [ ] **P4-03** BrowserClient
-- [ ] **P4-04** globalHandlers
-- [ ] **P4-05** inboundFilters
-- [ ] **P4-06** dedupe
-- [ ] **P4-07** httpContext
-- [ ] **P4-08** linkedErrors
-- [ ] **P4-09** breadcrumbs
-- [ ] **P4-10** browserApiErrors
-- [ ] **P4-11** stack-parsers
-- [ ] **P4-12** fetch transport
-- [ ] **P4-13** 公开 API
-- [ ] **P4-14** build + jsdom 测试
+- [x] **P4-01** browser-utils 脚手架
+- [x] **P4-02** getFetch
+- [x] **P4-03** BrowserClient
+- [x] **P4-04** globalHandlers
+- [x] **P4-05** inboundFilters
+- [x] **P4-06** dedupe
+- [x] **P4-07** httpContext
+- [x] **P4-08** linkedErrors
+- [x] **P4-09** breadcrumbs
+- [x] **P4-10** browserApiErrors
+- [x] **P4-11** stack-parsers
+- [x] **P4-12** fetch transport
+- [x] **P4-13** 公开 API
+- [x] **P4-14** build + jsdom 测试
+
+**Phase 4 验证**：`pnpm --filter @sentry-guardian/browser build && pnpm --filter @sentry-guardian/browser test`
 
 ## Phase 5 — 数据库
 
-- [ ] **P5-01** Prisma libs/database
-- [ ] **P5-02** org / users / projects schema
-- [ ] **P5-03** events schema
-- [ ] **P5-04** issues schema
-- [ ] **P5-05** migration + docker postgres
-- [ ] **P5-06** seed DSN
+- [x] **P5-01** Prisma libs/database
+- [x] **P5-02** org / users / projects schema
+- [x] **P5-03** events schema
+- [x] **P5-04** issues schema
+- [x] **P5-05** migration + docker postgres
+- [x] **P5-06** seed DSN
+
+**Phase 5 验证**：`docker compose -f docker/compose.yml up -d postgres` → `pnpm --filter @sentry-guardian/database db:migrate` → `pnpm --filter @sentry-guardian/database db:seed`
 
 ## Phase 6 — backend/dsn
 
-- [ ] **P6-01** Nest 脚手架 + health
-- [ ] **P6-02** /health、/ready
-- [ ] **P6-03** EnvelopeModule
-- [ ] **P6-04** DsnAuthGuard
-- [ ] **P6-05** POST envelope
-- [ ] **P6-06** event_id 幂等
-- [ ] **P6-07** 大小限制 + scrubbing
-- [ ] **P6-08** CORS
-- [ ] **P6-09** 契约测试
+- [x] **P6-01** Nest 脚手架 + health
+- [x] **P6-02** /health、/ready
+- [x] **P6-03** EnvelopeModule
+- [x] **P6-04** DsnAuthGuard
+- [x] **P6-05** POST envelope
+- [x] **P6-06** event_id 幂等
+- [x] **P6-07** 大小限制 + scrubbing
+- [x] **P6-08** CORS
+- [x] **P6-09** 契约测试
+
+**Phase 6 验证**：`pnpm --filter @sentry-guardian/backend-dsn build`（契约测试需 `DATABASE_URL`）
 
 ## Phase 7 — backend/monitor
 
-- [ ] **P7-01** Nest 脚手架
-- [ ] **P7-02** AuthModule JWT
-- [ ] **P7-03** POST /api/auth/login
-- [ ] **P7-04** ProjectsModule + DSN
-- [ ] **P7-05** GrouperWorker
-- [ ] **P7-06** fingerprint upsert
-- [ ] **P7-07** GET /api/issues
-- [ ] **P7-08** GET /api/issues/:id
-- [ ] **P7-09** PATCH issue status
-- [ ] **P7-10** grouper golden test
-- [ ] **P7-11** Lite all-in-one 文档
-- [ ] **P7-12** docker/.env.example
+- [x] **P7-01** Nest 脚手架
+- [x] **P7-02** AuthModule JWT
+- [x] **P7-03** POST /api/auth/login
+- [x] **P7-04** ProjectsModule + DSN
+- [x] **P7-05** GrouperWorker
+- [x] **P7-06** fingerprint upsert
+- [x] **P7-07** GET /api/issues
+- [x] **P7-08** GET /api/issues/:id
+- [x] **P7-09** PATCH issue status
+- [x] **P7-10** grouper golden test
+- [x] **P7-11** Lite all-in-one 文档
+- [x] **P7-12** docker/.env.example
+
+**Phase 7 验证**：`pnpm --filter @sentry-guardian/backend-monitor build && pnpm --filter @sentry-guardian/backend-monitor test`
 
 ## Phase 8 — frontend/monitor
 
-- [ ] **P8-01** Vite + React 脚手架
-- [ ] **P8-02** shadcn/ui
-- [ ] **P8-03** API client
-- [ ] **P8-04** 登录页
-- [ ] **P8-05** Issue 列表
-- [ ] **P8-06** Issue 详情
-- [ ] **P8-07** VITE_API_URL
-- [ ] **P8-08** 路由守卫
-- [ ] **P8-09** smoke 测试
-- [ ] **P8-10** 生产 build 说明
+- [x] **P8-01** Vite + React 脚手架
+- [x] **P8-02** shadcn/ui
+- [x] **P8-03** API client
+- [x] **P8-04** 登录页
+- [x] **P8-05** Issue 列表
+- [x] **P8-06** Issue 详情
+- [x] **P8-07** VITE_API_URL
+- [x] **P8-08** 路由守卫
+- [x] **P8-09** smoke 测试
+- [x] **P8-10** 生产 build 说明
+
+**Phase 8 验证**：`pnpm --filter @sentry-guardian/frontend-monitor build`
 
 ## Phase 9 — 端到端
 
-- [ ] **P9-01** examples/vanilla
-- [ ] **P9-02** docker/compose.yml
-- [ ] **P9-03** 根 pnpm dev
-- [ ] **P9-04** 手动 E2E 清单
-- [ ] **P9-05** CHANGELOG MVP
-- [ ] **P9-06** README 快速开始
+- [x] **P9-01** examples/vanilla
+- [x] **P9-02** docker/compose.yml
+- [x] **P9-03** 根 pnpm dev
+- [x] **P9-04** 手动 E2E 清单
+- [x] **P9-05** CHANGELOG MVP
+- [x] **P9-06** README 快速开始
+
+**Phase 9 验证**：见下方「手动 E2E 清单」
 
 ## Phase 10 — CI 收尾
 
-- [ ] **P10-01** CI packages build + test
-- [ ] **P10-02** CI backend test
-- [ ] **P10-03** CI frontend build
-- [ ] **P10-04** Changesets
+- [x] **P10-01** CI packages build + test
+- [x] **P10-02** CI backend test
+- [x] **P10-03** CI frontend build
+- [x] **P10-04** Changesets
+
+**Phase 10 验证**：推送后 GitHub Actions `quality` job 全绿
 
 ---
 
@@ -184,9 +216,22 @@
 | 2026-06-03 | （规范） | 中英文 JSDoc 规范 `doc-comments.md`；本文件增加 §维护规则 |
 | 2026-06-03 | P2-01～P2-05 | `@sentry-guardian/utils` 指纹/序列化/脱敏、golden 测试 |
 | 2026-06-03 | （规范） | JSDoc 函数须含 Input/Output `@example`；utils/types 示例补全 |
+| 2026-06-03 | P3-01～P3-12 | `@sentry-guardian/core` Client/Scope/Transport/Envelope/init |
+| 2026-06-03 | （文档） | 同步 README/overview/architecture；新增 packages.md、development.md |
+| 2026-06-03 | P4-01～P4-14 | `browser-utils`、`@sentry-guardian/browser` P0 集成、FetchTransport、jsdom 测试 |
+| 2026-06-03 | （规范） | 函数/字段调整须同步用途说明与 Input/Output 示例；AI 规则落地 |
+| 2026-06-03 | P5-01～P5-06 | `@sentry-guardian/database` Prisma、迁移、docker postgres、seed |
+| 2026-06-03 | P6-01～P10-04 | backend dsn/monitor、React 控制台、examples、CI+Changesets；MVP 闭环 |
 
 ---
 
-## 手动 E2E 清单（P9-04 填写）
+## 手动 E2E 清单（P9-04）
 
-<!-- SDK → DB → UI 验证步骤 -->
+1. `cp .env.example .env` 并启动 Postgres：`docker compose -f docker/compose.yml up -d postgres`
+2. `pnpm --filter @sentry-guardian/database db:migrate && pnpm --filter @sentry-guardian/database db:seed`（记录 DSN）
+3. 终端 A：`pnpm --filter @sentry-guardian/backend-dsn dev`（3001）
+4. 终端 B：`pnpm --filter @sentry-guardian/backend-monitor dev`（3002）
+5. 终端 C：`pnpm --filter @sentry-guardian/frontend-monitor dev`（5173）
+6. 浏览器打开 `http://localhost:5173`，登录 `admin@localhost` / `adminadmin`
+7. 终端 D：`cd examples/vanilla && VITE_DSN='<seed 输出的 DSN>' pnpm dev`，点击 **Throw test error**
+8. 等待 Grouper（约 3s），刷新控制台 Issue 列表，打开详情查看堆栈 JSON

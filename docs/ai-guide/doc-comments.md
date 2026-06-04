@@ -1,18 +1,22 @@
-# 代码文档注释规范（中英文 + 输入/输出示例）
+# 代码文档注释规范（中英文 + 用途 + 输入/输出示例）
 
 本仓库**公开 API** 的文档注释（JSDoc / TSDoc）须：
 
-1. 同时包含**英文**与**简体中文**说明；
-2. **导出函数**须包含**输入示例**与**输出示例**（`@example`）；
-3. **导出类型/接口**建议包含典型数据结构的 `@example`（当作「输入形态」示例）。
+1. 写清**用途 / 作用**（这条 API 解决什么问题、在链路中的职责）；
+2. 同时包含**英文**与**简体中文**说明；
+3. **导出函数**须包含**输入示例**与**输出示例**（`@example`）；
+4. **导出类型 / 接口 / 枚举 / 类字段**须为**每个字段**写清用途（双语）；类型建议有典型 `@example` 对象。
+
+> **调整已有函数或字段时**：与新增同等要求——改签名、改字段名、改语义时，**必须同步更新**对应用途说明与 Input/Output（或字段）示例，不得只改实现不改正文。
 
 ## 适用范围
 
 | 须遵守 | 可不遵守 |
 |--------|----------|
 | `packages/*` 对外导出的函数、类方法 | 私有函数、测试 helper |
-| `packages/*` 对外导出的类型、接口（建议有示例对象） | 纯 re-export 的 `index.ts` |
+| `packages/*` 对外导出的类型、接口**及其每个字段** | 纯 re-export 的 `index.ts` |
 | `apps/*` 对外 Service / Controller 公开方法 | 内部实现细节 |
+| Prisma schema 模型字段（`///` 注释） | 迁移 SQL 生成文件 |
 
 **用户可见 Markdown**（`README`、`docs/`）以中文为主；与代码内 JSDoc 分工不同。
 
@@ -61,9 +65,24 @@ export function truncate(value: string, maxLength: number): string;
 
 **多个场景**：可用多个 `@example` 块（如边界情况），每个块仍含 Input/Output。
 
+### 接口 / 类型字段（强制）
+
+每个公开字段须有**双语**说明（`/** … */` 或 `@description`），写清**用途 / 作用**（非重复字段名翻译）。
+
+```typescript
+export interface BrowserInitOptions {
+  /** Ingest DSN URL for this project. 本项目的 ingest DSN 地址。 */
+  dsn: string;
+  /** URL patterns to drop; matched against `request.url`. 丢弃匹配的 URL（对照 `request.url`）。 */
+  denyUrls?: Array<string | RegExp>;
+}
+```
+
+类型级 `@example`：展示含主要字段的典型对象（当作 Input 形态）。
+
 ### 类型 / 接口：典型数据示例（建议）
 
-无「输出」时，用 `@example` 展示符合类型的 JSON/对象即可：
+无函数级「输出」时，用 `@example` 展示符合类型的 JSON/对象即可：
 
 ```typescript
 /**
@@ -85,10 +104,21 @@ export function truncate(value: string, maxLength: number): string;
 export interface ErrorEvent { ... }
 ```
 
+### 调整函数 / 字段时的检查表
+
+| 变更 | 必须同步 |
+|------|----------|
+| 改函数签名、返回值、副作用 | 双语说明 + `@example` Input/Output |
+| 增删改接口 / 类字段 | 该字段用途说明；类型 `@example` 含新字段 |
+| 改枚举成员 | 每个取值的用途说明 |
+| 仅重构实现、行为不变 | 确认现有注释仍准确；不准则改 |
+
 ### 禁止
 
 - 仅英文或仅中文（公开 API 说明）
 - 函数无 `@example` 或无 Input/Output 标注
+- 字段无用途说明、仅重复标识符英文名
+- **改函数/字段却不更新注释或示例**
 - 示例与实现不符、误导性输出
 - 用机器翻译堆砌、重复第三语言
 
@@ -102,9 +132,10 @@ export interface ErrorEvent { ... }
 
 ## AI 协作要求
 
-1. 新增或修改**公开导出函数**时：双语说明 + `@example`（Input/Output）**同步提交**。
-2. 审查 diff：检查是否缺示例、示例是否可对照实现跑通。
-3. 私有实现不强制；**公开 API 不可缺**。
+1. 新增或修改**公开导出函数**时：用途/作用 + 双语说明 + `@example`（Input/Output）**与代码同 diff**。
+2. 新增或修改**公开类型 / 接口 / 枚举 / 类字段**时：每个字段用途说明 + 类型级 `@example`（有字段变更时更新示例对象）。
+3. 审查 diff：缺注释、缺字段说明、示例与实现不一致 → 视为未完成。
+4. 私有实现不强制；**公开 API 与 Prisma 模型字段不可缺**。
 
 ## 参考实现
 

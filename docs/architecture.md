@@ -2,7 +2,7 @@
 
 本文描述 SentryGuardian 的 **Monorepo 目录结构**、**模块职责**、**数据流**、**核心协议**与 **MVP 边界**。产品定位与路线图见 [overview.md](./overview.md)。
 
-> **状态**：架构草稿，随实现迭代更新。仓库内 `awesome/` 为 Sentry 参考代码（gitignore），**不参与构建与发布**。
+> **状态**：MVP 全栈已落地（SDK + `apps/backend` + `apps/frontend`）。详见 [plans/mvp-implementation.md](./plans/mvp-implementation.md)。`awesome/` 为 Sentry 参考代码（gitignore），**不参与构建与发布**。
 
 ---
 
@@ -160,9 +160,9 @@ vue ◀── browser, core
 
 ## 4. Packages 模块说明
 
-### 4.1 `packages/types`
+### 4.1 `packages/types`（已实现）
 
-跨 SDK、Backend、Frontend 的**协议层类型**，不包含运行时逻辑。
+跨 SDK、Backend、Frontend 的**协议层类型**，不包含运行时逻辑。详见 [packages/types/README.md](../packages/types/README.md)。
 
 | 类别 | 示例 |
 |------|------|
@@ -174,29 +174,33 @@ vue ◀── browser, core
 
 > 参考：Sentry 已将 `@sentry/types` 并入 `@sentry/core`；本仓库保留独立 `types` 包，便于 Backend 不依赖 SDK 运行时。
 
-### 4.2 `packages/utils`
+### 4.2 `packages/utils`（已实现）
 
-无环境依赖的工具函数，被 `core` 与 backend 共用。
+无 DOM 依赖的工具函数，被 `core` 与 backend 共用。详见 [packages/utils/README.md](../packages/utils/README.md)。
 
-- 堆栈帧解析辅助、指纹 hash（稳定排序后 sha256）
-- 深度裁剪、`maxValueLength`、循环引用安全序列化
-- URL / 路径脱敏、时间戳规范化
-
-### 4.3 `packages/core`
-
-SDK **内核**，定义采集 → 处理 → 上报的完整流水线。
-
-| 模块 | 职责 |
+| 能力 | 导出 |
 |------|------|
-| **Client** | 生命周期、`captureException` / `captureMessage`、flush |
-| **Scope** | `user`、`tags`、`extra`、`breadcrumb` 上下文栈 |
-| **Integration** | 插件接口：`setup(client)`，由 `init` 统一注册 |
-| **Transport** | 抽象上报：`send(envelope)`，含 buffer、retry、rate-limit 响应处理 |
-| **Envelope** | 多 item 批量编码（event、session、client_report） |
-| **EventProcessor** | `beforeSend` 链、采样（`sampleRate`）、ignore 规则 |
-| **Session** | 可选：会话起止、崩溃标记，用于「影响用户数」统计 |
+| 指纹 | `computeFingerprint`、`computeFallbackFingerprint` |
+| 序列化 | `safeSerialize` |
+| 脱敏 | `scrubUrl`、`scrubObject` |
+| 时间/字符串 | `normalizeTimestamp`、`truncate` |
 
-**不包含**：`window` 监听、fetch 实现、框架 hook——这些在 `browser` / `vue`。
+### 4.3 `packages/core`（已实现）
+
+SDK **内核**，定义采集 → 处理 → 上报流水线。详见 [packages/core/README.md](../packages/core/README.md)。
+
+| 模块 | 职责 | MVP 状态 |
+|------|------|----------|
+| **Client** | `captureException` / `captureMessage`、`sampleRate`、`ignoreErrors`、内置 dedupe | 已实现 |
+| **Scope** | `user`、`tags`、`extra`、`breadcrumb` | 已实现 |
+| **Integration** | `setup(client)` 插件接口 | 已实现 |
+| **Transport** | `Transport`、`MockTransport`、`BufferTransport`（429 退避） | 已实现 |
+| **Envelope** | `createEnvelope` / `serializeEnvelope` / `parseEnvelope` | 已实现 |
+| **EventProcessor** | `beforeSend` 链 | 已实现 |
+| **sdk** | `init` / `getClient` / `flush` / `close` | 已实现 |
+| **Session** | 会话统计 | **未实现**（P2） |
+
+**不包含**：`window` 监听、真实 `fetch` 上报、框架 hook——由 `browser` / `vue` 提供。
 
 ### 4.4 `packages/browser-utils`
 
@@ -553,23 +557,28 @@ browser SDK 捕获 JS Error
 
 ## 10. 工程化
 
-### 10.1 工具链（规划）
+### 10.1 工具链
 
-| 项 | 选型 |
-|----|------|
-| 包管理 | pnpm workspace |
-| SDK 构建 | tsup / Rollup（ESM + CJS + IIFE bundle） |
-| Backend | Node.js（Fastify/Hono）或 Go（待定） |
-| Frontend | Vite + React 或 Vue（与 shadcn 选型一致，待定） |
-| 测试 | Vitest（packages）、契约测试（dsn envelope） |
-| 版本发布 | Changesets，包前缀 `@sentry-guardian/*` |
+| 项 | 选型 | 状态 |
+|----|------|------|
+| 包管理 | pnpm workspace | 已配置 |
+| SDK 构建 | tsup（ESM + CJS + `.d.ts`） | types / utils / core 已用 |
+| Backend | **Nest.js + TypeScript** | 已决，待实现 |
+| Frontend | **React + Vite + shadcn/ui** | 已决，待实现 |
+| ORM | Prisma（`apps/backend/libs/database`） | 已决，待实现 |
+| 测试 | Vitest | packages 已用 |
+| 版本发布 | Changesets，`@sentry-guardian/*` | 待 P10-04 |
 
-### 10.2 根目录待补充文件
+### 10.2 工程化文件清单
 
-- `pnpm-workspace.yaml`
-- `tsconfig.base.json`
-- `.github/workflows/ci.yml`（lint、test、build）
-- `docker/compose.yml`（Lite 默认栈）
+| 文件 | 状态 |
+|------|------|
+| `pnpm-workspace.yaml` | 已有 |
+| `tsconfig.base.json` | 已有 |
+| `.github/workflows/ci.yml` | 已有（spellcheck / lint / test / build） |
+| `docker/compose.yml` | 待 P9-02 |
+| `docker/.env.example` | 待 P7-12 |
+| `examples/vanilla` | 待 P9-01 |
 
 ### 10.3 测试策略
 
@@ -648,47 +657,28 @@ browser SDK 捕获 JS Error
 
 ---
 
-## 附录 B：目录结构（实现后目标态）
+## 附录 B：目录结构
+
+**已实现**（✅）与**规划**（⏳）：
 
 ```text
 packages/
-├── types/src/
-│   ├── event.ts
-│   ├── issue.ts
-│   ├── envelope.ts
-│   └── index.ts
-├── core/src/
-│   ├── client.ts
-│   ├── scope.ts
-│   ├── integration.ts
-│   ├── transports/
-│   └── index.ts
-├── browser/src/
-│   ├── client.ts
-│   ├── sdk.ts
-│   ├── integrations/
-│   ├── transports/fetch.ts
-│   └── index.ts
-└── vue/src/
-    ├── integration.ts
-    └── index.ts
+├── types/src/          ✅ event, issue, envelope, api, stack, breadcrumb
+├── utils/src/          ✅ fingerprint, serialize, scrub, string
+├── core/src/           ✅ client, scope, integration, envelope, transports, sdk
+├── browser-utils/src/  ✅ getFetch
+├── browser/src/        ✅ integrations/, transports/fetch.ts
+└── vue/src/            ⏳
 
-apps/backend/dsn/src/
-├── routes/envelope.ts
-├── auth/dsn.ts
-└── storage/
+apps/backend/
+├── libs/database/      ✅ Prisma schema + migrations + seed
+├── dsn/src/            ✅ envelope ingest
+└── monitor/src/        ✅ API, grouper worker
 
-apps/backend/monitor/src/
-├── api/
-├── worker/grouper.ts
-├── symbolicator/
-└── alerter/
-
-apps/frontend/monitor/src/
-├── pages/issues/
-├── pages/performance/
-└── components/
+apps/frontend/monitor/  ✅ React 控制台
 ```
+
+当前源码树以仓库为准；包说明见 [packages.md](./packages.md)。
 
 ---
 

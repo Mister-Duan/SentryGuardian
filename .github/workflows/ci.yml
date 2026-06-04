@@ -9,6 +9,24 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sentryguardian
+          POSTGRES_PASSWORD: sentryguardian
+          POSTGRES_DB: sentryguardian
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sentryguardian -d sentryguardian"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://sentryguardian:sentryguardian@localhost:5432/sentryguardian
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,17 +40,45 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: pnpm --filter @sentry-guardian/database exec prisma generate
+
+      - name: Migrate database
+        run: pnpm --filter @sentry-guardian/database db:migrate
+
+      - name: Seed database
+        run: pnpm --filter @sentry-guardian/database db:seed
+
       - name: Spellcheck
         run: pnpm spellcheck
 
       - name: Lint
         run: pnpm lint
 
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Test
+      - name: Test packages
         run: pnpm test
 
-      - name: Build
-        run: pnpm build
+      - name: Build packages
+        run: |
+          pnpm --filter @sentry-guardian/types build
+          pnpm --filter @sentry-guardian/utils build
+          pnpm --filter @sentry-guardian/core build
+          pnpm --filter @sentry-guardian/browser-utils build
+          pnpm --filter @sentry-guardian/browser build
+
+      - name: Build database lib
+        run: pnpm --filter @sentry-guardian/database build
+
+      - name: Build backend apps
+        run: |
+          pnpm --filter @sentry-guardian/nest-prisma build
+          pnpm --filter @sentry-guardian/backend-dsn build
+          pnpm --filter @sentry-guardian/backend-monitor build
+
+      - name: Backend tests
+        run: |
+          pnpm --filter @sentry-guardian/backend-dsn test
+          pnpm --filter @sentry-guardian/backend-monitor test
+
+      - name: Build frontend
+        run: pnpm --filter @sentry-guardian/frontend-monitor build

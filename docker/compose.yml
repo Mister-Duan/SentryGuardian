@@ -1,0 +1,26 @@
+# Lite stack: PostgreSQL for local dev (MVP Phase 5+).
+# Lite 本地开发：PostgreSQL（MVP Phase 5 起）。
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sentryguardian
+      POSTGRES_PASSWORD: sentryguardian
+      POSTGRES_DB: sentryguardian
+    ports:
+      - '5432:5432'
+    volumes:
+      - sentryguardian_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sentryguardian -d sentryguardian']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Run backends locally: pnpm --filter @sentry-guardian/backend-dsn dev (3001)
+  # and pnpm --filter @sentry-guardian/backend-monitor dev (3002)
+
+volumes:
+  sentryguardian_pgdata:

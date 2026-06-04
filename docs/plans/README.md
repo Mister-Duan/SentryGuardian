@@ -8,6 +8,8 @@ SentryGuardian MVP 的分步实施文档。架构背景见 [architecture.md](../
 |------|------|
 | [mvp-implementation.md](./mvp-implementation.md) | **主清单**：步骤 checkbox、当前步骤、变更日志 |
 | [decisions.md](./decisions.md) | 架构决策记录（ADR） |
+| [../packages.md](../packages.md) | 已实现 npm 包 |
+| [../development.md](../development.md) | 本地构建与测试命令 |
 
 ## 如何阅读进度
 

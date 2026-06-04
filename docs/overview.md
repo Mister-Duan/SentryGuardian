@@ -124,17 +124,25 @@ AI 开发须完整执行 [delivery-checklist.md](../ai-guide/delivery-checklist.
 
 ## 当前状态
 
-- [x] 仓库初始化、AI 协作规范、项目介绍文档
-- [x] 技术栈与 Monorepo 目录结构定稿（见 [architecture.md](./architecture.md) 草稿）
-- [ ] 前端 SDK 最小上报（JS Error）
-- [ ] 接收 API 与事件存储
-- [ ] Issue 指纹聚合
-- [ ] 监控控制台 MVP
-- [ ] Docker Compose 单机部署方案
-- [ ] 基础告警（Webhook）
+与 [plans/mvp-implementation.md](./plans/mvp-implementation.md) 一致（MVP Phase 0～10 已完成）：
+
+| 阶段 | 状态 |
+|------|------|
+| 工程底座、文档与 AI 规范 | 已完成 |
+| SDK：`types` / `utils` / `core` | 已完成 |
+| SDK：`browser`（真实上报） | **已完成** |
+| 后端 ingest / Issue 聚合 | **已完成** |
+| 监控控制台 | **已完成** |
+| Docker Compose 单机部署 | **已完成**（Postgres；后端/前端本地 `pnpm dev`） |
 
 ## 相关文档
 
+- [getting-started.md](./getting-started.md) — 入门指南
+- [configuration.md](./configuration.md) — 配置参考
+- [learn/README.md](./learn/README.md) — 学习路径
 - [README.md](../README.md) — 仓库首页
-- [architecture.md](./architecture.md) — 系统架构、Monorepo 与协议草案
+- [architecture.md](./architecture.md) — 系统架构、Monorepo 与协议
+- [packages.md](./packages.md) — 已实现包
+- [development.md](./development.md) — 贡献者开发
+- [plans/mvp-implementation.md](./plans/mvp-implementation.md) — MVP 实施清单
 - [AGENTS.md](../AGENTS.md) — AI 协作规范

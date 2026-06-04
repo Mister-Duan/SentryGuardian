@@ -38,3 +38,9 @@ pnpm --filter @sentry-guardian/utils test
 ```
 
 公开函数须 **中英文双语** JSDoc，且包含 **Input/Output `@example`**，见 [docs/ai-guide/doc-comments.md](../../docs/ai-guide/doc-comments.md)。
+
+## 相关包
+
+- 上游：[@sentry-guardian/types](../types/README.md)
+- 下游：[@sentry-guardian/core](../core/README.md)
+- 文档：[packages.md](../../docs/packages.md) · [architecture §5.2](../../docs/architecture.md)

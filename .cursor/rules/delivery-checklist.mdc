@@ -16,7 +16,7 @@ alwaysApply: true
 - 功能正确性、边界与错误路径
 - 与周边代码风格、命名、目录约定一致
 - 无密钥、无无关重构、无临时调试代码
-- 公开导出具备双语 JSDoc；函数含 Input/Output `@example`（见 `docs/ai-guide/doc-comments.md`）
+- 公开导出：用途/作用 + 双语 JSDoc；函数含 Input/Output `@example`；类型每个字段有用途说明；改 API 同步更新（见 `docs/ai-guide/doc-comments.md`）
 - 对话中附简要审核结论（通过项 / 已修复 / 已知限制）
 
 ## ② 测试
