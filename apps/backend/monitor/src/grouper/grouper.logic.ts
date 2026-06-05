@@ -48,6 +48,22 @@ export function eventFingerprint(event: ErrorEvent): string {
 /**
  * Pick culprit string from top in-app frame.
  * 从栈顶应用帧提取 culprit。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * eventCulprit({
+ *   exception: {
+ *     values: [{
+ *       type: 'Error',
+ *       value: 'x',
+ *       stacktrace: { frames: [{ filename: 'app.js', lineno: 10, in_app: true }] },
+ *     }],
+ *   },
+ * })
+ * // Output / 输出
+ * 'app.js:10'
+ * ```
  */
 export function eventCulprit(event: ErrorEvent): string | undefined {
   const frames = event.exception?.values?.[0]?.stacktrace?.frames ?? [];

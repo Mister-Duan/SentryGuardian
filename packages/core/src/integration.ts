@@ -3,10 +3,23 @@ import type { Client } from './client.js';
 /**
  * SDK integration plugin interface.
  * SDK 集成插件接口。
+ *
+ * @example
+ * ```ts
+ * // Sample / 示例
+ * const integration: Integration = {
+ *   name: 'MyIntegration',
+ *   setupOnce: () => {},
+ *   setup: (client) => client.addBeforeSend((e) => e),
+ * };
+ * ```
  */
 export interface Integration {
+  /** Unique integration name; duplicates in the list are deduped by name. 唯一集成名；列表中同名项会去重。 */
   name: string;
+  /** Run once per process before any client setup (global hooks). 每个进程仅运行一次的全局钩子（任意 Client 之前）。 */
   setupOnce?: () => void;
+  /** Run per client instance to register handlers or beforeSend. 每个 Client 实例上注册处理器或 beforeSend。 */
   setup?: (client: Client) => void;
 }
 
@@ -47,6 +60,14 @@ export function getIntegration(name: string): Integration | undefined {
 /**
  * Run setupOnce/setup for each integration on a client.
  * 在 Client 上初始化各集成的 setupOnce/setup。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * setupIntegrations(client, [dedupeIntegration()])
+ * // Output / 输出
+ * undefined
+ * ```
  */
 export function setupIntegrations(client: Client, integrations: Integration[]): void {
   for (const integration of integrations) {

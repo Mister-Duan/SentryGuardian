@@ -23,6 +23,19 @@ export function generateEventId(): string {
 }
 
 /**
+ * Resolved parts of a parsed ingest DSN.
+ * 解析后的 ingest DSN 组成部分。
+ */
+export interface ParsedDsn {
+  /** Public key segment used for ingest authentication headers. 用于 ingest 鉴权头的 public key 段。 */
+  publicKey: string;
+  /** Project slug/id embedded in the DSN path. DSN 路径中的项目 slug/id。 */
+  projectId: string;
+  /** Full envelope POST URL derived from scheme, host, and project. 由协议、主机与项目推导的 Envelope POST URL。 */
+  envelopeUrl: string;
+}
+
+/**
  * Resolve ingest URL scheme for a DSN host (loopback always uses HTTP).
  * 根据 DSN 主机解析上报协议（回环地址强制 HTTP）。
  */
@@ -46,11 +59,7 @@ function ingestScheme(host: string, scheme: 'http' | 'https'): 'http' | 'https' 
  * { publicKey: 'publicKey', projectId: 'my-project', envelopeUrl: 'http://localhost:3001/api/my-project/envelope/' }
  * ```
  */
-export function parseDsn(dsn: string): {
-  publicKey: string;
-  projectId: string;
-  envelopeUrl: string;
-} {
+export function parseDsn(dsn: string): ParsedDsn {
   const match = dsn.match(/^(https?):\/\/([^@]+)@([^/]+)\/api\/([^/]+)/);
   if (!match) {
     throw new Error(`Invalid DSN: ${dsn}`);

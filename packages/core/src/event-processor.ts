@@ -10,6 +10,20 @@ export type BeforeSendFn = (event: ErrorEvent) => ErrorEvent | null;
 export class EventProcessor {
   private processors: BeforeSendFn[] = [];
 
+  /**
+   * Append a beforeSend processor to the chain.
+   * 向链尾追加 beforeSend 处理器。
+   *
+   * @example
+   * ```ts
+   * // Input / 输入
+   * const p = new EventProcessor();
+   * p.add((e) => e);
+   * p.process(event)?.event_id
+   * // Output / 输出
+   * event.event_id
+   * ```
+   */
   add(processor: BeforeSendFn): void {
     this.processors.push(processor);
   }

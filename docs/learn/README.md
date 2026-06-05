@@ -10,7 +10,8 @@
 | **运维 / 自托管** | 部署一套 Lite 环境 | [入门](../getting-started.md) → [自托管](./self-hosting.md) → [配置：环境变量](../configuration.md#环境变量) |
 | **后端开发** | 理解 ingest 与聚合 | [核心概念](./concepts.md) → [数据流](./data-flow.md) → [architecture.md](../architecture.md) |
 | **产品 / 测试** | 用控制台排障 | [入门](../getting-started.md) → [控制台指南](./console-guide.md) |
-| **贡献者** | 改 Monorepo 代码 | [development.md](../development.md) → [architecture.md](../architecture.md) → [packages.md](../packages.md) |
+| **贡献者** | 改 Monorepo 代码 | [packages 源码入门](./packages-source-guide.md) → [development.md](../development.md) → [architecture.md](../architecture.md) |
+| **读 SDK 源码** | 看懂 packages 流程与字段 | [packages 源码入门](./packages-source-guide.md) → [data-flow.md](./data-flow.md) |
 
 ## 推荐学习顺序（约 2～3 小时）
 
@@ -33,12 +34,15 @@
 | [sdk-guide.md](./sdk-guide.md) | 浏览器 SDK 使用详解 |
 | [console-guide.md](./console-guide.md) | 监控控制台与 REST API |
 | [self-hosting.md](./self-hosting.md) | Lite 部署与运维 |
+| [packages-source-guide.md](./packages-source-guide.md) | **packages 目录**：包依赖、数据流、字段谁填谁用、阅读顺序 |
 
 ## 与 Sentry 的关系
 
 SentryGuardian **借鉴** Sentry 的 DSN、Envelope、Issue 等产品概念，但是**独立实现**的轻量自托管方案，API 与配置项并不与 Sentry SaaS 兼容。若你熟悉 Sentry，可对照 [concepts.md](./concepts.md) 中的「对照表」快速迁移心智模型。
 
 ## 源码入口（阅读代码时）
+
+**建议从** [packages-source-guide.md](./packages-source-guide.md) **开始**（含流程图、字段表、文件导读）。
 
 | 主题 | 路径 |
 |------|------|

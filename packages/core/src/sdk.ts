@@ -2,9 +2,24 @@ import { Client, type ClientOptions } from './client.js';
 
 let activeClient: Client | undefined;
 
-/** Options for {@link init}. {@link init} 的配置项。 */
+/**
+ * Options for {@link init} in the core SDK.
+ * 核心 SDK {@link init} 的配置项。
+ *
+ * @example
+ * ```ts
+ * // Sample / 示例
+ * const options: InitOptions = {
+ *   dsn: 'http://publicKey@localhost:3001/api/demo',
+ *   sdkName: 'my-app',
+ *   sdkVersion: '1.0.0',
+ * };
+ * ```
+ */
 export interface InitOptions extends Omit<ClientOptions, 'sdk'> {
+  /** Override default SDK name in events. 覆盖事件中默认的 SDK 名称。 */
   sdkName?: string;
+  /** Override default SDK version in events. 覆盖事件中默认的 SDK 版本。 */
   sdkVersion?: string;
 }
 
@@ -51,6 +66,14 @@ export function getClient(): Client | undefined {
 /**
  * Capture an exception on the active client.
  * 在活跃 Client 上捕获异常。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * captureException(new Error('boom'))
+ * // Output / 输出（event_id 或 undefined）
+ * 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+ * ```
  */
 export function captureException(error: unknown): string | undefined {
   return activeClient?.captureException(error);
@@ -59,6 +82,14 @@ export function captureException(error: unknown): string | undefined {
 /**
  * Capture a message on the active client.
  * 在活跃 Client 上捕获消息。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * captureMessage('hello', 'info')
+ * // Output / 输出
+ * 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+ * ```
  */
 export function captureMessage(message: string, level?: import('@sentry-guardian/types').EventLevel): string | undefined {
   return activeClient?.captureMessage(message, level);
@@ -67,6 +98,14 @@ export function captureMessage(message: string, level?: import('@sentry-guardian
 /**
  * Flush the active client transport.
  * Flush 活跃 Client 的 Transport。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * await flush(2000)
+ * // Output / 输出
+ * true
+ * ```
  */
 export async function flush(timeout?: number): Promise<boolean> {
   return (await activeClient?.flush(timeout)) ?? true;
@@ -75,6 +114,14 @@ export async function flush(timeout?: number): Promise<boolean> {
 /**
  * Close the active client.
  * 关闭活跃 Client。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * await close(2000)
+ * // Output / 输出
+ * true
+ * ```
  */
 export async function close(timeout?: number): Promise<boolean> {
   const result = (await activeClient?.close(timeout)) ?? true;

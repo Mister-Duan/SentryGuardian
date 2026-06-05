@@ -40,12 +40,29 @@ export class BufferTransport implements Transport {
   private sending = false;
   private closed = false;
 
+  /**
+   * @param inner - Underlying transport that performs HTTP (or mock) sends. 执行实际 HTTP（或 mock）发送的底层 Transport。
+   * @param maxRetries - Max attempts per envelope before drop. 每条 Envelope 丢弃前的最大重试次数。
+   * @param retryDelayMs - Delay between non-429 retries. 非 429 重试之间的延迟（毫秒）。
+   */
   constructor(
     private inner: Transport,
     private maxRetries = DEFAULT_MAX_RETRIES,
     private retryDelayMs = DEFAULT_RETRY_DELAY_MS,
   ) {}
 
+  /**
+   * Number of envelopes waiting in the buffer.
+   * 缓冲区内待发送 Envelope 数量。
+   *
+   * @example
+   * ```ts
+   * // Input / 输入
+   * new BufferTransport(new MockTransport({ url: 'x' })).getPendingCount()
+   * // Output / 输出
+   * 0
+   * ```
+   */
   getPendingCount(): number {
     return this.buffer.length;
   }

@@ -10,18 +10,43 @@ import { MockTransport, type Transport } from './transports/base.js';
 
 const DEDUPE_WINDOW_MS = 2000;
 
-/** Client configuration options. Client 配置项。 */
+/**
+ * Client configuration options.
+ * Client 配置项。
+ *
+ * @example
+ * ```ts
+ * // Sample / 示例
+ * const options: ClientOptions = {
+ *   dsn: 'http://publicKey@localhost:3001/api/demo',
+ *   environment: 'production',
+ *   sampleRate: 1,
+ *   sdk: { name: 'sentry-guardian.javascript', version: '0.1.0' },
+ * };
+ * ```
+ */
 export interface ClientOptions {
+  /** Ingest DSN for this project. 本项目的 ingest DSN。 */
   dsn: string;
+  /** Deployment environment tag on events. 事件上的部署环境标签。 */
   environment?: string;
+  /** Release version tag on events. 事件上的发布版本标签。 */
   release?: string;
+  /** Fraction of events to send (`0`–`1`); default `1`. 发送采样比例（`0`–`1`），默认 `1`。 */
   sampleRate?: number;
+  /** When true, include email/IP in user context. 为 true 时在用户上下文中包含邮箱/IP。 */
   sendDefaultPii?: boolean;
+  /** Max breadcrumbs kept on scope before oldest are dropped. Scope 保留的面包屑上限，超出则丢弃最旧。 */
   maxBreadcrumbs?: number;
+  /** Message substrings or regexes that drop matching errors. 匹配则丢弃异常的消息子串或正则。 */
   ignoreErrors?: Array<string | RegExp>;
+  /** Hook to mutate or drop events before send. 发送前修改或丢弃事件的钩子。 */
   beforeSend?: BeforeSendFn;
+  /** Transport used to POST envelopes to ingest. 向 ingest POST Envelope 的 Transport。 */
   transport?: Transport;
+  /** Integrations run at client construction. Client 构造时运行的集成列表。 */
   integrations?: Integration[];
+  /** Reporting SDK metadata (required). 上报 SDK 元数据（必填）。 */
   sdk: SdkInfo;
 }
 
@@ -64,14 +89,17 @@ export class Client {
     setupIntegrations(this, integrations);
   }
 
+  /** Return frozen client configuration. 返回 Client 配置（只读视图）。 */
   getOptions(): Readonly<ClientOptions> {
     return this.options;
   }
 
+  /** Return the scope stack for context mutations. 返回用于修改上下文的 Scope 栈。 */
   getScope(): ScopeStack {
     return this.scopeStack;
   }
 
+  /** Return the active transport (may be buffered). 返回当前 Transport（可能为缓冲包装）。 */
   getTransport(): Transport {
     return this.transport;
   }
@@ -139,7 +167,6 @@ export class Client {
     if (this.closed || !this.shouldSample()) {
       return undefined;
     }
-
     const scope = this.scopeStack.get();
     const event: ErrorEvent = {
       event_id: generateEventId(),

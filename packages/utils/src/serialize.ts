@@ -12,6 +12,11 @@
  * '{"a":1,"self":"[Circular]"}'
  * ```
  */
+/**
+ * @param value - Value to stringify (objects, arrays, primitives). 待序列化的值。
+ * @param maxDepth - Max nesting depth before `[MaxDepth]`. 最大嵌套深度，超出标记为 `[MaxDepth]`。
+ * @param maxLength - Max output string length before truncation with `...`. 输出字符串最大长度，超出截断并加 `...`。
+ */
 export function safeSerialize(value: unknown, maxDepth = 3, maxLength = 1000): string {
   const result = serializeInternal(value, maxDepth, 0, new WeakMap());
   const json = JSON.stringify(result);

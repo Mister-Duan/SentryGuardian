@@ -18,6 +18,7 @@ SentryGuardian 项目文档索引。
 | [learn/concepts.md](./learn/concepts.md) | Event、Issue、DSN、Envelope |
 | [learn/data-flow.md](./learn/data-flow.md) | 端到端数据流与幂等 |
 | [learn/sdk-guide.md](./learn/sdk-guide.md) | 浏览器 SDK 接入详解 |
+| [learn/packages-source-guide.md](./learn/packages-source-guide.md) | **packages 源码入门**（流程、字段、阅读顺序） |
 | [learn/console-guide.md](./learn/console-guide.md) | 监控控制台与 API |
 | [learn/self-hosting.md](./learn/self-hosting.md) | Lite 自托管部署 |
 

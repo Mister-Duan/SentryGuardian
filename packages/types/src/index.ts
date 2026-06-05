@@ -9,6 +9,9 @@ export type { StackFrame } from './stack.js';
 export type {
   ErrorEvent,
   EventLevel,
+  ExceptionData,
+  ExceptionMechanism,
+  ExceptionStacktrace,
   ExceptionValue,
   Platform,
   RequestContext,
