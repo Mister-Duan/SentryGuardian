@@ -29,12 +29,38 @@ export type {
 } from './envelope.js';
 export type { Issue, IssueStatus } from './issue.js';
 export type {
+  EventDetailResponse,
+  EventSummary,
+  IssueEventListQuery,
+  IssueEventListResponse,
+} from './event-api.js';
+export type {
+  IssueTrendResponse,
+  ReleaseCompareResponse,
+  ReleaseStats,
+  TransactionEvent,
+  TransactionListResponse,
+  TransactionSummary,
+  TrendBucket,
+} from './performance.js';
+export type {
+  AlertRuleRequest,
+  AlertRuleResponse,
+  AlertTrigger,
+  CreateIssueCommentRequest,
   CreateProjectRequest,
+  CreateReleaseRequest,
+  IssueCommentResponse,
   IssueDetailResponse,
   IssueListQuery,
   IssueListResponse,
   LoginRequest,
   LoginResponse,
   ProjectResponse,
+  ReleaseResponse,
+  RotateKeyResponse,
+  SetupRequest,
+  SetupResponse,
+  SetupStatusResponse,
   UpdateIssueStatusRequest,
 } from './api.js';

@@ -60,9 +60,9 @@ BrowserClient → BufferTransport → FetchTransport → ingest
 
 ## 阶段 3：ingest（dsn）
 
-`POST /api/:projectId/envelope`：
+`POST /api/sentry/:projectId/envelope`：
 
-1. **DsnAuthGuard**：URL 中的 `projectId` 必须存在于 `projects` 表
+1. **项目校验**：`EnvelopeService.ingest` 校验 URL 中的 `projectId` 必须存在于 `projects` 表，否则 `401`
 2. **大小限制**：超过 `MAX_ENVELOPE_BYTES` → `413`
 3. **解析**：`parseEnvelope` 行式格式
 4. **脱敏**：`scrubObject` 过滤 password、token 等键
@@ -92,10 +92,15 @@ BrowserClient → BufferTransport → FetchTransport → ingest
 
 ## 阶段 5：控制台查询
 
-1. 用户 `POST /api/auth/login` 获得 JWT
-2. `GET /api/issues?project_id=...` 分页列表
-3. `GET /api/issues/:id` 详情 + 最近一条 `latest_event`
-4. `PATCH /api/issues/:id` 修改 `status`
+1. 用户 `POST /api/auth/login` 获得 JWT（或空库走 `/api/setup` 首次引导）
+2. `GET /api/issues?project_id=...&search=...` 分页列表；`GET /api/projects/:id/trends` 趋势
+3. `GET /api/issues/:id` 详情；`symbolicator` 按 `release` 匹配 artifact 符号化堆栈
+4. `GET /api/issues/:id/events` 事件历史；`GET /api/events/:id` 单条详情
+5. `PATCH /api/issues/:id` 修改 `status`；`POST /api/issues/:id/comments` 评论
+
+Release / Source Map：`POST /api/projects/:id/releases` + artifact 上传 → 影响阶段 5 堆栈展示。
+
+告警：Grouper 创建新 Issue 时 `alerter.onNewIssue`；维护任务每小时扫描 `error_rate` 规则。
 
 前端开发时 Vite 将 `/api` 代理到 `localhost:3002`。
 
@@ -116,8 +121,9 @@ SDK dedupe（2s 内相同 type|message）
 | 阶段 | 失败 | 用户可见影响 |
 |------|------|----------------|
 | SDK | 无网络 | 事件可能丢失（MVP 无 offline 队列） |
-| ingest | 401 | 鉴权失败，需检查 DSN |
+| ingest | 401 | 未知 projectId，需检查 DSN |
 | ingest | 413 | Envelope 过大 |
+| ingest | 429 | 超过项目每分钟限流；SDK 读 `Retry-After` |
 | Grouper | DB 断开 | Issue 不更新，events 堆积未聚合 |
 | 控制台 | JWT 过期 | 需重新登录 |
 

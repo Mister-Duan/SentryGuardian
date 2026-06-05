@@ -245,9 +245,9 @@ Vue 框架适配，**不是**独立 SDK，通过 Integration 挂到 `browser`。
 - 可选：`piniaIntegration`（状态快照，P2）
 - 必须在 `app.mount()` **之前** 调用 `Sentry.init()`
 
-### 4.7 预留：`packages/react`（未实现）
+### 4.7 `packages/react`（不实现）
 
-Error Boundary + `reactIntegration`，目录规划保留，首期不实现。
+按用户决策不开发 React 专用包；React 应用使用 `@sentry-guardian/browser` 并在 Error Boundary 中 `captureException`。
 
 ---
 
@@ -260,7 +260,7 @@ Error Boundary + `reactIntegration`，目录规划保留，首期不实现。
 | 职责 | 说明 |
 |------|------|
 | 接收 Envelope | `POST /api/sentry/{projectId}/envelope/` |
-| DSN 鉴权 | 校验 public key + project，拒绝非法/过期 Key |
+| DSN 鉴权 | 校验 URL 中 `projectId` 存在；按项目 `rate_limit_per_minute` 限流 |
 | Payload 校验 | JSON schema、大小上限、必填字段 |
 | 限流 | 按 project / IP；返回 `429` + `Retry-After` |
 | 脱敏 | 服务端 scrubbing（cookie、authorization 等敏感字段） |

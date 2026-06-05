@@ -7,7 +7,7 @@
 | 文件 | 用途 |
 |------|------|
 | [.env.example](../.env.example) | 根目录环境变量模板（复制为 `.env`） |
-| `docker/compose.yml` | 本地 PostgreSQL |
+| `docker/compose.yml` | 本地 PostgreSQL；或全栈（postgres + migrate + dsn + monitor + frontend） |
 | `apps/frontend/monitor/.env`（可选） | 前端 `VITE_*`（也可用根 `.env` + Vite 加载） |
 | `examples/vanilla/.env`（可选） | 示例页 `VITE_DSN` |
 
@@ -41,9 +41,11 @@ Prisma 与两个 Nest 应用共用此变量。
 | `CORS_ORIGIN` | 否 | `true`（允许全部） | CORS 来源；生产建议设为前端域名 |
 | `MAX_ENVELOPE_BYTES` | 否 | `1048576`（1MB） | 单条 Envelope 请求体上限 |
 
-ingest 鉴权：DSN 路径中的 `{projectId}` 须对应 `projects` 表中已存在项目（`POST /api/sentry/{projectId}/envelope/`）。
+ingest 鉴权：`EnvelopeService.ingest` 校验 URL 中 `{projectId}` 存在于 `projects` 表，否则 `401`。
 
-### backend/monitor（API + Grouper，默认端口 3002）
+ingest 限流：按项目 `rate_limit_per_minute`（默认 **100**/分钟，存于 DB）；超限返回 `429` + `Retry-After: 60`。
+
+### backend/monitor（API + Grouper + 告警 + 维护，默认端口 3002）
 
 | 变量 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
@@ -51,6 +53,10 @@ ingest 鉴权：DSN 路径中的 `{projectId}` 须对应 `projects` 表中已存
 | `JWT_SECRET` | 生产必填 | `dev-secret-change-me` | JWT 签名密钥；**生产必须更换** |
 | `CORS_ORIGIN` | 否 | `true` | 控制台跨域来源 |
 | `GROUPER_POLL_MS` | 否 | `3000` | 未聚合 Event 轮询间隔（毫秒） |
+| `EVENT_RETENTION_DAYS` | 否 | `30` | 超过该天数的 `events` 行由维护任务删除 |
+| `SEED_INGEST_HOST` | 否 | `localhost:3001` | API 返回 DSN 时使用的 ingest 主机 |
+| `SMTP_HOST` | 否 | — | 配置后告警可尝试邮件（当前为日志桩） |
+| `SMTP_PORT` | 否 | `587` | SMTP 端口 |
 
 ### frontend/monitor（Vite）
 
@@ -116,6 +122,15 @@ ingest 通过 URL 中的 `projectId` 识别项目；`projects.public_key` 仍保
 | monitor | 3002 | `http://localhost:3002/api` |
 | 控制台 | 5173 | `http://localhost:5173` |
 | vanilla 示例 | 5174 | `http://localhost:5174` |
+| vue-vite 示例 | 5175 | `http://localhost:5175`（若本地启动） |
+
+### 脚本 `upload-sourcemaps.mjs`
+
+| 变量 | 必填 | 默认值 | 说明 |
+|------|------|--------|------|
+| `MONITOR_API_URL` | 否 | `http://localhost:3002` | monitor API 根地址 |
+
+CLI 参数：`--project-id`、`--token`（JWT）、`--release`、`--dir`（默认 `./dist`）。
 
 ---
 
@@ -134,7 +149,7 @@ ingest 通过 URL 中的 `projectId` 识别项目；`projects.public_key` 仍保
 | 选项 | 类型 | 默认 | 说明 |
 |------|------|------|------|
 | `environment` | `string` | `'production'` | 环境标签，便于控制台筛选 |
-| `release` | `string` | — | 版本号（后续关联 Release / Source Map） |
+| `release` | `string` | — | 版本号；与 Release / Source Map 符号化关联 |
 | `sampleRate` | `number` | `1` | 错误采样率 `0`～`1` |
 | `sendDefaultPii` | `false` | `boolean` | 为 `true` 时上报完整 `user`；否则仅 `user.id` |
 | `maxBreadcrumbs` | `number` | `100` | 单事件附带的面包屑上限 |
@@ -151,6 +166,30 @@ ingest 通过 URL 中的 `projectId` 识别项目；`projects.public_key` 仍保
 | `defaultIntegrations` | `boolean` | `true` | 为 `false` 时不加载 P0 默认集成 |
 | `integrations` | `Integration[]` | `[]` | 额外集成（按 `name` 与默认去重） |
 | `transport` | `Transport` | 内置 Fetch+Buffer | 自定义上报实现 |
+| `tunnel` | `string` | — | 同源代理 URL；上报发往 tunnel 而非 DSN 的 `envelopeUrl`（绕过广告拦截） |
+
+### 可选性能集成（手动加入 `integrations`）
+
+| 集成 | 导入 | 作用 |
+|------|------|------|
+| `Performance` | `performanceIntegration` | LCP、CLS、TTFB → `TRANSACTION` 事件 |
+| `BrowserTracing` | `browserTracingIntegration` | 路由导航、慢 fetch（可设 `slowThresholdMs`） |
+
+```typescript
+import {
+  init,
+  performanceIntegration,
+  browserTracingIntegration,
+} from '@sentry-guardian/browser';
+
+init({
+  dsn: '...',
+  release: 'my-app@1.2.0',
+  integrations: [performanceIntegration(), browserTracingIntegration()],
+});
+```
+
+事务在控制台 **性能** 页与 `GET /api/projects/:id/transactions` 查看。
 
 ### 默认集成（`defaultIntegrations: true`）
 
@@ -191,6 +230,37 @@ Sentry.init({
 | `flush(timeout?)` | 等待发送队列清空 |
 | `close(timeout?)` | 关闭并 flush |
 | `getClient()` | 获取当前 `BrowserClient` |
+| `captureTransaction(ctx)` | 手动上报性能事务（integration 内部使用） |
+
+---
+
+## SDK：`@sentry-guardian/vue`
+
+Vue 3 适配包，re-export `init` / `getClient`，并提供：
+
+| API | 说明 |
+|-----|------|
+| `vueIntegration(app)` | 挂接 `app.config.errorHandler` |
+| `vueRouterIntegration(router)` | 路由切换写入 breadcrumb |
+
+须在 `app.mount()` **之前** `init`。示例见 `examples/vue-vite`、`packages/vue/README.md`。
+
+```typescript
+import { createApp } from 'vue';
+import { init, vueIntegration, vueRouterIntegration } from '@sentry-guardian/vue';
+
+init({
+  dsn: import.meta.env.VITE_DSN,
+  release: 'my-vue-app@1.0.0',
+  integrations: [vueRouterIntegration(router)],
+});
+
+const app = createApp(App);
+vueIntegration(app);
+app.use(router).mount('#app');
+```
+
+> **`packages/react`** 按项目决策不实现；React 应用可直接使用 `@sentry-guardian/browser`。
 
 ---
 
@@ -209,17 +279,58 @@ Sentry.init({
 
 ## 控制台 REST API（monitor）
 
-全局前缀：`/api`。除登录外均需 `Authorization: Bearer <token>`。
+全局前缀：`/api`。除 **登录**、**setup** 外均需 `Authorization: Bearer <token>`。
+
+### 认证与引导
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | `POST` | `/api/auth/login` | Body: `{ email, password }` → JWT |
-| `GET` | `/api/projects` | 项目列表（含 DSN 字符串） |
-| `GET` | `/api/issues` | Query: `project_id`, `status`, `page`, `page_size` |
-| `GET` | `/api/issues/:id` | Issue 详情 + `latest_event` |
-| `PATCH` | `/api/issues/:id` | Body: `{ status: 'resolved' \| 'ignored' \| 'unresolved' }` |
+| `GET` | `/api/setup/status` | `{ configured: boolean }` |
+| `POST` | `/api/setup` | 首次引导 Body: `SetupRequest` → DSN |
+| `GET` | `/api/health` | 健康检查 |
 
-类型定义：`packages/types/src/api.ts`。
+### 项目
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/api/projects` | 项目列表（含 DSN） |
+| `POST` | `/api/projects` | 创建项目 |
+| `POST` | `/api/projects/:id/rotate-key` | 轮换 public key，返回新 DSN |
+
+### Issue 与事件
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/api/issues` | Query: `project_id`, `status`, `search`, `environment`, `release`, `page`, `page_size` |
+| `GET` | `/api/issues/:id` | Issue 详情 + 符号化后的 `latest_event` |
+| `PATCH` | `/api/issues/:id` | Body: `{ status }` |
+| `GET` | `/api/issues/:id/events` | 事件历史分页 |
+| `GET` | `/api/events/:id` | 单事件详情 |
+| `GET` | `/api/issues/:issueId/comments` | 评论列表 |
+| `POST` | `/api/issues/:issueId/comments` | Body: `{ body }` |
+
+### Release 与统计
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/api/projects/:projectId/releases` | Release 列表 |
+| `POST` | `/api/projects/:projectId/releases` | Body: `{ version }` |
+| `POST` | `/api/projects/:projectId/releases/:releaseId/artifacts` | multipart 字段 `file`（`.map`） |
+| `GET` | `/api/projects/:projectId/trends` | Query: `hours`（默认 24） |
+| `GET` | `/api/projects/:projectId/releases/compare` | 各 Release 错误数对比 |
+| `GET` | `/api/projects/:projectId/transactions` | 性能事务分页 |
+
+### 告警
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/api/projects/:projectId/alerts` | 规则列表 |
+| `POST` | `/api/projects/:projectId/alerts` | 创建规则 |
+| `PATCH` | `/api/projects/:projectId/alerts/:id` | 更新规则 |
+| `DELETE` | `/api/projects/:projectId/alerts/:id` | 删除规则 |
+
+类型定义：`packages/types/src/api.ts`、`event-api.ts`、`performance.ts`。
 
 ---
 
@@ -232,5 +343,8 @@ Sentry.init({
 - [ ] 修改默认管理员密码或禁用 seed 账号
 - [ ] 配置 `VITE_API_URL` 指向 monitor 公网地址
 - [ ] 按需调大 `MAX_ENVELOPE_BYTES` 与数据库连接池
+- [ ] 设置 `EVENT_RETENTION_DAYS` 与磁盘容量匹配
+- [ ] 配置告警 Webhook；需要邮件时设置 `SMTP_*`
+- [ ] CI 中 `upload-sourcemaps.mjs` 上传 Source Map 并设置 SDK `release`
 
 更多部署说明：[learn/self-hosting.md](./learn/self-hosting.md)。

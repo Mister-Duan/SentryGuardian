@@ -23,8 +23,10 @@ export function Input({ className = '', ...props }: InputHTMLAttributes<HTMLInpu
   );
 }
 
-export function Card({ children }: { children: ReactNode }) {
+export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-6 shadow-sm">{children}</div>
+    <div className={`rounded-lg border border-zinc-800 bg-zinc-900/60 p-6 shadow-sm ${className}`}>
+      {children}
+    </div>
   );
 }

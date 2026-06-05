@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Post-MVP Phase 12～21: issue event history API, search/pagination, Source Map symbolicator, `@sentry-guardian/vue`, performance transactions, release compare, project CRUD, setup wizard, alerts (webhook), trends, comments, ingest rate limit, event retention, Docker full stack
+- `@sentry-guardian/vue`: Vue 3 `vueIntegration` + `vueRouterIntegration`; `examples/vue-vite`
+- `scripts/upload-sourcemaps.mjs` for CI source map upload
+- Console pages: Projects, Releases, Performance, Alerts; setup flow at `/setup`
+- Docs: updated `console-guide`, `self-hosting`, `configuration`, `sdk-guide`, `getting-started` for Post-MVP features
+- Console UX: readable stack traces and breadcrumbs on issue detail; status filter; DSN copy; auto-refresh
+
 ### Changed
 
+- DSN ingest: project validation in `EnvelopeService.ingest` (removed unused `DsnAuthGuard`); explicit `@Inject` on DSN Nest providers for Vitest compatibility
 - **BREAKING CHANGE:** DSN format is now `{scheme}://{host}/api/sentry/{projectId}` (no `publicKey@` in URL). Ingest route is `POST /api/sentry/{projectId}/envelope/`. `buildDsn(projectId, host)` signature changed.
 
 ### Added

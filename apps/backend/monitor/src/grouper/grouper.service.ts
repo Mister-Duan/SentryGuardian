@@ -1,10 +1,20 @@
 import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 import { PrismaService } from '@sentry-guardian/nest-prisma';
 import type { ErrorEvent } from '@sentry-guardian/types';
+import { AlerterService } from '../alerter/alerter.service.js';
 import { eventCulprit, eventFingerprint, eventTitle } from './grouper.logic.js';
 
 const BATCH_SIZE = 50;
 const POLL_MS = Number(process.env.GROUPER_POLL_MS ?? 3000);
+
+function tagsString(event: ErrorEvent): string | undefined {
+  if (!event.tags || !Object.keys(event.tags).length) {
+    return undefined;
+  }
+  return Object.entries(event.tags)
+    .map(([k, v]) => `${k}:${v}`)
+    .join(',');
+}
 
 /**
  * Poll unaggregated events and upsert issues.
@@ -15,7 +25,10 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(GrouperService.name);
   private timer: ReturnType<typeof setInterval> | undefined;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly alerter: AlerterService,
+  ) {}
 
   onApplicationBootstrap(): void {
     void this.processBatch();
@@ -28,21 +41,9 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
     }
   }
 
-  /**
-   * Process one batch of pending events.
-   * 处理一批待聚合事件。
-   *
-   * @example
-   * ```ts
-   * // Input / 输入
-   * await grouper.processBatch()
-   * // Output / 输出
-   * undefined
-   * ```
-   */
   async processBatch(): Promise<void> {
     const pending = await this.prisma.event.findMany({
-      where: { aggregatedAt: null },
+      where: { aggregatedAt: null, eventType: 'ERROR' },
       orderBy: { createdAt: 'asc' },
       take: BATCH_SIZE,
     });
@@ -54,6 +55,34 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
       const culprit = eventCulprit(event);
       const level = event.level ?? 'error';
       const seenAt = new Date(event.timestamp);
+      const environment = event.environment ?? null;
+      const release = event.release ?? null;
+      const tagLine = tagsString(event) ?? null;
+
+      const existing = await this.prisma.issue.findUnique({
+        where: {
+          projectId_fingerprint: {
+            projectId: row.projectId,
+            fingerprint,
+          },
+        },
+      });
+
+      const isNewIssue = !existing;
+
+      let userIncrement = 0;
+      if (event.user?.id) {
+        const prior = existing
+          ? await this.prisma.event.count({
+              where: {
+                issueId: existing.id,
+                NOT: { id: row.id },
+                payload: { path: ['user', 'id'], equals: event.user.id },
+              },
+            })
+          : 0;
+        userIncrement = prior === 0 ? 1 : 0;
+      }
 
       const issue = await this.prisma.issue.upsert({
         where: {
@@ -72,13 +101,20 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
           eventCount: 1,
           usersSeen: event.user?.id ? 1 : 0,
           culprit,
+          environment,
+          release,
+          tags: tagLine,
         },
         update: {
           title,
           level,
           lastSeen: seenAt,
           eventCount: { increment: 1 },
+          usersSeen: userIncrement ? { increment: userIncrement } : undefined,
           culprit: culprit ?? undefined,
+          environment: environment ?? undefined,
+          release: release ?? undefined,
+          tags: tagLine ?? undefined,
         },
       });
 
@@ -86,6 +122,10 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
         where: { id: row.id },
         data: { issueId: issue.id, aggregatedAt: new Date() },
       });
+
+      if (isNewIssue) {
+        await this.alerter.onNewIssue(issue.id, row.projectId);
+      }
     }
 
     if (pending.length > 0) {

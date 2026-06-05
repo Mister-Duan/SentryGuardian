@@ -1,4 +1,4 @@
-import type { Envelope, EnvelopeItem, ErrorEvent } from '@sentry-guardian/types';
+import type { Envelope, EnvelopeItem, ErrorEvent, TransactionEvent } from '@sentry-guardian/types';
 
 /**
  * Build an envelope containing one or more events.
@@ -20,6 +20,38 @@ export function createEnvelope(
     header: { type: 'event', content_type: 'application/json' },
     payload: event,
   }));
+
+  return {
+    header: {
+      sdk,
+      sent_at: new Date().toISOString(),
+    },
+    items,
+  };
+}
+
+/**
+ * Build an envelope containing a performance transaction.
+ * 构建包含性能事务的 Envelope。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * createTransactionEnvelope(tx, sdk).items[0].header.type
+ * // Output / 输出
+ * 'transaction'
+ * ```
+ */
+export function createTransactionEnvelope(
+  transaction: TransactionEvent,
+  sdk: { name: string; version: string },
+): Envelope {
+  const items: EnvelopeItem[] = [
+    {
+      header: { type: 'transaction', content_type: 'application/json' },
+      payload: transaction,
+    },
+  ];
 
   return {
     header: {

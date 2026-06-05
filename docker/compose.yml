@@ -1,5 +1,5 @@
-# Lite stack: PostgreSQL for local dev (MVP Phase 5+).
-# Lite 本地开发：PostgreSQL（MVP Phase 5 起）。
+# Lite stack: PostgreSQL + backend + frontend (Post-MVP full stack).
+# Lite 全栈：PostgreSQL + 后端 + 前端。
 
 services:
   postgres:
@@ -19,8 +19,75 @@ services:
       timeout: 5s
       retries: 5
 
-  # Run backends locally: pnpm --filter @sentry-guardian/backend-dsn dev (3001)
-  # and pnpm --filter @sentry-guardian/backend-monitor dev (3002)
+  migrate:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ..:/app
+    environment:
+      DATABASE_URL: postgresql://sentryguardian:sentryguardian@postgres:5432/sentryguardian
+    command: sh -c "corepack enable && pnpm install && pnpm --filter @sentry-guardian/database exec prisma generate && pnpm --filter @sentry-guardian/database db:migrate"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  dsn:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ..:/app
+    environment:
+      DATABASE_URL: postgresql://sentryguardian:sentryguardian@postgres:5432/sentryguardian
+      DSN_PORT: 3001
+      CORS_ORIGIN: '*'
+    command: sh -c "corepack enable && pnpm install && pnpm --filter @sentry-guardian/backend-dsn build && pnpm --filter @sentry-guardian/backend-dsn start"
+    ports:
+      - '3001:3001'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  monitor:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ..:/app
+    environment:
+      DATABASE_URL: postgresql://sentryguardian:sentryguardian@postgres:5432/sentryguardian
+      MONITOR_PORT: 3002
+      JWT_SECRET: dev-secret-change-me
+      SEED_INGEST_HOST: localhost:3001
+      CORS_ORIGIN: '*'
+      EVENT_RETENTION_DAYS: 30
+    command: sh -c "corepack enable && pnpm install && pnpm --filter @sentry-guardian/backend-monitor build && pnpm --filter @sentry-guardian/backend-monitor start"
+    ports:
+      - '3002:3002'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ..:/app
+    environment:
+      VITE_API_URL: http://localhost:3002
+    command: sh -c "corepack enable && pnpm install && pnpm build && VITE_API_URL=http://localhost:3002 pnpm --filter @sentry-guardian/frontend-monitor build && pnpm --filter @sentry-guardian/frontend-monitor preview --host 0.0.0.0 --port 5173"
+    ports:
+      - '5173:5173'
+    depends_on:
+      - monitor
+
+  # Analytics profile (optional / Phase 20)
+  clickhouse:
+    profiles: [analytics]
+    image: clickhouse/clickhouse-server:24-alpine
+    ports:
+      - '8123:8123'
+    volumes:
+      - sentryguardian_chdata:/var/lib/clickhouse
 
 volumes:
   sentryguardian_pgdata:
+  sentryguardian_chdata:

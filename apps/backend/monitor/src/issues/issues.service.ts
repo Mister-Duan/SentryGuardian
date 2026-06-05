@@ -5,11 +5,15 @@ import type {
   ErrorEvent,
   Issue,
   IssueDetailResponse,
+  IssueEventListQuery,
+  IssueEventListResponse,
   IssueListQuery,
   IssueListResponse,
   IssueStatus,
   UpdateIssueStatusRequest,
 } from '@sentry-guardian/types';
+import { EventsService } from '../events/events.service.js';
+import { SymbolicatorService } from '../symbolicator/symbolicator.service.js';
 
 function toApiStatus(status: PrismaIssueStatus): IssueStatus {
   return status.toLowerCase() as IssueStatus;
@@ -27,6 +31,9 @@ function mapIssue(row: {
   eventCount: number;
   usersSeen: number;
   culprit: string | null;
+  environment: string | null;
+  release: string | null;
+  tags: string | null;
 }): Issue {
   return {
     id: row.id,
@@ -49,7 +56,11 @@ function mapIssue(row: {
  */
 @Injectable()
 export class IssuesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventsService: EventsService,
+    private readonly symbolicator: SymbolicatorService,
+  ) {}
 
   async list(query: IssueListQuery): Promise<IssueListResponse> {
     const page = query.page ?? 1;
@@ -58,6 +69,17 @@ export class IssuesService {
       ...(query.project_id ? { projectId: query.project_id } : {}),
       ...(query.status
         ? { status: query.status.toUpperCase() as PrismaIssueStatus }
+        : {}),
+      ...(query.environment ? { environment: query.environment } : {}),
+      ...(query.release ? { release: query.release } : {}),
+      ...(query.search
+        ? {
+            OR: [
+              { title: { contains: query.search, mode: 'insensitive' as const } },
+              { culprit: { contains: query.search, mode: 'insensitive' as const } },
+              { fingerprint: { contains: query.search, mode: 'insensitive' as const } },
+            ],
+          }
         : {}),
     };
 
@@ -79,6 +101,33 @@ export class IssuesService {
     };
   }
 
+  async listEvents(issueId: string, query: IssueEventListQuery): Promise<IssueEventListResponse> {
+    const issue = await this.prisma.issue.findUnique({ where: { id: issueId } });
+    if (!issue) {
+      throw new NotFoundException('Issue not found');
+    }
+    const page = query.page ?? 1;
+    const pageSize = Math.min(query.page_size ?? 20, 100);
+
+    const where = { issueId, eventType: 'ERROR' as const };
+    const [rows, total] = await Promise.all([
+      this.prisma.event.findMany({
+        where,
+        orderBy: { timestamp: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.event.count({ where }),
+    ]);
+
+    return {
+      items: rows.map((r) => this.eventsService.mapSummary(r)),
+      total,
+      page,
+      page_size: pageSize,
+    };
+  }
+
   async getById(id: string): Promise<IssueDetailResponse> {
     const issue = await this.prisma.issue.findUnique({ where: { id } });
     if (!issue) {
@@ -86,13 +135,21 @@ export class IssuesService {
     }
 
     const latest = await this.prisma.event.findFirst({
-      where: { issueId: id },
+      where: { issueId: id, eventType: 'ERROR' },
       orderBy: { timestamp: 'desc' },
     });
 
+    let latest_event: ErrorEvent | undefined;
+    if (latest) {
+      latest_event = await this.symbolicator.symbolicateEvent(
+        issue.projectId,
+        latest.payload as unknown as ErrorEvent,
+      );
+    }
+
     return {
       issue: mapIssue(issue),
-      latest_event: latest ? (latest.payload as unknown as ErrorEvent) : undefined,
+      latest_event,
     };
   }
 

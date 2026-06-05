@@ -133,7 +133,7 @@ SentryGuardian/
 - [x] frontend/monitor 控制台 MVP（Phase 8）
 - [x] 端到端示例与 `pnpm dev`（Phase 9）
 - [x] CI 分包构建 / Changesets（Phase 10）
-- [ ] 基础告警 Webhook（P2 能力，MVP 外）
+- [x] Post-MVP Phase 12～21（事件历史、Source Map、Vue 适配、性能、告警等；不含 `packages/react`）
 
 **MVP 闭环**：`browser` 捕获错误 → `dsn` 落库 → `monitor` 聚合 Issue → 控制台展示堆栈。
 

@@ -1,6 +1,6 @@
 # MVP 实施主清单
 
-> **当前步骤**：MVP Phase 0～10 **已完成**
+> **当前步骤**：MVP Phase 0～11 **已完成**；Post-MVP 见 [post-mvp-roadmap.md](./post-mvp-roadmap.md)
 >
 > 架构：[architecture.md](../architecture.md) · 决策：[decisions.md](./decisions.md)
 
@@ -53,6 +53,7 @@
 | 8     | frontend/monitor | P8-01～P8-10　 | **已完成** |
 | 9     | 端到端　　　　　 | P9-01～P9-06　 | **已完成** |
 | 10    | CI 收尾　　　　　| P10-01～P10-04 | **已完成** |
+| 11    | 控制台体验增强　 | P11-01～P11-04 | **已完成** |
 
 ---
 
@@ -143,7 +144,7 @@
 - [x] **P6-01** Nest 脚手架 + health
 - [x] **P6-02** /health、/ready
 - [x] **P6-03** EnvelopeModule
-- [x] **P6-04** DsnAuthGuard
+- [x] **P6-04** ingest 项目校验（MVP：`DsnAuthGuard`；Post-MVP 迁入 `EnvelopeService.ingest`）
 - [x] **P6-05** POST envelope
 - [x] **P6-06** event_id 幂等
 - [x] **P6-07** 大小限制 + scrubbing
@@ -204,6 +205,15 @@
 
 **Phase 10 验证**：推送后 GitHub Actions `quality` job 全绿
 
+## Phase 11 — 控制台体验增强
+
+- [x] **P11-01** Issue 详情可读堆栈 + 面包屑 + 上下文卡片
+- [x] **P11-02** Issue 列表状态筛选 + 中文状态标签
+- [x] **P11-03** 修复 DSN 显示（跟随选中项目）+ 复制按钮
+- [x] **P11-04** 列表手动/自动刷新 + `format-event` 单元测试
+
+**Phase 11 验证**：`pnpm --filter @sentry-guardian/frontend-monitor test && pnpm --filter @sentry-guardian/frontend-monitor build`
+
 ---
 
 ## 变更日志
@@ -222,6 +232,7 @@
 | 2026-06-03 | （规范） | 函数/字段调整须同步用途说明与 Input/Output 示例；AI 规则落地 |
 | 2026-06-03 | P5-01～P5-06 | `@sentry-guardian/database` Prisma、迁移、docker postgres、seed |
 | 2026-06-03 | P6-01～P10-04 | backend dsn/monitor、React 控制台、examples、CI+Changesets；MVP 闭环 |
+| 2026-06-05 | P11-01～P11-04 | 控制台可读堆栈/面包屑、状态筛选、DSN 复制与自动刷新 |
 
 ---
 

@@ -28,7 +28,8 @@ SentryGuardian 项目文档索引。
 |------|------|
 | [overview.md](./overview.md) | 项目简介、目标用户、路线图 |
 | [architecture.md](./architecture.md) | Monorepo、模块职责、协议与 MVP 边界 |
-| [plans/README.md](./plans/README.md) | MVP 实施计划与进度 |
+| [plans/README.md](./plans/README.md) | 实施计划索引 |
+| [plans/post-mvp-roadmap.md](./plans/post-mvp-roadmap.md) | Post-MVP Phase 12～21 进度 |
 | [packages.md](./packages.md) | npm 包状态与导出 |
 | [development.md](./development.md) | 贡献者：构建、测试、目录 |
 

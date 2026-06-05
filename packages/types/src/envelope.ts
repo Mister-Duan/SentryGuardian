@@ -7,7 +7,12 @@
  * - `client_report` — SDK self-telemetry. SDK 自监控报告。
  * - `attachment` — binary attachment. 二进制附件。
  */
-export type EnvelopeItemType = 'event' | 'session' | 'client_report' | 'attachment';
+export type EnvelopeItemType =
+  | 'event'
+  | 'transaction'
+  | 'session'
+  | 'client_report'
+  | 'attachment';
 
 /**
  * Top-level envelope metadata (first JSON line of the wire format).

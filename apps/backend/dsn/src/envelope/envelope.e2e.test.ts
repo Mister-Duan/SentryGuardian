@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { text } from 'express';
@@ -6,7 +7,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createEnvelope } from '@sentry-guardian/core';
 import { serializeEnvelope } from '@sentry-guardian/core';
 import type { ErrorEvent } from '@sentry-guardian/types';
-import { AppModule } from '../app.module.js';
+import { PrismaModule } from '@sentry-guardian/nest-prisma';
+import { EnvelopeModule } from './envelope.module.js';
 
 const hasDatabase = Boolean(process.env.DATABASE_URL);
 
@@ -16,7 +18,7 @@ describe.skipIf(!hasDatabase)('Envelope ingest (contract)', () => {
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [PrismaModule, EnvelopeModule],
     }).compile();
     app = moduleRef.createNestApplication();
     app.use(

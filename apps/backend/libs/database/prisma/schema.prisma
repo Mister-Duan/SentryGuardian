@@ -30,14 +30,14 @@ model Organization {
 /// Console user; credentials separate from DSN keys.
 /// 控制台用户；凭据与 DSN Key 分离。
 model User {
-  id           String   @id @default(cuid())
-  organizationId String @map("organization_id")
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
   /// Login email (unique per instance). 登录邮箱（实例内唯一）。
-  email        String   @unique
+  email          String   @unique
   /// bcrypt password hash. bcrypt 密码哈希。
-  passwordHash String   @map("password_hash")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  passwordHash   String   @map("password_hash")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -48,20 +48,26 @@ model User {
 /// Monitored application; owns ingest DSN and issues.
 /// 被监控的应用；持有 ingest DSN 与 Issue。
 model Project {
-  id             String   @id @default(cuid())
-  organizationId String   @map("organization_id")
+  id                 String   @id @default(cuid())
+  organizationId     String   @map("organization_id")
   /// Human-readable project name. 项目名称。
-  name           String
+  name               String
   /// URL-safe slug unique within the organization. 组织内唯一的 slug。
-  slug           String
+  slug               String
   /// Public key embedded in the DSN (ingest auth). DSN 中的 public key（ingest 鉴权）。
-  publicKey      String   @unique @map("public_key")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  publicKey          String   @unique @map("public_key")
+  /// CORS allowed origins; empty means allow all (dev). CORS 白名单。
+  allowedOrigins     String[] @default([]) @map("allowed_origins")
+  /// Max ingest requests per minute per project. 每项目每分钟 ingest 上限。
+  rateLimitPerMinute Int      @default(100) @map("rate_limit_per_minute")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   issues       Issue[]
   events       Event[]
+  releases     Release[]
+  alertRules   AlertRule[]
 
   @@unique([organizationId, slug])
   @@map("projects")
@@ -87,26 +93,37 @@ model Issue {
   usersSeen   Int         @default(0) @map("users_seen")
   /// Primary source location for UI. UI 展示的主要来源位置。
   culprit     String?
+  /// Latest event environment (denormalized). 最近事件环境。
+  environment String?
+  /// Latest event release (denormalized). 最近事件 release。
+  release     String?
+  /// Comma-separated tags rollup (denormalized). 标签汇总。
+  tags        String?
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  events  Event[]
+  project  Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  events   Event[]
+  comments IssueComment[]
 
   @@unique([projectId, fingerprint])
   @@index([projectId, status, lastSeen])
+  @@index([projectId, environment])
+  @@index([projectId, release])
   @@map("issues")
 }
 
-/// Raw ErrorEvent payload from the SDK (Lite: PostgreSQL JSONB).
-/// SDK 上报的原始 ErrorEvent（Lite：PostgreSQL JSONB）。
+/// Raw event payload from the SDK (Lite: PostgreSQL JSONB).
+/// SDK 上报的原始事件（Lite：PostgreSQL JSONB）。
 model Event {
   id           String    @id @default(cuid())
   projectId    String    @map("project_id")
   /// SDK-generated event_id for idempotent ingest. SDK 生成的 event_id（ingest 幂等）。
   eventId      String    @map("event_id")
   issueId      String?   @map("issue_id")
-  /// Full ErrorEvent JSON. 完整 ErrorEvent JSON。
+  /// Event kind: error or performance transaction. 事件类型。
+  eventType    EventType @default(ERROR) @map("event_type")
+  /// Full event JSON (ErrorEvent or TransactionEvent). 完整事件 JSON。
   payload      Json
   /// Event timestamp from the SDK. SDK 事件时间戳。
   timestamp    DateTime
@@ -119,8 +136,78 @@ model Event {
 
   @@unique([projectId, eventId])
   @@index([projectId, timestamp])
+  @@index([projectId, eventType, timestamp])
+  @@index([issueId, timestamp])
   @@index([aggregatedAt])
   @@map("events")
+}
+
+/// SDK release version for Source Map association.
+/// SDK Release 版本（关联 Source Map）。
+model Release {
+  id        String   @id @default(cuid())
+  projectId String   @map("project_id")
+  /// Release version string (matches SDK init release). Release 版本字符串。
+  version   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  artifacts Artifact[]
+
+  @@unique([projectId, version])
+  @@map("releases")
+}
+
+/// Source map artifact for a release.
+/// Release 下的 Source Map 制品。
+model Artifact {
+  id         String   @id @default(cuid())
+  releaseId  String   @map("release_id")
+  /// Original minified filename (e.g. app.js.map). 原始文件名。
+  name       String
+  /// Source map JSON content. Source map JSON 内容。
+  sourceMap  String   @map("source_map") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseId, name])
+  @@map("artifacts")
+}
+
+/// Alert notification rule (Phase 21).
+/// 告警通知规则。
+model AlertRule {
+  id         String        @id @default(cuid())
+  projectId  String        @map("project_id")
+  name       String
+  trigger    AlertTrigger
+  webhookUrl String?       @map("webhook_url")
+  emailTo    String?       @map("email_to")
+  enabled    Boolean       @default(true)
+  threshold  Int?
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, enabled])
+  @@map("alert_rules")
+}
+
+/// Issue activity comment.
+/// Issue 活动评论。
+model IssueComment {
+  id        String   @id @default(cuid())
+  issueId   String   @map("issue_id")
+  authorId  String   @map("author_id")
+  body      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([issueId, createdAt])
+  @@map("issue_comments")
 }
 
 /// Issue lifecycle status. Issue 生命周期状态。
@@ -128,4 +215,16 @@ enum IssueStatus {
   UNRESOLVED
   RESOLVED
   IGNORED
+}
+
+/// Stored event kind. 存储的事件类型。
+enum EventType {
+  ERROR
+  TRANSACTION
+}
+
+/// Alert trigger type. 告警触发类型。
+enum AlertTrigger {
+  NEW_ISSUE
+  ERROR_RATE
 }

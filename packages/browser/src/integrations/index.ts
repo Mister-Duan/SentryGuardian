@@ -4,3 +4,5 @@ export { httpContextIntegration } from './http-context.js';
 export { linkedErrorsIntegration } from './linked-errors.js';
 export { breadcrumbsIntegration } from './breadcrumbs.js';
 export { browserApiErrorsIntegration } from './browser-api-errors.js';
+export { performanceIntegration } from './performance.js';
+export { browserTracingIntegration } from './browser-tracing.js';

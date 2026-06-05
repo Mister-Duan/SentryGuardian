@@ -99,6 +99,12 @@ export interface IssueListQuery {
   project_id?: string;
   /** Filter by workflow status. 按工作流状态过滤。 */
   status?: IssueStatus;
+  /** Search issue title (case-insensitive substring). 标题搜索（不区分大小写子串）。 */
+  search?: string;
+  /** Filter by environment on latest occurrence. 按环境过滤。 */
+  environment?: string;
+  /** Filter by release on latest occurrence. 按 release 过滤。 */
+  release?: string;
   /** 1-based page index. 从 1 开始的页码。 */
   page?: number;
   /** Page size (server may cap). 每页条数（服务端可能设上限）。 */
@@ -161,4 +167,117 @@ export interface IssueDetailResponse {
 export interface UpdateIssueStatusRequest {
   /** New workflow status to persist. 要持久化的新工作流状态。 */
   status: IssueStatus;
+}
+
+/** Alert rule trigger type. 告警规则触发类型。 */
+export type AlertTrigger = 'new_issue' | 'error_rate';
+
+/**
+ * Alert rule returned by the monitor API.
+ * Monitor API 返回的告警规则。
+ */
+export interface AlertRuleResponse {
+  /** Rule primary key. 规则主键。 */
+  id: string;
+  /** Owning project id. 所属项目 ID。 */
+  project_id: string;
+  /** Display name. 展示名称。 */
+  name: string;
+  /** Trigger condition. 触发条件。 */
+  trigger: AlertTrigger;
+  /** Webhook URL when configured. Webhook URL。 */
+  webhook_url?: string;
+  /** Email recipient when configured. 邮件收件人。 */
+  email_to?: string;
+  /** Whether the rule is active. 是否启用。 */
+  enabled: boolean;
+  /** Threshold for error_rate trigger. error_rate 触发阈值。 */
+  threshold?: number;
+}
+
+/**
+ * Create or update alert rule body.
+ * 创建或更新告警规则请求体。
+ */
+export interface AlertRuleRequest {
+  name: string;
+  trigger: AlertTrigger;
+  webhook_url?: string;
+  email_to?: string;
+  enabled?: boolean;
+  threshold?: number;
+}
+
+/**
+ * Release row for console API.
+ * 控制台 Release 行。
+ */
+export interface ReleaseResponse {
+  id: string;
+  project_id: string;
+  version: string;
+  created_at: string;
+  artifact_count: number;
+}
+
+/**
+ * Create release request.
+ * 创建 Release 请求。
+ */
+export interface CreateReleaseRequest {
+  version: string;
+}
+
+/**
+ * Rotate DSN public key response.
+ * 轮换 DSN public key 响应。
+ */
+export interface RotateKeyResponse {
+  dsn: string;
+  public_key: string;
+}
+
+/**
+ * Setup wizard status for first-run bootstrap.
+ * 首次部署引导状态。
+ */
+export interface SetupStatusResponse {
+  /** Whether initial admin exists. 是否已有管理员。 */
+  configured: boolean;
+}
+
+/**
+ * First-run setup request.
+ * 首次部署引导请求。
+ */
+export interface SetupRequest {
+  organization_name: string;
+  admin_email: string;
+  admin_password: string;
+  project_name: string;
+}
+
+/**
+ * Setup completion response with DSN.
+ * 引导完成响应（含 DSN）。
+ */
+export interface SetupResponse {
+  dsn: string;
+  project_id: string;
+}
+
+/**
+ * Issue comment for activity stream.
+ * Issue 评论。
+ */
+export interface IssueCommentResponse {
+  id: string;
+  issue_id: string;
+  author_email: string;
+  body: string;
+  created_at: string;
+}
+
+export interface CreateIssueCommentRequest {
+  body: string;
 }

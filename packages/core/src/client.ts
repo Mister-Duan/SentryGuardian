@@ -1,7 +1,7 @@
-import type { ErrorEvent, ExceptionValue, SdkInfo, User } from '@sentry-guardian/types';
+import type { ErrorEvent, ExceptionValue, SdkInfo, TransactionEvent, User } from '@sentry-guardian/types';
 import { normalizeTimestamp } from '@sentry-guardian/utils/string';
 import { generateEventId, parseDsn } from './dsn.js';
-import { createEnvelope } from './envelope.js';
+import { createEnvelope, createTransactionEnvelope } from './envelope.js';
 import { EventProcessor, type BeforeSendFn } from './event-processor.js';
 import { setupIntegrations, type Integration } from './integration.js';
 import { ScopeStack } from './scope.js';
@@ -193,6 +193,48 @@ export class Client {
   }
 
   /**
+   * Capture a performance transaction event.
+   * 捕获性能事务事件。
+   *
+   * @example
+   * ```ts
+   * // Input / 输入
+   * client.captureTransaction({ transaction: 'pageload', duration_ms: 1200 })
+   * // Output / 输出
+   * 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+   * ```
+   */
+  captureTransaction(
+    partial: Pick<import('@sentry-guardian/types').TransactionEvent, 'transaction' | 'duration_ms'> &
+      Partial<
+        Omit<
+          import('@sentry-guardian/types').TransactionEvent,
+          'transaction' | 'duration_ms' | 'type' | 'event_id' | 'timestamp' | 'sdk'
+        >
+      >,
+  ): string | undefined {
+    if (this.closed) {
+      return undefined;
+    }
+    const tx: TransactionEvent = {
+      event_id: generateEventId(),
+      timestamp: normalizeTimestamp(),
+      type: 'transaction',
+      transaction: partial.transaction,
+      duration_ms: partial.duration_ms,
+      environment: partial.environment ?? this.options.environment,
+      release: partial.release ?? this.options.release,
+      url: partial.url,
+      status_code: partial.status_code,
+      metric: partial.metric,
+      metric_value: partial.metric_value,
+      sdk: this.options.sdk,
+    };
+    void this.sendTransaction(tx);
+    return tx.event_id;
+  }
+
+  /**
    * Flush pending envelopes within timeout.
    * 在超时时间内 flush 待发送 Envelope。
    *
@@ -257,6 +299,11 @@ export class Client {
 
   protected async sendEvent(event: ErrorEvent): Promise<void> {
     const envelope = createEnvelope([event], this.options.sdk);
+    await this.transport.send(envelope);
+  }
+
+  protected async sendTransaction(transaction: TransactionEvent): Promise<void> {
+    const envelope = createTransactionEnvelope(transaction, this.options.sdk);
     await this.transport.send(envelope);
   }
 

@@ -1,6 +1,5 @@
-import { Controller, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, HttpCode, Inject, Param, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
-import { DsnAuthGuard } from './dsn-auth.guard.js';
 import { EnvelopeService } from './envelope.service.js';
 
 /**
@@ -9,7 +8,7 @@ import { EnvelopeService } from './envelope.service.js';
  */
 @Controller('api/sentry/:projectId')
 export class EnvelopeController {
-  constructor(private readonly envelopeService: EnvelopeService) {}
+  constructor(@Inject(EnvelopeService) private readonly envelopeService: EnvelopeService) {}
 
   /**
    * Accept a line-based sentry-guardian envelope.
@@ -24,7 +23,6 @@ export class EnvelopeController {
    */
   @Post('envelope')
   @HttpCode(201)
-  @UseGuards(DsnAuthGuard)
   async ingest(
     @Param('projectId') projectId: string,
     @Req() req: Request,

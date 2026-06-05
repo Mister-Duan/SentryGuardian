@@ -2,6 +2,8 @@ import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/c
 import type {
   Issue,
   IssueDetailResponse,
+  IssueEventListQuery,
+  IssueEventListResponse,
   IssueListQuery,
   IssueListResponse,
   UpdateIssueStatusRequest,
@@ -17,6 +19,14 @@ export class IssuesController {
   @Get()
   list(@Query() query: IssueListQuery): Promise<IssueListResponse> {
     return this.issuesService.list(query);
+  }
+
+  @Get(':id/events')
+  listEvents(
+    @Param('id') id: string,
+    @Query() query: IssueEventListQuery,
+  ): Promise<IssueEventListResponse> {
+    return this.issuesService.listEvents(id, query);
   }
 
   @Get(':id')

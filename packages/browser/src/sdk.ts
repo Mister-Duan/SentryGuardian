@@ -36,7 +36,9 @@ export interface BrowserInitOptions
    * 为 false 时不加载 P0 默认集成。
    */
   defaultIntegrations?: boolean;
-  /** Custom transport; defaults to buffered Fetch to ingest. 自定义 Transport；默认经缓冲 Fetch 上报。 */
+  /** Same-origin tunnel URL for ingest (bypasses ad-block). 同源 tunnel URL（绕过广告拦截）。 */
+  tunnel?: string;
+  /** Custom transport; defaults to buffered Fetch to ingest. 自定义 Transport。 */
   transport?: BrowserClientOptions['transport'];
 }
 
@@ -60,10 +62,12 @@ export function init(options: BrowserInitOptions): BrowserClient {
     defaultIntegrations,
     integrations: customIntegrations,
     transport: customTransport,
+    tunnel,
     ...clientOptions
   } = options;
 
   const { envelopeUrl } = parseDsn(dsn);
+  const targetUrl = tunnel ?? envelopeUrl;
   const integrations =
     defaultIntegrations === false
       ? (customIntegrations ?? [])
@@ -77,7 +81,7 @@ export function init(options: BrowserInitOptions): BrowserClient {
     customTransport ??
     new BufferTransport(
       new FetchTransport({
-        url: envelopeUrl,
+        url: targetUrl,
       }),
     );
 

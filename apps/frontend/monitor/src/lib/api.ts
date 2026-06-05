@@ -1,52 +1,46 @@
 import type {
+  AlertRuleRequest,
+  AlertRuleResponse,
+  CreateIssueCommentRequest,
+  CreateProjectRequest,
+  CreateReleaseRequest,
+  EventDetailResponse,
+  IssueCommentResponse,
   IssueDetailResponse,
+  IssueEventListResponse,
+  IssueListQuery,
   IssueListResponse,
+  IssueTrendResponse,
   LoginRequest,
   LoginResponse,
   ProjectResponse,
+  ReleaseCompareResponse,
+  ReleaseResponse,
+  RotateKeyResponse,
+  SetupRequest,
+  SetupResponse,
+  SetupStatusResponse,
+  TransactionListResponse,
   UpdateIssueStatusRequest,
 } from '@sentry-guardian/types';
 import type { Issue } from '@sentry-guardian/types';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
-/**
- * HTTP client for the monitor REST API.
- * Monitor REST API 的 HTTP 客户端。
- *
- * @example
- * ```ts
- * // Sample / 示例
- * const api = new ApiClient(accessToken);
- * await api.listIssues('proj_1');
- * ```
- */
 export class ApiClient {
-  /**
-   * @param token - Optional Bearer token for authenticated routes. 可选 Bearer 令牌，用于需鉴权的路由。
-   */
   constructor(private token?: string) {}
 
-  private headers(): HeadersInit {
-    const h: Record<string, string> = { 'Content-Type': 'application/json' };
+  private headers(json = true): HeadersInit {
+    const h: Record<string, string> = {};
+    if (json) {
+      h['Content-Type'] = 'application/json';
+    }
     if (this.token) {
       h.Authorization = `Bearer ${this.token}`;
     }
     return h;
   }
 
-  /**
-   * Login and return token response.
-   * 登录并返回 Token。
-   *
-   * @example
-   * ```ts
-   * // Input / 输入
-   * await new ApiClient().login({ email: 'a@b.com', password: 'secret' })
-   * // Output / 输出
-   * { access_token: '…', token_type: 'Bearer', expires_in: 3600 }
-   * ```
-   */
   async login(body: LoginRequest): Promise<LoginResponse> {
     const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
@@ -59,18 +53,23 @@ export class ApiClient {
     return res.json() as Promise<LoginResponse>;
   }
 
-  /**
-   * List projects visible to the authenticated user.
-   * 列出当前用户可见的项目。
-   *
-   * @example
-   * ```ts
-   * // Input / 输入
-   * await new ApiClient(token).listProjects()
-   * // Output / 输出
-   * ProjectResponse[]
-   * ```
-   */
+  async setupStatus(): Promise<SetupStatusResponse> {
+    const res = await fetch(`${API_BASE}/api/setup/status`);
+    return res.json() as Promise<SetupStatusResponse>;
+  }
+
+  async setup(body: SetupRequest): Promise<SetupResponse> {
+    const res = await fetch(`${API_BASE}/api/setup`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      throw new Error('Setup failed');
+    }
+    return res.json() as Promise<SetupResponse>;
+  }
+
   async listProjects(): Promise<ProjectResponse[]> {
     const res = await fetch(`${API_BASE}/api/projects`, { headers: this.headers() });
     if (!res.ok) {
@@ -79,22 +78,39 @@ export class ApiClient {
     return res.json() as Promise<ProjectResponse[]>;
   }
 
-  /**
-   * List issues, optionally filtered by project.
-   * 列出 Issue，可按项目过滤。
-   *
-   * @param projectId - When set, only issues for this project. 设置时仅返回该项目下的 Issue。
-   *
-   * @example
-   * ```ts
-   * // Input / 输入
-   * await new ApiClient(token).listIssues('proj_1')
-   * // Output / 输出
-   * { items: Issue[], total: number, page: number, page_size: number }
-   * ```
-   */
-  async listIssues(projectId?: string): Promise<IssueListResponse> {
-    const q = projectId ? `?project_id=${encodeURIComponent(projectId)}` : '';
+  async createProject(body: CreateProjectRequest): Promise<ProjectResponse> {
+    const res = await fetch(`${API_BASE}/api/projects`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      throw new Error('Create project failed');
+    }
+    return res.json() as Promise<ProjectResponse>;
+  }
+
+  async rotateKey(projectId: string): Promise<RotateKeyResponse> {
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/rotate-key`, {
+      method: 'POST',
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error('Rotate key failed');
+    }
+    return res.json() as Promise<RotateKeyResponse>;
+  }
+
+  async listIssues(query?: IssueListQuery): Promise<IssueListResponse> {
+    const params = new URLSearchParams();
+    if (query?.project_id) params.set('project_id', query.project_id);
+    if (query?.status) params.set('status', query.status);
+    if (query?.search) params.set('search', query.search);
+    if (query?.environment) params.set('environment', query.environment);
+    if (query?.release) params.set('release', query.release);
+    if (query?.page != null) params.set('page', String(query.page));
+    if (query?.page_size != null) params.set('page_size', String(query.page_size));
+    const q = params.toString() ? `?${params.toString()}` : '';
     const res = await fetch(`${API_BASE}/api/issues${q}`, { headers: this.headers() });
     if (!res.ok) {
       throw new Error('Failed to load issues');
@@ -102,20 +118,6 @@ export class ApiClient {
     return res.json() as Promise<IssueListResponse>;
   }
 
-  /**
-   * Fetch issue detail including latest event when available.
-   * 获取 Issue 详情（可用时含最近事件）。
-   *
-   * @param id - Issue primary key. Issue 主键。
-   *
-   * @example
-   * ```ts
-   * // Input / 输入
-   * await new ApiClient(token).getIssue('iss_1')
-   * // Output / 输出
-   * { issue: Issue, latest_event?: ErrorEvent }
-   * ```
-   */
   async getIssue(id: string): Promise<IssueDetailResponse> {
     const res = await fetch(`${API_BASE}/api/issues/${id}`, { headers: this.headers() });
     if (!res.ok) {
@@ -124,21 +126,24 @@ export class ApiClient {
     return res.json() as Promise<IssueDetailResponse>;
   }
 
-  /**
-   * Update issue workflow status.
-   * 更新 Issue 工作流状态。
-   *
-   * @param id - Issue primary key. Issue 主键。
-   * @param body - New status payload. 新状态请求体。
-   *
-   * @example
-   * ```ts
-   * // Input / 输入
-   * await new ApiClient(token).updateIssueStatus('iss_1', { status: 'resolved' })
-   * // Output / 输出
-   * Issue
-   * ```
-   */
+  async listIssueEvents(issueId: string, page = 1): Promise<IssueEventListResponse> {
+    const res = await fetch(`${API_BASE}/api/issues/${issueId}/events?page=${page}`, {
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error('Failed to load events');
+    }
+    return res.json() as Promise<IssueEventListResponse>;
+  }
+
+  async getEvent(id: string): Promise<EventDetailResponse> {
+    const res = await fetch(`${API_BASE}/api/events/${id}`, { headers: this.headers() });
+    if (!res.ok) {
+      throw new Error('Event not found');
+    }
+    return res.json() as Promise<EventDetailResponse>;
+  }
+
   async updateIssueStatus(id: string, body: UpdateIssueStatusRequest): Promise<Issue> {
     const res = await fetch(`${API_BASE}/api/issues/${id}`, {
       method: 'PATCH',
@@ -149,5 +154,129 @@ export class ApiClient {
       throw new Error('Update failed');
     }
     return res.json() as Promise<Issue>;
+  }
+
+  async listReleases(projectId: string): Promise<ReleaseResponse[]> {
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/releases`, {
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error('Failed to load releases');
+    }
+    return res.json() as Promise<ReleaseResponse[]>;
+  }
+
+  async createRelease(projectId: string, body: CreateReleaseRequest): Promise<ReleaseResponse> {
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/releases`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      throw new Error('Create release failed');
+    }
+    return res.json() as Promise<ReleaseResponse>;
+  }
+
+  async uploadSourceMap(
+    projectId: string,
+    releaseId: string,
+    file: File,
+  ): Promise<{ name: string }> {
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(
+      `${API_BASE}/api/projects/${projectId}/releases/${releaseId}/artifacts`,
+      { method: 'POST', headers: this.headers(false), body: form },
+    );
+    if (!res.ok) {
+      throw new Error('Upload failed');
+    }
+    return res.json() as Promise<{ name: string }>;
+  }
+
+  async issueTrends(projectId: string, hours = 24): Promise<IssueTrendResponse> {
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/trends?hours=${hours}`, {
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error('Failed to load trends');
+    }
+    return res.json() as Promise<IssueTrendResponse>;
+  }
+
+  async releaseCompare(projectId: string): Promise<ReleaseCompareResponse> {
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/releases/compare`, {
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error('Failed to load release compare');
+    }
+    return res.json() as Promise<ReleaseCompareResponse>;
+  }
+
+  async listTransactions(projectId: string, page = 1): Promise<TransactionListResponse> {
+    const res = await fetch(
+      `${API_BASE}/api/projects/${projectId}/transactions?page=${page}`,
+      { headers: this.headers() },
+    );
+    if (!res.ok) {
+      throw new Error('Failed to load transactions');
+    }
+    return res.json() as Promise<TransactionListResponse>;
+  }
+
+  async listAlerts(projectId: string): Promise<AlertRuleResponse[]> {
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/alerts`, {
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error('Failed to load alerts');
+    }
+    return res.json() as Promise<AlertRuleResponse[]>;
+  }
+
+  async createAlert(projectId: string, body: AlertRuleRequest): Promise<AlertRuleResponse> {
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/alerts`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      throw new Error('Create alert failed');
+    }
+    return res.json() as Promise<AlertRuleResponse>;
+  }
+
+  async deleteAlert(projectId: string, id: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/alerts/${id}`, {
+      method: 'DELETE',
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error('Delete alert failed');
+    }
+  }
+
+  async listComments(issueId: string): Promise<IssueCommentResponse[]> {
+    const res = await fetch(`${API_BASE}/api/issues/${issueId}/comments`, {
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error('Failed to load comments');
+    }
+    return res.json() as Promise<IssueCommentResponse[]>;
+  }
+
+  async addComment(issueId: string, body: CreateIssueCommentRequest): Promise<IssueCommentResponse> {
+    const res = await fetch(`${API_BASE}/api/issues/${issueId}/comments`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      throw new Error('Add comment failed');
+    }
+    return res.json() as Promise<IssueCommentResponse>;
   }
 }

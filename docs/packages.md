@@ -11,7 +11,7 @@ Monorepo 中 `packages/` 下各包的**实现进度**与文档入口。架构职
 | core | `@sentry-guardian/core` | **已实现** | [packages/core/README.md](../packages/core/README.md) |
 | browser-utils | `@sentry-guardian/browser-utils` | **已实现**（internal） | — |
 | browser | `@sentry-guardian/browser` | **已实现** | [packages/browser/README.md](../packages/browser/README.md) |
-| vue | `@sentry-guardian/vue` | 未开始 | architecture §4.6 |
+| vue | `@sentry-guardian/vue` | **已实现** | [packages/vue/README.md](../packages/vue/README.md) |
 | database | `@sentry-guardian/database` | **已实现** | [apps/backend/libs/database/README.md](../apps/backend/libs/database/README.md) |
 | backend-dsn | `@sentry-guardian/backend-dsn` | **已实现** | [apps/backend/README.md](../apps/backend/README.md) |
 | backend-monitor | `@sentry-guardian/backend-monitor` | **已实现** | [apps/backend/README.md](../apps/backend/README.md) |
@@ -59,6 +59,14 @@ Monorepo 中 `packages/` 下各包的**实现进度**与文档入口。架构职
 
 **依赖**：`core`、`browser-utils`、`types`。
 
+## `@sentry-guardian/vue`
+
+**职责**：Vue 3 框架适配——`vueIntegration`、`vueRouterIntegration`。
+
+**主要导出**：`init`、`vueIntegration`、`vueRouterIntegration`（re-export from `browser`）。
+
+**依赖**：`browser`、`core`。
+
 ## `@sentry-guardian/database`
 
 **职责**：PostgreSQL 元数据与 Event 存储（Prisma）。
@@ -67,11 +75,11 @@ Monorepo 中 `packages/` 下各包的**实现进度**与文档入口。架构职
 
 **依赖**：Prisma + PostgreSQL。
 
-## 后续包（规划）
+## 后续包
 
-| 包 | 依赖 | MVP 步骤 |
-|----|------|----------|
-| vue | browser, core | MVP 外暂缓 |
+| 包 | 说明 |
+|----|------|
+| react | 暂不实现（用户决策） |
 
 ## 构建顺序
 
@@ -83,5 +91,6 @@ pnpm --filter @sentry-guardian/utils build
 pnpm --filter @sentry-guardian/core build
 pnpm --filter @sentry-guardian/browser-utils build
 pnpm --filter @sentry-guardian/browser build
+pnpm --filter @sentry-guardian/vue build
 # 或根目录：pnpm build
 ```

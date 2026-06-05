@@ -36,28 +36,25 @@
 | **可自托管** | 无厂商锁定，无按量账单 |
 | **易上手** | 接入步骤短，控制台信息架构清晰 |
 
-## 监控范围（规划）
+## 监控范围
 
-### 第一期：前端错误（P0）
+### 已实现（MVP + Post-MVP）
 
-- JavaScript 运行时异常
-- 未处理的 Promise rejection
-- 静态资源加载失败（脚本、样式、图片等）
-- 可选：Vue / React 等框架错误边界对接
+| 能力 | 说明 |
+|------|------|
+| 前端错误 | 运行时异常、Promise rejection、资源加载失败 |
+| Vue 3 | `@sentry-guardian/vue`（**不含** `packages/react`） |
+| 基础性能 | Web Vitals（LCP/CLS/TTFB）、路由与慢 fetch 事务 |
+| Release / Source Map | 版本追踪、artifact 上传、堆栈符号化 |
+| 控制台 | Issue 搜索/分页、事件历史、评论、趋势、项目 CRUD |
+| 告警 | Webhook（新 Issue、错误率）；邮件为 SMTP 桩 |
+| 运维 | ingest 限流、事件 TTL、Docker 全栈 Compose |
 
-### 第二期：基础性能（P1）
+### 规划 / 占位
 
-- 页面加载耗时（DNS、TCP、DOM、首屏等关键节点）
-- 慢接口 / XHR / fetch 失败
-- 白屏或长时间无响应检测（简化版）
-
-### 第三期：运营辅助（P2）
-
-- Release / 版本维度对比
-- 简单 UV / PV 或会话计数（非专业统计平台，仅辅助排障）
-- Webhook、邮件等告警规则
-
-> 具体优先级随实现迭代调整；原则是先保证「错误可见、可聚合、可通知」。
+- ClickHouse 分析档（Compose profile 占位）
+- `allowed_origins` ingest 校验（字段已入库）
+- 专业 UV/PV 分析、Session Replay、Native SDK
 
 ## 成套系统架构
 
@@ -108,7 +105,7 @@
 
 - 移动端 Native SDK（iOS / Android 原生）
 - 服务端 / 后端 APM 全链路
-- 大规模分布式 ingest、Symbolicator 符号化集群
+- 大规模分布式 ingest 集群（单机 symbolicator 已实现）
 - 专业级用户行为分析（热力图、录屏等）
 
 ## 开源标准
@@ -124,16 +121,15 @@ AI 开发须完整执行 [delivery-checklist.md](../ai-guide/delivery-checklist.
 
 ## 当前状态
 
-与 [plans/mvp-implementation.md](./plans/mvp-implementation.md) 一致（MVP Phase 0～10 已完成）：
+MVP Phase 0～11 与 Post-MVP Phase 12～21 已闭环，详见 [plans/post-mvp-roadmap.md](./plans/post-mvp-roadmap.md)。
 
 | 阶段 | 状态 |
 |------|------|
-| 工程底座、文档与 AI 规范 | 已完成 |
-| SDK：`types` / `utils` / `core` | 已完成 |
-| SDK：`browser`（真实上报） | **已完成** |
-| 后端 ingest / Issue 聚合 | **已完成** |
-| 监控控制台 | **已完成** |
-| Docker Compose 单机部署 | **已完成**（Postgres；后端/前端本地 `pnpm dev`） |
+| SDK：`browser` + `vue` | **已完成** |
+| 后端 ingest / monitor（含告警、维护） | **已完成** |
+| 控制台（Issue/项目/Release/性能/告警） | **已完成** |
+| Docker Compose 全栈 | **已完成**（postgres + migrate + dsn + monitor + frontend） |
+| `packages/react` | **不实现**（用户决策） |
 
 ## 相关文档
 
@@ -145,4 +141,5 @@ AI 开发须完整执行 [delivery-checklist.md](../ai-guide/delivery-checklist.
 - [packages.md](./packages.md) — 已实现包
 - [development.md](./development.md) — 贡献者开发
 - [plans/mvp-implementation.md](./plans/mvp-implementation.md) — MVP 实施清单
+- [plans/post-mvp-roadmap.md](./plans/post-mvp-roadmap.md) — Post-MVP 路线图
 - [AGENTS.md](../AGENTS.md) — AI 协作规范
