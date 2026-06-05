@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { EventSummary, IssueEventListResponse } from '@sentry-guardian/types';
-import { Card } from '../components/ui.js';
+import { Card } from './ui.js';
 import { useAuth } from '../lib/auth.js';
 
 export function IssueEventsPanel({ issueId }: { issueId: string }) {
@@ -13,20 +13,28 @@ export function IssueEventsPanel({ issueId }: { issueId: string }) {
   }, [api, issueId]);
 
   if (!data) {
-    return <p className="text-zinc-500">加载事件…</p>;
+    return <p className="text-xs text-[var(--sg-text-muted)]">加载事件…</p>;
   }
 
   return (
     <Card>
-      <h2 className="mb-3 font-medium">事件历史 ({data.total})</h2>
-      <ul className="space-y-2 text-sm">
+      <h2 className="mb-2 text-sm font-semibold">事件历史 ({data.total})</h2>
+      <ul className="space-y-1 text-xs">
         {data.items.map((ev: EventSummary) => (
-          <li key={ev.id} className="flex flex-wrap gap-2 border-b border-zinc-800 pb-2">
-            <span className="text-zinc-500">{new Date(ev.timestamp).toLocaleString()}</span>
+          <li
+            key={ev.id}
+            className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-b border-[var(--sg-border)] py-1 last:border-0"
+          >
+            <span className="text-[var(--sg-text-muted)] tabular-nums">
+              {new Date(ev.timestamp).toLocaleString()}
+            </span>
             <span>{ev.environment ?? '—'}</span>
-            <span>{ev.release ?? '—'}</span>
-            <span>{ev.user_id ?? '—'}</span>
-            <Link to={`/events/${ev.id}`} className="text-sky-400 hover:underline">
+            <span className="truncate">{ev.release ?? '—'}</span>
+            <Link
+              to={`/events/${ev.id}`}
+              className="font-medium hover:underline"
+              style={{ color: 'var(--sg-accent)' }}
+            >
               详情
             </Link>
           </li>

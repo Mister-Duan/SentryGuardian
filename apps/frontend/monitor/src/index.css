@@ -1,5 +1,35 @@
 @import 'tailwindcss';
 
+/* Sentry page-frame tokens (see awesome/sentry/static/app/views/navigation/constants.tsx) */
+:root {
+  --sg-primary-width: 74px;
+  --sg-secondary-width: 168px;
+  --sg-topbar-height: 53px;
+  --sg-nav-item-height: 32px;
+
+  --sg-sidebar-bg: #2f2936;
+  --sg-sidebar-border: #e0e0e6;
+  --sg-sidebar-text: #6c5f7c;
+  --sg-sidebar-text-active: #2b2233;
+  --sg-sidebar-active-bg: rgba(117, 83, 255, 0.12);
+  --sg-sidebar-hover-bg: rgba(0, 0, 0, 0.04);
+
+  --sg-accent: #7553ff;
+  --sg-accent-hover: #6344e8;
+  --sg-content-bg: #f8f8f9;
+  --sg-surface: #ffffff;
+  --sg-border: #e0e0e6;
+  --sg-text: #2b2233;
+  --sg-text-muted: #6c5f7c;
+  --sg-danger: #e1567c;
+  --sg-row-hover: #fbfbfc;
+  --sg-row-selected: #f0edff;
+}
+
 body {
-  @apply bg-zinc-950 text-zinc-100 antialiased;
+  @apply antialiased;
+  color: var(--sg-text);
+  background: var(--sg-content-bg);
+  font-size: 14px;
+  line-height: 1.4;
 }

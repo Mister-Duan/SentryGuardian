@@ -9,33 +9,32 @@ import {
 
 /**
  * Readable breakdown of an `ErrorEvent` for the issue detail page.
- * Issue 详情页中 `ErrorEvent` 的可读化展示。
  */
 export function EventDetail({ event }: { event: ErrorEvent }) {
   const exceptions = event.exception?.values ?? [];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {(event.environment || event.release || event.request?.url) && (
         <Card>
-          <h2 className="mb-2 font-medium">上下文</h2>
-          <dl className="grid gap-2 text-sm text-zinc-300">
+          <h2 className="mb-1.5 text-sm font-semibold">上下文</h2>
+          <dl className="grid gap-1.5 text-xs">
             {event.environment && (
               <div>
-                <dt className="text-zinc-500">环境</dt>
+                <dt className="text-[var(--sg-text-muted)]">环境</dt>
                 <dd>{event.environment}</dd>
               </div>
             )}
             {event.release && (
               <div>
-                <dt className="text-zinc-500">Release</dt>
-                <dd className="font-mono text-xs">{event.release}</dd>
+                <dt className="text-[var(--sg-text-muted)]">版本</dt>
+                <dd className="font-mono">{event.release}</dd>
               </div>
             )}
             {event.request?.url && (
               <div>
-                <dt className="text-zinc-500">URL</dt>
-                <dd className="break-all font-mono text-xs">{event.request.url}</dd>
+                <dt className="text-[var(--sg-text-muted)]">地址</dt>
+                <dd className="break-all font-mono">{event.request.url}</dd>
               </div>
             )}
           </dl>
@@ -44,25 +43,30 @@ export function EventDetail({ event }: { event: ErrorEvent }) {
 
       {exceptions.length > 0 && (
         <Card>
-          <h2 className="mb-3 font-medium">异常</h2>
-          <div className="space-y-4">
+          <h2 className="mb-2 text-sm font-semibold">异常</h2>
+          <div className="space-y-3">
             {exceptions.map((ex, index) => (
               <div key={`${ex.type}-${index}`}>
-                <p className="font-mono text-sm text-red-300">{formatExceptionTitle(ex)}</p>
+                <p className="font-mono text-xs text-[var(--sg-danger)]">
+                  {formatExceptionTitle(ex)}
+                </p>
                 {ex.stacktrace?.frames && ex.stacktrace.frames.length > 0 && (
-                  <ol className="mt-2 space-y-1 font-mono text-xs">
+                  <ol className="mt-1 space-y-0.5 font-mono text-[11px]">
                     {displayStackFrames(ex.stacktrace.frames).map((frame, frameIndex) => (
                       <li
                         key={frameIndex}
                         className={
                           frame.in_app
-                            ? 'rounded bg-zinc-950 px-2 py-1 text-sky-300'
-                            : 'px-2 py-1 text-zinc-500'
+                            ? 'rounded border border-[var(--sg-border)] bg-[var(--sg-row-selected)] px-1.5 py-0.5'
+                            : 'px-1.5 py-0.5 text-[var(--sg-text-muted)]'
                         }
+                        style={frame.in_app ? { color: 'var(--sg-accent)' } : undefined}
                       >
                         {formatFrameLocation(frame)}
                         {frame.in_app && (
-                          <span className="ml-2 text-[10px] uppercase text-zinc-500">in app</span>
+                          <span className="ml-1.5 text-[10px] uppercase text-[var(--sg-text-muted)]">
+                            应用内
+                          </span>
                         )}
                       </li>
                     ))}
@@ -76,24 +80,24 @@ export function EventDetail({ event }: { event: ErrorEvent }) {
 
       {event.message && !exceptions.length && (
         <Card>
-          <h2 className="mb-2 font-medium">消息</h2>
-          <p className="font-mono text-sm text-zinc-300">{event.message}</p>
+          <h2 className="mb-1.5 text-sm font-semibold">消息</h2>
+          <p className="font-mono text-xs">{event.message}</p>
         </Card>
       )}
 
       {event.breadcrumbs && event.breadcrumbs.length > 0 && (
         <Card>
-          <h2 className="mb-3 font-medium">面包屑</h2>
-          <ul className="space-y-2 text-sm">
+          <h2 className="mb-2 text-sm font-semibold">面包屑</h2>
+          <ul className="space-y-1 text-xs">
             {event.breadcrumbs.map((crumb, index) => (
               <li
                 key={index}
-                className="flex gap-3 border-b border-zinc-800 pb-2 last:border-0 last:pb-0"
+                className="flex gap-2 border-b border-[var(--sg-border)] py-1 last:border-0"
               >
-                <span className="shrink-0 text-xs text-zinc-500">
+                <span className="shrink-0 text-[var(--sg-text-muted)]">
                   {formatBreadcrumbTime(crumb.timestamp)}
                 </span>
-                <span className="text-zinc-400">
+                <span>
                   {[crumb.category, crumb.message].filter(Boolean).join(' · ') || crumb.type || '—'}
                 </span>
               </li>

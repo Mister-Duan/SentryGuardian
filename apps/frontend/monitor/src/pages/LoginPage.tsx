@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { AuthLayout } from '../components/AuthLayout.js';
 import { Button, Card, Input } from '../components/ui.js';
 import { useAuth } from '../lib/auth.js';
 
@@ -24,10 +25,11 @@ export function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md items-center p-6">
+    <AuthLayout>
       <Card>
-        <h1 className="mb-4 text-xl font-semibold">SentryGuardian</h1>
-        <form className="space-y-3" onSubmit={onSubmit}>
+        <h1 className="mb-0.5 text-lg font-semibold">登录</h1>
+        <p className="mb-3 text-xs text-[var(--sg-text-muted)]">进入监控控制台</p>
+        <form className="space-y-2" onSubmit={onSubmit}>
           <Input
             type="email"
             placeholder="邮箱"
@@ -40,12 +42,12 @@ export function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          <Button type="submit" className="w-full">
+          {error && <p className="text-xs text-[var(--sg-danger)]">{error}</p>}
+          <Button type="submit" variant="primary" className="w-full">
             登录
           </Button>
         </form>
       </Card>
-    </div>
+    </AuthLayout>
   );
 }

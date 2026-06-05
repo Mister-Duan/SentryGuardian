@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ProjectResponse, ReleaseCompareResponse, ReleaseResponse } from '@sentry-guardian/types';
-import { Button, Card, Input } from '../components/ui.js';
+import { Button, Card, FilterBar, FilterField, Input, Select, Table, TableHead, TableRow } from '../components/ui.js';
+import { usePageHeader } from '../layout/PageHeaderContext.js';
 import { useAuth } from '../lib/auth.js';
 
 export function ReleasesPage() {
@@ -12,6 +13,8 @@ export function ReleasesPage() {
   const [version, setVersion] = useState('');
   const [uploadReleaseId, setUploadReleaseId] = useState('');
   const [file, setFile] = useState<File | null>(null);
+
+  usePageHeader({ title: '版本', description: '版本管理与源码映射' });
 
   useEffect(() => {
     void api.listProjects().then((list) => {
@@ -44,101 +47,103 @@ export function ReleasesPage() {
   }
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold">Releases & Source Maps</h1>
-      <label className="mb-4 block text-sm text-zinc-400">
-        项目
-        <select
-          className="mt-1 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
-        >
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <Card>
-        <h2 className="mb-3 font-medium">创建 Release</h2>
-        <form className="flex gap-2" onSubmit={(e) => void createRelease(e)}>
-          <Input value={version} onChange={(e) => setVersion(e.target.value)} placeholder="1.0.0" />
-          <Button type="submit">创建</Button>
-        </form>
-      </Card>
-
-      <Card>
-        <h2 className="mb-3 font-medium">上传 Source Map</h2>
-        <form className="space-y-2" onSubmit={(e) => void uploadMap(e)}>
-          <select
-            className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm"
-            value={uploadReleaseId}
-            onChange={(e) => setUploadReleaseId(e.target.value)}
-          >
-            <option value="">选择 Release</option>
-            {releases.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.version}
+    <div className="space-y-3">
+      <FilterBar>
+        <FilterField label="项目" className="max-w-[200px]">
+          <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
               </option>
             ))}
-          </select>
-          <input type="file" accept=".map" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-          <Button type="submit" disabled={!file || !uploadReleaseId}>
-            上传
-          </Button>
-        </form>
-      </Card>
+          </Select>
+        </FilterField>
+      </FilterBar>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Card>
+          <h2 className="mb-2 text-sm font-semibold">创建版本</h2>
+          <form className="flex gap-2" onSubmit={(e) => void createRelease(e)}>
+            <Input value={version} onChange={(e) => setVersion(e.target.value)} placeholder="1.0.0" />
+            <Button type="submit" variant="primary" size="sm">
+              创建
+            </Button>
+          </form>
+        </Card>
+        <Card>
+          <h2 className="mb-2 text-sm font-semibold">上传源码映射</h2>
+          <form className="space-y-2" onSubmit={(e) => void uploadMap(e)}>
+            <Select value={uploadReleaseId} onChange={(e) => setUploadReleaseId(e.target.value)}>
+              <option value="">选择版本</option>
+              {releases.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.version}
+                </option>
+              ))}
+            </Select>
+            <input
+              type="file"
+              accept=".map"
+              className="block w-full text-xs text-[var(--sg-text-muted)]"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <Button type="submit" variant="primary" size="sm" disabled={!file || !uploadReleaseId}>
+              上传
+            </Button>
+          </form>
+        </Card>
+      </div>
 
       <Card>
-        <h2 className="mb-3 font-medium">Release 列表</h2>
-        <table className="w-full text-left text-sm">
-          <thead className="text-zinc-500">
+        <h2 className="mb-2 text-sm font-semibold">版本列表</h2>
+        <Table>
+          <TableHead>
             <tr>
-              <th className="pb-2">版本</th>
-              <th className="pb-2">Artifacts</th>
-              <th className="pb-2">创建时间</th>
+              <th className="pb-2 pr-3">版本</th>
+              <th className="pb-2 pr-3 w-20">映射</th>
+              <th className="pb-2">创建</th>
             </tr>
-          </thead>
+          </TableHead>
           <tbody>
             {releases.map((r) => (
-              <tr key={r.id} className="border-t border-zinc-800">
-                <td className="py-2">{r.version}</td>
-                <td className="py-2">{r.artifact_count}</td>
-                <td className="py-2">{new Date(r.created_at).toLocaleString()}</td>
-              </tr>
+              <TableRow key={r.id}>
+                <td className="py-1.5 pr-3 text-xs">{r.version}</td>
+                <td className="py-1.5 pr-3 text-xs tabular-nums">{r.artifact_count}</td>
+                <td className="py-1.5 text-xs text-[var(--sg-text-muted)]">
+                  {new Date(r.created_at).toLocaleString()}
+                </td>
+              </TableRow>
             ))}
           </tbody>
-        </table>
+        </Table>
       </Card>
 
       {compare && (
         <Card>
-          <h2 className="mb-3 font-medium">版本对比</h2>
-          <table className="w-full text-left text-sm">
-            <thead className="text-zinc-500">
+          <h2 className="mb-2 text-sm font-semibold">版本对比</h2>
+          <Table>
+            <TableHead>
               <tr>
-                <th className="pb-2">Release</th>
-                <th className="pb-2">Events</th>
-                <th className="pb-2">Issues</th>
-                <th className="pb-2">24h 新 Issue</th>
+                <th className="pb-2 pr-3">版本</th>
+                <th className="pb-2 pr-3 w-16">事件</th>
+                <th className="pb-2 pr-3 w-16">问题</th>
+                <th className="pb-2 w-20">24h 新增</th>
               </tr>
-            </thead>
+            </TableHead>
             <tbody>
               {compare.items.map((row) => (
-                <tr
+                <TableRow
                   key={row.version}
-                  className={`border-t border-zinc-800 ${row.new_issues_24h > 5 ? 'bg-red-950/30' : ''}`}
+                  className={row.new_issues_24h > 5 ? 'bg-red-50' : ''}
                 >
-                  <td className="py-2">{row.version}</td>
-                  <td className="py-2">{row.event_count}</td>
-                  <td className="py-2">{row.issue_count}</td>
-                  <td className="py-2">{row.new_issues_24h}</td>
-                </tr>
+                  <td className="py-1.5 pr-3 text-xs">{row.version}</td>
+                  <td className="py-1.5 pr-3 text-xs tabular-nums">{row.event_count}</td>
+                  <td className="py-1.5 pr-3 text-xs tabular-nums">{row.issue_count}</td>
+                  <td className="py-1.5 text-xs tabular-nums">{row.new_issues_24h}</td>
+                </TableRow>
               ))}
             </tbody>
-          </table>
+          </Table>
         </Card>
       )}
     </div>

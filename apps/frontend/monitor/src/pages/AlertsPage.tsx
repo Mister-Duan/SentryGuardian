@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { AlertRuleResponse, AlertTrigger, ProjectResponse } from '@sentry-guardian/types';
-import { Button, Card, Input } from '../components/ui.js';
+import { Button, Card, FilterBar, FilterField, Input, Select } from '../components/ui.js';
+import { usePageHeader } from '../layout/PageHeaderContext.js';
 import { useAuth } from '../lib/auth.js';
+
+const ALERT_TRIGGER_LABELS: Record<AlertTrigger, string> = {
+  new_issue: '新 Issue',
+  error_rate: '1 小时错误率阈值',
+};
 
 export function AlertsPage() {
   const { api } = useAuth();
@@ -14,6 +20,8 @@ export function AlertsPage() {
     webhook_url: '',
     threshold: 100,
   });
+
+  usePageHeader({ title: '告警', description: 'Webhook 与错误率告警规则' });
 
   useEffect(() => {
     void api.listProjects().then((list) => {
@@ -41,37 +49,32 @@ export function AlertsPage() {
   }
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold">告警规则</h1>
-      <label className="mb-4 block text-sm text-zinc-400">
-        项目
-        <select
-          className="mt-1 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
-        >
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </label>
+    <div className="space-y-3">
+      <FilterBar>
+        <FilterField label="项目" className="max-w-[200px]">
+          <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </Select>
+        </FilterField>
+      </FilterBar>
 
       <Card>
-        <h2 className="mb-3 font-medium">新建规则</h2>
-        <form className="space-y-3" onSubmit={(e) => void createRule(e)}>
+        <h2 className="mb-2 text-sm font-semibold">新建规则</h2>
+        <form className="space-y-2" onSubmit={(e) => void createRule(e)}>
           <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <select
-            className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
+          <Select
             value={form.trigger}
             onChange={(e) => setForm({ ...form, trigger: e.target.value as AlertTrigger })}
           >
-            <option value="new_issue">新 Issue</option>
-            <option value="error_rate">1h 错误率阈值</option>
-          </select>
+            <option value="new_issue">{ALERT_TRIGGER_LABELS.new_issue}</option>
+            <option value="error_rate">{ALERT_TRIGGER_LABELS.error_rate}</option>
+          </Select>
           <Input
-            placeholder="Webhook URL"
+            placeholder="Webhook 地址"
             value={form.webhook_url}
             onChange={(e) => setForm({ ...form, webhook_url: e.target.value })}
           />
@@ -83,22 +86,32 @@ export function AlertsPage() {
               onChange={(e) => setForm({ ...form, threshold: Number(e.target.value) })}
             />
           )}
-          <Button type="submit">保存</Button>
+          <Button type="submit" variant="primary" size="sm">
+            保存
+          </Button>
         </form>
       </Card>
 
       <Card>
-        <h2 className="mb-3 font-medium">已有规则</h2>
-        <ul className="space-y-2 text-sm">
+        <h2 className="mb-2 text-sm font-semibold">已有规则</h2>
+        <ul className="space-y-1.5 text-xs">
           {rules.map((r) => (
-            <li key={r.id} className="flex items-center justify-between border-b border-zinc-800 pb-2">
-              <span>
-                {r.name} · {r.trigger} · {r.webhook_url ?? '无 Webhook'}
+            <li
+              key={r.id}
+              className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--sg-border)] py-1.5 last:border-0"
+            >
+              <span className="min-w-0 flex-1 truncate">
+                {r.name} · {ALERT_TRIGGER_LABELS[r.trigger] ?? r.trigger}
               </span>
               <Button
                 type="button"
-                className="bg-red-900/50 text-red-200"
-                onClick={() => void api.deleteAlert(projectId, r.id).then(() => api.listAlerts(projectId).then(setRules))}
+                variant="danger"
+                size="sm"
+                onClick={() =>
+                  void api
+                    .deleteAlert(projectId, r.id)
+                    .then(() => api.listAlerts(projectId).then(setRules))
+                }
               >
                 删除
               </Button>

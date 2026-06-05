@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { EventDetail } from '../components/EventDetail.js';
+import { usePageHeader } from '../layout/PageHeaderContext.js';
 import { useAuth } from '../lib/auth.js';
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { api } = useAuth();
   const [event, setEvent] = useState<Awaited<ReturnType<typeof api.getEvent>> | null>(null);
+
+  usePageHeader({ title: '事件详情', description: id?.slice(0, 12) });
 
   useEffect(() => {
     if (id) {
@@ -15,13 +18,17 @@ export function EventDetailPage() {
   }, [api, id]);
 
   if (!event) {
-    return <p className="p-6 text-zinc-500">加载中…</p>;
+    return <p className="text-xs text-[var(--sg-text-muted)]">加载中…</p>;
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 p-6">
-      <Link to={`/issues/${event.issue_id ?? ''}`} className="text-sm text-sky-400 hover:underline">
-        ← 返回 Issue
+    <div className="space-y-3">
+      <Link
+        to={`/issues/${event.issue_id ?? ''}`}
+        className="inline-block text-xs hover:underline"
+        style={{ color: 'var(--sg-accent)' }}
+      >
+        ← 返回问题
       </Link>
       <EventDetail event={event.payload} />
     </div>
