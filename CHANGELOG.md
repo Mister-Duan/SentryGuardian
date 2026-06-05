@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING CHANGE:** DSN format is now `{scheme}://{host}/api/sentry/{projectId}` (no `publicKey@` in URL). Ingest route is `POST /api/sentry/{projectId}/envelope/`. `buildDsn(projectId, host)` signature changed.
+
 ### Added
 
+- Local dev hot reload: `pnpm dev:packages` / `pnpm dev:full` / `pnpm dev:example`; shared `scripts/dev-nest-backend.sh`; VS Code tasks (`.vscode/tasks.json`)
 - User docs: `docs/getting-started.md`, `docs/configuration.md`, `docs/learn/*` (concepts, data-flow, SDK, console, self-hosting)
 - **MVP full stack**: `@sentry-guardian/backend-dsn` ingest, `@sentry-guardian/backend-monitor` API + Grouper, `@sentry-guardian/frontend-monitor` React console
 - `@sentry-guardian/nest-prisma` shared Prisma module for Nest apps

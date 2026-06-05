@@ -3,7 +3,7 @@ import { MockTransport, BufferTransport } from '@sentry-guardian/core';
 import { init, getClient, close } from './sdk.js';
 import { FetchTransport } from './transports/fetch.js';
 
-const dsn = 'https://public@localhost/api/demo';
+const dsn = 'http://localhost:3001/api/sentry/demo';
 
 describe('browser init', () => {
   afterEach(async () => {

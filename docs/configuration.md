@@ -41,12 +41,7 @@ Prisma 与两个 Nest 应用共用此变量。
 | `CORS_ORIGIN` | 否 | `true`（允许全部） | CORS 来源；生产建议设为前端域名 |
 | `MAX_ENVELOPE_BYTES` | 否 | `1048576`（1MB） | 单条 Envelope 请求体上限 |
 
-ingest 鉴权（请求侧，非环境变量）：
-
-| 方式 | 说明 |
-|------|------|
-| 请求头 `X-Sentry-Guardian-Public-Key` | **推荐**；`@sentry-guardian/browser` 自动附带 |
-| 查询参数 `?sentry_key=` | 备用 |
+ingest 鉴权：DSN 路径中的 `{projectId}` 须对应 `projects` 表中已存在项目（`POST /api/sentry/{projectId}/envelope/`）。
 
 ### backend/monitor（API + Grouper，默认端口 3002）
 
@@ -80,31 +75,33 @@ VITE_API_URL=https://monitor.example.com pnpm --filter @sentry-guardian/frontend
 ## DSN 格式
 
 ```text
-{scheme}://{publicKey}@{host}/api/{projectId}
+{scheme}://{host}[:port]/api/sentry/{projectId}
 ```
 
 | 部分 | 说明 |
 |------|------|
 | `scheme` | `http` 或 `https`；见下表「协议约定」 |
-| `publicKey` | 项目公钥，存于 `projects.public_key` |
 | `host` | ingest 服务地址，如 `localhost:3001` 或 `ingest.example.com`（**不要**带路径） |
 | `projectId` | 项目 ID（cuid），非 slug |
+
+示例：`http://localhost:3001/api/sentry/clxxxxxxxx`
 
 ### 协议约定（本地 vs 生产）
 
 | 场景 | DSN / 上报 URL | 说明 |
 |------|----------------|------|
-| 本地开发（`localhost`、`127.0.0.1`、`::1`） | `http://...@localhost:3001/api/...` | ingest 默认仅 HTTP；`db:seed` 的 `buildDsn` 生成 `http://` |
-| 生产（自定义域名） | `https://...@ingest.example.com/api/...` | 前置 TLS 终结；`buildDsn` 对非回环主机使用 `https://` |
-| DSN 误写 `https://...@localhost` | SDK 仍上报 **`http://localhost:.../envelope/`** | `parseDsn` 对回环主机强制 HTTP（需使用已含该逻辑的 `@sentry-guardian/core` 构建产物） |
+| 本地开发（`localhost`、`127.0.0.1`、`::1`） | `http://localhost:3001/api/sentry/...` | ingest 默认仅 HTTP；`db:seed` 的 `buildDsn` 生成 `http://` |
+| 生产（自定义域名） | `https://ingest.example.com/api/sentry/...` | 前置 TLS 终结；`buildDsn` 对非回环主机使用 `https://` |
+| DSN 误写 `https://...@localhost` | SDK 仍上报 **`http://localhost:.../envelope/`** | `parseDsn` 对回环主机强制 HTTP |
 
 SDK 实际上报（`parseDsn` 解析后的 `envelopeUrl`）：
 
 ```text
-POST {scheme}://{host}/api/{projectId}/envelope/
+POST {scheme}://{host}/api/sentry/{projectId}/envelope/
 Content-Type: application/x-sentry-guardian-envelope
-X-Sentry-Guardian-Public-Key: {publicKey}
 ```
+
+ingest 通过 URL 中的 `projectId` 识别项目；`projects.public_key` 仍保留于数据库供后续轮换等能力，**不再**写入 DSN。
 
 实现：`packages/core/src/dsn.ts`（`parseDsn`、`ingestScheme`）、`apps/backend/libs/database/src/dsn.ts`（`buildDsn`）。
 
@@ -173,7 +170,7 @@ X-Sentry-Guardian-Public-Key: {publicKey}
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  dsn: 'http://<publicKey>@localhost:3001/api/<projectId>',
+  dsn: 'http://localhost:3001/api/sentry/<projectId>',
   environment: import.meta.env.MODE,
   release: 'my-app@1.2.0',
   sampleRate: 1,

@@ -7,7 +7,7 @@
     "prebuild": "pnpm --filter @sentry-guardian/backend-monitor^... run build",
     "build": "tsc -p tsconfig.json",
     "predev": "pnpm --filter @sentry-guardian/backend-monitor^... run build",
-    "dev": "sh -c 'tsc -p tsconfig.json && tsc -p tsconfig.json -w --preserveWatchOutput & exec node --watch --env-file=../../../.env dist/main.js'",
+    "dev": "bash ../../../scripts/dev-nest-backend.sh",
     "start": "node dist/main.js",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"

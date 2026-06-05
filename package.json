@@ -14,6 +14,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "spellcheck": "cspell --config .cspell/cspell.json --no-progress .",
     "dev": "pnpm --parallel --filter @sentry-guardian/backend-dsn --filter @sentry-guardian/backend-monitor --filter @sentry-guardian/frontend-monitor run dev",
+    "predev:packages": "pnpm --filter @sentry-guardian/browser... run build",
+    "dev:packages": "pnpm --parallel --filter @sentry-guardian/types --filter @sentry-guardian/utils --filter @sentry-guardian/browser-utils --filter @sentry-guardian/core --filter @sentry-guardian/browser run dev",
+    "dev:full": "bash scripts/dev-full.sh",
+    "dev:example": "pnpm --filter @sentry-guardian/example-vanilla dev",
     "changeset": "changeset"
   },
   "devDependencies": {

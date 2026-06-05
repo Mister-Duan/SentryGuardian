@@ -14,8 +14,8 @@ pnpm add @sentry-guardian/browser
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  // 本地 ingest 示例：http://<publicKey>@localhost:3001/api/<projectId>
-  dsn: 'https://<publicKey>@your-ingest-host/api/<projectId>',
+  // 本地 ingest 示例：http://localhost:3001/api/sentry/<projectId>
+  dsn: 'https://your-ingest-host/api/sentry/<projectId>',
   environment: 'production',
 });
 

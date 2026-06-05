@@ -10,7 +10,7 @@ let activeClient: Client | undefined;
  * ```ts
  * // Sample / 示例
  * const options: InitOptions = {
- *   dsn: 'http://publicKey@localhost:3001/api/demo',
+ *   dsn: 'http://localhost:3001/api/sentry/demo',
  *   sdkName: 'my-app',
  *   sdkVersion: '1.0.0',
  * };
@@ -30,7 +30,7 @@ export interface InitOptions extends Omit<ClientOptions, 'sdk'> {
  * @example
  * ```ts
  * // Input / 输入
- * init({ dsn: 'https://key@host/api/1', sdkName: 'test', sdkVersion: '0.1.0' })
+ * init({ dsn: 'http://localhost:3001/api/sentry/proj_1', sdkName: 'test', sdkVersion: '0.1.0' })
  * // Output / 输出
  * Client instance
  * ```

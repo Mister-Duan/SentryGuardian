@@ -148,7 +148,11 @@ docker compose -f docker/compose.yml up -d postgres
 pnpm --filter @sentry-guardian/database db:migrate
 pnpm --filter @sentry-guardian/database db:seed   # 记下输出的 DSN
 
-# 三个服务（或根目录 pnpm dev）
+# 三服务并行 + 热重启（推荐）
+pnpm dev
+# 若同时改 packages/* SDK：pnpm dev:full
+
+# 或分终端：
 pnpm --filter @sentry-guardian/backend-dsn dev      # :3001
 pnpm --filter @sentry-guardian/backend-monitor dev  # :3002
 pnpm --filter @sentry-guardian/frontend-monitor dev # :5173
@@ -162,7 +166,7 @@ SDK 接入（monorepo 内）：
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  dsn: 'http://<publicKey>@localhost:3001/api/<projectId>',
+  dsn: 'http://localhost:3001/api/sentry/<projectId>',
   environment: 'production',
 });
 ```

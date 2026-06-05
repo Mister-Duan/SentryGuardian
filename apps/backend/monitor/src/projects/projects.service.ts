@@ -33,7 +33,7 @@ export class ProjectsService {
       id: p.id,
       name: p.name,
       slug: p.slug,
-      dsn: buildDsn(p.publicKey, p.id, host),
+      dsn: buildDsn(p.id, host),
     }));
   }
 }

@@ -165,7 +165,7 @@ Sentry.init({
 ## 与 ingest 的协议
 
 - Content-Type：`application/x-sentry-guardian-envelope`
-- 鉴权头：`X-Sentry-Guardian-Public-Key`
+- ingest 路径：`POST /api/sentry/{projectId}/envelope/`
 - 成功：`201` + `{ stored: number }`
 
 自定义 `transport` 时需保持兼容，见 `packages/browser/src/transports/fetch.ts`。

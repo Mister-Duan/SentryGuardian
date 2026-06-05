@@ -3,7 +3,7 @@ import { Client } from './client.js';
 import { MockTransport } from './transports/base.js';
 import { BufferTransport } from './transports/buffer.js';
 
-const dsn = 'https://public@localhost/api/demo';
+const dsn = 'http://localhost:3001/api/sentry/demo';
 const sdk = { name: 'test.core', version: '0.1.0' };
 
 function createTestClient(overrides: Partial<ConstructorParameters<typeof Client>[0]> = {}) {

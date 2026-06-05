@@ -20,7 +20,7 @@ pnpm dev
 **方式 B — 命令行**
 
 ```bash
-VITE_DSN='http://<publicKey>@localhost:3001/api/<projectId>' pnpm dev
+VITE_DSN='http://localhost:3001/api/sentry/<projectId>' pnpm dev
 ```
 
 本地 seed 与 `buildDsn` 对 `localhost` 使用 **`http://`**。若 DSN 仍写成 `https://`，SDK 的 `parseDsn` 也会在回环地址上改为 HTTP 上报；修改 DSN 或 SDK 后请重新构建 browser 包（见下方故障排查）。
@@ -38,7 +38,7 @@ VITE_DSN='http://<publicKey>@localhost:3001/api/<projectId>' pnpm dev
 |------|------|
 | `net::ERR_SSL_PROTOCOL_ERROR` | 上报 URL 仍是 `https://localhost` 时：执行 `pnpm --filter @sentry-guardian/core build && pnpm --filter @sentry-guardian/browser build`，重启本示例 `pnpm dev`；或把 `VITE_DSN` 改为 `http://` |
 | 无上报请求 | 确认已设置 `VITE_DSN`（`main.js` 在缺少 DSN 时不会 `init`） |
-| 401 / 403 | 使用 seed 完整 DSN，勿改 publicKey / projectId |
+| 401 / 403 | 使用 seed 完整 DSN，勿改 projectId |
 | 连接被拒绝 | 确认 `backend-dsn` 在 3001 监听：`curl http://localhost:3001/health` |
 
 ## 相关文档

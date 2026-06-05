@@ -66,7 +66,7 @@ pnpm --filter @sentry-guardian/database db:seed
 **务必保存 seed 输出**，例如：
 
 ```text
-DSN: http://a1b2c3...@localhost:3001/api/clxxxxxxxx
+DSN: http://localhost:3001/api/sentry/clxxxxxxxx
 Admin / 管理员: admin@localhost
 ```
 
@@ -81,7 +81,9 @@ Admin / 管理员: admin@localhost
 pnpm dev
 ```
 
-同时启动 dsn（3001）、monitor（3002）、前端（5173）。首次会先构建 workspace 依赖并编译后端 `dist/`（见 [development.md §后端 dev](./development.md#后端-dev-说明)）。
+同时启动 dsn（3001）、monitor（3002）、前端（5173）。首次会先构建 workspace 依赖并编译后端 `dist/`（见 [development.md](./development.md#热重启一览)）。
+
+若同时改 `packages/*` 与后端/控制台，用 **`pnpm dev:full`**（SDK `tsup --watch` + 三应用热重启）。
 
 **方式 B — 分终端**
 
@@ -109,9 +111,9 @@ curl http://localhost:3002/api/health
 **方式 A — Vanilla 示例**
 
 ```bash
-cd examples/vanilla
-cp .env.example .env   # 填入 seed 输出的 DSN
-pnpm dev
+# 根目录（需已 pnpm dev 或 pnpm dev:full）
+pnpm dev:example
+# 或：cd examples/vanilla && cp .env.example .env && pnpm dev
 ```
 
 打开 http://localhost:5174 ，点击 **Throw test error**。详见 [examples/vanilla/README.md](../examples/vanilla/README.md)。
@@ -122,7 +124,7 @@ pnpm dev
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  dsn: 'http://<publicKey>@localhost:3001/api/<projectId>',
+  dsn: 'http://localhost:3001/api/sentry/<projectId>',
   environment: 'development',
 });
 
@@ -147,7 +149,7 @@ throw new Error('Hello SentryGuardian');
 | `Cannot read properties of undefined (reading 'event')` | 旧 `tsx` dev 导致 DI 失败 | 拉最新代码，用 `pnpm dev`（`tsc` + `node --watch`） |
 | `net::ERR_SSL_PROTOCOL_ERROR` | 浏览器用 HTTPS 访问本地 HTTP ingest | DSN 用 `http://localhost:...`；或升级 SDK 后 `core`/`browser` 重建并重启示例 |
 | 登录 401 | 密码与 seed 不一致 | 重跑 seed 或核对 `SEED_ADMIN_PASSWORD` |
-| SDK 上报 401 | DSN / publicKey 错误 | 使用 seed 完整 DSN；或控制台项目页复制 |
+| SDK 上报 401 | DSN 中 projectId 错误 | 使用 seed 完整 DSN；或控制台项目页复制 |
 | Issue 一直为空 | Grouper 未跑或 monitor 未连库 | 确认 monitor 进程、查看其日志 |
 | CORS 错误 | 前端直连错误 API 地址 | 开发用 Vite 代理；生产配置 `VITE_API_URL` |
 | 重复事件不增加 | `event_id` 幂等 | 正常；换 `captureException` 或新错误文本 |

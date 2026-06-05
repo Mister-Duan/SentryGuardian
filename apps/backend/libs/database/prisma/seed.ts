@@ -51,7 +51,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const dsn = buildDsn(project.publicKey, project.id, ingestHost);
+  const dsn = buildDsn(project.id, ingestHost);
 
   console.log('Seed complete / 种子数据已写入:');
   console.log(`  Admin / 管理员: ${adminEmail}`);

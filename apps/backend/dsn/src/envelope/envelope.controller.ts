@@ -7,7 +7,7 @@ import { EnvelopeService } from './envelope.service.js';
  * Ingest envelope HTTP API.
  * Envelope 上报 HTTP API。
  */
-@Controller('api/:projectId')
+@Controller('api/sentry/:projectId')
 export class EnvelopeController {
   constructor(private readonly envelopeService: EnvelopeService) {}
 
@@ -17,8 +17,7 @@ export class EnvelopeController {
    *
    * @example
    * ```http
-   * POST /api/{projectId}/envelope/
-   * X-Sentry-Guardian-Public-Key: {publicKey}
+   * POST /api/sentry/{projectId}/envelope/
    * // Output / 输出
    * { "stored": 1 }
    * ```

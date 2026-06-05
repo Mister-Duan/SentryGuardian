@@ -8,7 +8,7 @@ describe('BrowserClient', () => {
   it('attaches stack frames from Error', async () => {
     const inner = new MockTransport({ url: 'https://localhost/envelope/' });
     const client = new BrowserClient({
-      dsn: 'https://public@localhost/api/demo',
+      dsn: 'http://localhost:3001/api/sentry/demo',
       sdk,
       transport: new BufferTransport(inner),
       integrations: [],
@@ -30,7 +30,7 @@ describe('BrowserClient', () => {
   it('includes linked Error.cause chain', async () => {
     const inner = new MockTransport({ url: 'https://localhost/envelope/' });
     const client = new BrowserClient({
-      dsn: 'https://public@localhost/api/demo',
+      dsn: 'http://localhost:3001/api/sentry/demo',
       sdk,
       transport: new BufferTransport(inner),
       integrations: [],

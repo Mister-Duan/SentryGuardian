@@ -27,9 +27,7 @@ export function generateEventId(): string {
  * 解析后的 ingest DSN 组成部分。
  */
 export interface ParsedDsn {
-  /** Public key segment used for ingest authentication headers. 用于 ingest 鉴权头的 public key 段。 */
-  publicKey: string;
-  /** Project slug/id embedded in the DSN path. DSN 路径中的项目 slug/id。 */
+  /** Project id embedded in the DSN path. DSN 路径中的项目 id。 */
   projectId: string;
   /** Full envelope POST URL derived from scheme, host, and project. 由协议、主机与项目推导的 Envelope POST URL。 */
   envelopeUrl: string;
@@ -51,24 +49,28 @@ function ingestScheme(host: string, scheme: 'http' | 'https'): 'http' | 'https' 
  * Parse DSN into ingest URL parts.
  * 解析 DSN 为上报 URL 组成部分。
  *
+ * Format / 格式：`{scheme}://{host}[:port]/api/sentry/{projectId}`
+ *
  * @example
  * ```ts
  * // Input / 输入（本地常见误写 https，仍解析为 http 上报）
- * parseDsn('https://publicKey@localhost:3001/api/my-project')
+ * parseDsn('https://localhost:3001/api/sentry/my-project')
  * // Output / 输出
- * { publicKey: 'publicKey', projectId: 'my-project', envelopeUrl: 'http://localhost:3001/api/my-project/envelope/' }
+ * { projectId: 'my-project', envelopeUrl: 'http://localhost:3001/api/sentry/my-project/envelope/' }
  * ```
  */
 export function parseDsn(dsn: string): ParsedDsn {
-  const match = dsn.match(/^(https?):\/\/([^@]+)@([^/]+)\/api\/([^/]+)/);
+  const trimmed = dsn.trim().replace(/\/+$/, '');
+  const match = trimmed.match(/^(https?):\/\/([^/]+)\/api\/sentry\/([^/?#]+)$/);
   if (!match) {
-    throw new Error(`Invalid DSN: ${dsn}`);
+    throw new Error(
+      `Invalid DSN: ${dsn}. Expected format: http://host:port/api/sentry/{projectId}`,
+    );
   }
-  const [, scheme, publicKey, host, projectId] = match;
+  const [, scheme, host, projectId] = match;
   const resolvedScheme = ingestScheme(host, scheme as 'http' | 'https');
   return {
-    publicKey: publicKey!,
     projectId: projectId!,
-    envelopeUrl: `${resolvedScheme}://${host}/api/${projectId}/envelope/`,
+    envelopeUrl: `${resolvedScheme}://${host}/api/sentry/${projectId}/envelope/`,
   };
 }

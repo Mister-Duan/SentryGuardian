@@ -15,7 +15,7 @@ const SDK_VERSION = '0.1.0';
  * ```ts
  * // Sample / 示例
  * const options: BrowserInitOptions = {
- *   dsn: 'https://publicKey@localhost/api/demo',
+ *   dsn: 'http://localhost:3001/api/sentry/demo',
  *   environment: 'production',
  *   denyUrls: [/extensions\//],
  * };
@@ -47,7 +47,7 @@ export interface BrowserInitOptions
  * @example
  * ```ts
  * // Input / 输入
- * init({ dsn: 'https://key@host/api/1' })
+ * init({ dsn: 'http://localhost:3001/api/sentry/proj_1' })
  * // Output / 输出
  * BrowserClient
  * ```
@@ -63,7 +63,7 @@ export function init(options: BrowserInitOptions): BrowserClient {
     ...clientOptions
   } = options;
 
-  const { envelopeUrl, publicKey } = parseDsn(dsn);
+  const { envelopeUrl } = parseDsn(dsn);
   const integrations =
     defaultIntegrations === false
       ? (customIntegrations ?? [])
@@ -78,7 +78,6 @@ export function init(options: BrowserInitOptions): BrowserClient {
     new BufferTransport(
       new FetchTransport({
         url: envelopeUrl,
-        headers: { 'X-Sentry-Guardian-Public-Key': publicKey },
       }),
     );
 

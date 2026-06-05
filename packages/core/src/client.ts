@@ -18,7 +18,7 @@ const DEDUPE_WINDOW_MS = 2000;
  * ```ts
  * // Sample / 示例
  * const options: ClientOptions = {
- *   dsn: 'http://publicKey@localhost:3001/api/demo',
+ *   dsn: 'http://localhost:3001/api/sentry/demo',
  *   environment: 'production',
  *   sampleRate: 1,
  *   sdk: { name: 'sentry-guardian.javascript', version: '0.1.0' },

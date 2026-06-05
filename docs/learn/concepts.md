@@ -56,14 +56,13 @@ MVP 算法（`@sentry-guardian/utils`）：
 **项目级上报凭证**，嵌入在 SDK 的 `init({ dsn })` 中。
 
 ```text
-{scheme}://{publicKey}@{host}/api/{projectId}
+{scheme}://{host}[:port]/api/sentry/{projectId}
 ```
 
 | 部分 | 谁持有 | 说明 |
 |------|--------|------|
 | `scheme` | 配置 / seed | 本地回环一般为 `http`；公网 ingest 为 `https` |
-| `publicKey` | 浏览器可见 | 仅用于 ingest 鉴权，**不是**控制台密码 |
-| `projectId` | URL 路径 | 数据库项目主键 |
+| `projectId` | URL 路径 | 数据库项目主键（ingest 路由与鉴权依据） |
 | `host` | ingest 服务 | 如 `localhost:3001` 或 `ingest.yourcompany.com` |
 
 控制台用户密码存在 `users` 表，与 DSN **分离**——泄露 DSN 不应能登录后台。
@@ -107,7 +106,7 @@ SDK 内的插件，在 `init` 时注册，用于：
 | `Issue` | Issue | 状态枚举一致 |
 | DSN | DSN | URL 格式类似，host 指向自托管 ingest |
 | Envelope | Envelope | 行式格式借鉴，Content-Type 自定义 |
-| `publicKey` | Public key | 无 Secret key 上报路径（MVP） |
+| DSN 路径 | Project id in URL | 无独立 Secret key 上报路径（MVP） |
 
 ## 下一步
 

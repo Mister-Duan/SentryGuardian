@@ -13,7 +13,6 @@ const hasDatabase = Boolean(process.env.DATABASE_URL);
 describe.skipIf(!hasDatabase)('Envelope ingest (contract)', () => {
   let app: INestApplication;
   let projectId: string;
-  let publicKey: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -32,14 +31,13 @@ describe.skipIf(!hasDatabase)('Envelope ingest (contract)', () => {
     const org = await prisma.organization.findFirst();
     const project = await prisma.project.findFirst({ where: { organizationId: org!.id } });
     projectId = project!.id;
-    publicKey = project!.publicKey;
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('POST /api/:projectId/envelope stores event', async () => {
+  it('POST /api/sentry/:projectId/envelope stores event', async () => {
     const event: ErrorEvent = {
       event_id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
@@ -52,8 +50,7 @@ describe.skipIf(!hasDatabase)('Envelope ingest (contract)', () => {
     const body = serializeEnvelope(envelope);
 
     const res = await request(app.getHttpServer())
-      .post(`/api/${projectId}/envelope`)
-      .set('X-Sentry-Guardian-Public-Key', publicKey)
+      .post(`/api/sentry/${projectId}/envelope`)
       .set('Content-Type', 'application/x-sentry-guardian-envelope')
       .send(body);
 
@@ -61,8 +58,7 @@ describe.skipIf(!hasDatabase)('Envelope ingest (contract)', () => {
     expect(res.body.stored).toBe(1);
 
     const dup = await request(app.getHttpServer())
-      .post(`/api/${projectId}/envelope`)
-      .set('X-Sentry-Guardian-Public-Key', publicKey)
+      .post(`/api/sentry/${projectId}/envelope`)
       .set('Content-Type', 'application/x-sentry-guardian-envelope')
       .send(body);
 

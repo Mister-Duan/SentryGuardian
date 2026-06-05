@@ -9,14 +9,11 @@ import { PrismaService } from '@sentry-guardian/nest-prisma';
 
 export interface DsnAuthRequest extends Request {
   projectId?: string;
-  publicKey?: string;
 }
 
-const PUBLIC_KEY_HEADER = 'x-sentry-guardian-public-key';
-
 /**
- * Validate projectId + public key for ingest requests.
- * 校验 ingest 请求的 projectId 与 public key。
+ * Validate project id for ingest requests (DSN path embeds project id).
+ * 校验 ingest 请求的项目 id（DSN 路径含 project id）。
  */
 @Injectable()
 export class DsnAuthGuard implements CanActivate {
@@ -34,32 +31,14 @@ export class DsnAuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing projectId');
     }
 
-    const publicKey = this.extractPublicKey(req);
-    if (!publicKey) {
-      throw new UnauthorizedException('Missing public key');
-    }
-
     const project = await this.prisma.project.findFirst({
-      where: { id: projectId, publicKey },
+      where: { id: projectId },
     });
     if (!project) {
-      throw new UnauthorizedException('Invalid DSN credentials');
+      throw new UnauthorizedException('Unknown project');
     }
 
     req.projectId = projectId;
-    req.publicKey = publicKey;
     return true;
-  }
-
-  private extractPublicKey(req: DsnAuthRequest): string | undefined {
-    const header = req.headers[PUBLIC_KEY_HEADER];
-    if (typeof header === 'string' && header.length > 0) {
-      return header;
-    }
-    const query = req.query.sentry_key;
-    if (typeof query === 'string') {
-      return query;
-    }
-    return undefined;
   }
 }

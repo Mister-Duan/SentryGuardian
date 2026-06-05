@@ -27,7 +27,10 @@ cp .env.example .env
 | `pnpm test` | Vitest（node / browser / frontend 分项目） |
 | `pnpm lint` | ESLint |
 | `pnpm spellcheck` | 拼写检查 |
-| `pnpm dev` | 并行启动 dsn + monitor + 前端 |
+| `pnpm dev` | 并行启动 dsn + monitor + 前端（热重启，见下文） |
+| `pnpm dev:packages` | 仅监听构建 SDK 包（types → browser，`tsup --watch`） |
+| `pnpm dev:full` | **SDK 监听 + 三应用**（改 packages 与 apps 均自动重建/重启） |
+| `pnpm dev:example` | 启动 `examples/vanilla`（:5174，Vite HMR） |
 | `pnpm changeset` | 创建 Changeset（发布用） |
 
 ## 服务与端口
@@ -39,20 +42,31 @@ cp .env.example .env
 | `@sentry-guardian/frontend-monitor` | `pnpm --filter @sentry-guardian/frontend-monitor dev` | 5173 |
 | `@sentry-guardian/example-vanilla` | `cd examples/vanilla && pnpm dev` | 5174 |
 
+### 热重启一览
+
+| 场景 | 命令 | 行为 |
+|------|------|------|
+| 只改控制台 / Monitor API | `pnpm dev` | 前端 Vite HMR；后端 `tsc -w` + `node --watch` |
+| 只改 SDK（types/core/browser 等） | `pnpm dev:packages` | 各包 `tsup --watch` 写入 `dist/` |
+| 同时改 SDK + 后端/前端 | `pnpm dev:full` | 上两者并行；后端额外监听 `packages/*/dist` |
+| 测 vanilla 示例 | 另开终端 `pnpm dev:example` | 依赖已构建的 `@sentry-guardian/browser`；SDK 开发时用 `dev:full` |
+
+VS Code / Cursor：**Terminal → Run Task** 可选 `Dev: apps`、`Dev: full stack` 等（`.vscode/tasks.json`）。
+
 ### 后端 `dev` 说明
 
-- 使用 `tsc --watch` 编译到 `dist/`，再用 `node --watch dist/main.js` 运行（**不要**用 `tsx watch src/main.ts` 跑 Nest：`emitDecoratorMetadata` 无效会导致 `PrismaService` 等注入为 `undefined`）。
-- 通过 `node --env-file=../../../.env` 加载**仓库根目录** `.env`（含 `DATABASE_URL`）；执行 `pnpm dev` 前请 `cp .env.example .env`。
-- `predev` / `prebuild` 会自动 `pnpm --filter <app>^... run build`，构建 workspace 依赖（如 `@sentry-guardian/core` 的 `dist/`），避免 `Cannot find module '@sentry-guardian/core'`。
+- 脚本：`scripts/dev-nest-backend.sh`（`tsc -w` 编译到 `dist/`，`node --watch --watch-path=dist` 及 workspace 包 `dist` 变更时重启）。
+- **不要**用 `tsx watch src/main.ts` 跑 Nest：`emitDecoratorMetadata` 无效会导致 `PrismaService` 等注入为 `undefined`。
+- 通过 `node --env-file=<repo>/.env` 加载**仓库根目录** `.env`（含 `DATABASE_URL`）；执行 `pnpm dev` 前请 `cp .env.example .env`。
+- `predev` / `prebuild` 会自动 `pnpm --filter <app>^... run build`，构建 workspace 依赖，避免 `Cannot find module '@sentry-guardian/core'`。
 - `tsconfig` 已排除 `*.test.ts` / `*.e2e.test.ts`；契约测试用根目录 `pnpm test` + Vitest。
 
-### 修改 SDK 后
+### 修改 SDK 后（无 `dev:full` 时）
 
-若改了 `packages/core` 或 `packages/browser`，示例页与后端 ingest 需重新构建后再测：
+若未开 `pnpm dev:packages` / `pnpm dev:full`，改完 SDK 需手动构建：
 
 ```bash
-pnpm --filter @sentry-guardian/core build
-pnpm --filter @sentry-guardian/browser build
+pnpm --filter @sentry-guardian/browser... run build
 ```
 
 ## 数据库

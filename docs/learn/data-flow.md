@@ -16,7 +16,7 @@ sequenceDiagram
 
   App->>SDK: 未捕获错误 / captureException
   SDK->>SDK: 集成、beforeSend、采样、去重
-  SDK->>DSN: POST /api/{projectId}/envelope
+  SDK->>DSN: POST /api/sentry/{projectId}/envelope
   DSN->>DSN: 鉴权、解析、脱敏
   DSN->>DB: INSERT events (幂等 event_id)
   Grp->>DB: SELECT aggregated_at IS NULL
@@ -55,14 +55,14 @@ BrowserClient → BufferTransport → FetchTransport → ingest
 
 | 组件 | 行为 |
 |------|------|
-| `FetchTransport` | `POST` Envelope，`keepalive: true`，带 `X-Sentry-Guardian-Public-Key` |
+| `FetchTransport` | `POST` Envelope，`keepalive: true` |
 | `BufferTransport` | 失败重试；`429` 时读 `Retry-After` 退避 |
 
 ## 阶段 3：ingest（dsn）
 
 `POST /api/:projectId/envelope`：
 
-1. **DsnAuthGuard**：`projectId` + `publicKey` 必须匹配 `projects` 表
+1. **DsnAuthGuard**：URL 中的 `projectId` 必须存在于 `projects` 表
 2. **大小限制**：超过 `MAX_ENVELOPE_BYTES` → `413`
 3. **解析**：`parseEnvelope` 行式格式
 4. **脱敏**：`scrubObject` 过滤 password、token 等键

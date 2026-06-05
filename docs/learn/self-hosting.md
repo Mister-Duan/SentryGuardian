@@ -118,10 +118,10 @@ server {
 ### 4. 业务方 DSN
 
 ```text
-https://{publicKey}@ingest.example.com/api/{projectId}
+https://ingest.example.com/api/sentry/{projectId}
 ```
 
-与 seed / 控制台展示一致；`publicKey` 泄露时可轮换（需后续实现「轮换 Key」管理 UI，MVP 需手改数据库或重 seed 项目）。
+与 seed / 控制台展示一致。`projectId` 为不可猜测的 cuid，请勿在公开文档中暴露生产项目 DSN。
 
 ## 资源与容量（经验值）
 

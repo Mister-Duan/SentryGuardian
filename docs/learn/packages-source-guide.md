@@ -73,14 +73,14 @@ pnpm add @sentry-guardian/browser
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  dsn: 'http://你的publicKey@localhost:3001/api/项目ID',
+  dsn: 'http://localhost:3001/api/sentry/项目ID',
   environment: 'production',
 });
 ```
 
 | 你写的配置 | 源码位置 | 作用 |
 |-----------|----------|------|
-| `dsn` | `browser/src/sdk.ts` → `parseDsn()` | 解析出上报 URL 和 publicKey |
+| `dsn` | `browser/src/sdk.ts` → `parseDsn()` | 解析出上报 URL 与 projectId |
 | `environment` 等 | 传给 `BrowserClient` → `core/src/client.ts` | 写进每条 `ErrorEvent` |
 
 `init` 会做三件事（简化理解）：
@@ -125,9 +125,8 @@ Sentry.init({
 ### 第 3 步：HTTP 发到后端（不在 packages 里，但要心里有数）
 
 ```http
-POST http://localhost:3001/api/{projectId}/envelope/
+POST http://localhost:3001/api/sentry/{projectId}/envelope/
 Content-Type: application/x-sentry-guardian-envelope
-X-Sentry-Guardian-Public-Key: {publicKey}
 ```
 
 实现：`apps/backend/dsn/`。  
@@ -326,14 +325,13 @@ browser/src/sdk.ts
 格式：
 
 ```text
-{scheme}://{publicKey}@{host}/api/{projectId}
+{scheme}://{host}[:port]/api/sentry/{projectId}
 ```
 
 | 部分 | 含义 |
 |------|------|
-| `publicKey` | 项目公钥，HTTP 头 `X-Sentry-Guardian-Public-Key` |
-| `projectId` | 项目 ID，URL 路径里 |
-| `host` | ingest 服务地址 |
+| `projectId` | 项目主键，URL 路径段 |
+| `host` | ingest 服务地址（含端口，如 `localhost:3001`） |
 
 解析逻辑：`packages/core/src/dsn.ts` 的 `parseDsn()`。  
 本地 `localhost` 即使用 `https` 写 DSN，也会自动改成 **`http`** 上报，避免本机证书问题。

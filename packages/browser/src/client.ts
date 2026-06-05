@@ -10,7 +10,7 @@ import { parseStack } from './stack-parser.js';
  * ```ts
  * // Sample / 示例
  * const options: BrowserClientOptions = {
- *   dsn: 'https://publicKey@localhost/api/demo',
+ *   dsn: 'http://localhost:3001/api/sentry/demo',
  *   sdk: { name: 'sentry-guardian.javascript.browser', version: '0.1.0' },
  *   linkedErrors: true,
  * };
@@ -31,7 +31,7 @@ export interface BrowserClientOptions extends ClientOptions {
  * @example
  * ```ts
  * // Input / 输入
- * new BrowserClient({ dsn: 'https://key@host/api/1', sdk: { name: 'x', version: '0.1.0' } })
+ * new BrowserClient({ dsn: 'http://localhost:3001/api/sentry/1', sdk: { name: 'x', version: '0.1.0' } })
  * // Output / 输出
  * BrowserClient instance
  * ```

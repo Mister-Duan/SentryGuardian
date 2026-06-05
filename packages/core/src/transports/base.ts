@@ -38,8 +38,7 @@ export interface Transport {
  * ```ts
  * // Sample / 示例
  * const options: TransportOptions = {
- *   url: 'http://localhost:3001/api/demo/envelope/',
- *   headers: { 'X-Sentry-Guardian-Public-Key': 'publicKey' },
+ *   url: 'http://localhost:3001/api/sentry/demo/envelope/',
  * };
  * ```
  */
