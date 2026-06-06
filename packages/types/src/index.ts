@@ -59,6 +59,7 @@ export type {
   IssueCommentResponse,
   IssueDetailResponse,
   IssueListQuery,
+  IssueStatsQuery,
   IssueListResponse,
   LoginRequest,
   LoginResponse,

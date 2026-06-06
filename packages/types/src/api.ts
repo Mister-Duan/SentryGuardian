@@ -105,10 +105,43 @@ export interface IssueListQuery {
   environment?: string;
   /** Filter by release on latest occurrence. 按 release 过滤。 */
   release?: string;
+  /** Filter by latest event exception type (e.g. `TypeError`). 按最近事件异常类型过滤。 */
+  exception_type?: string;
+  /** Filter by latest event capture mechanism (e.g. `onerror`). 按最近事件捕获机制过滤。 */
+  mechanism?: string;
+  /** Filter by issue severity level (e.g. `error`). 按严重级别过滤。 */
+  level?: string;
+  /** ISO8601 lower bound on `last_seen` (inclusive). `last_seen` 下限（含）。 */
+  since?: string;
+  /** ISO8601 upper bound on `last_seen` (inclusive). `last_seen` 上限（含）。 */
+  until?: string;
   /** 1-based page index. 从 1 开始的页码。 */
   page?: number;
   /** Page size (server may cap). 每页条数（服务端可能设上限）。 */
   page_size?: number;
+}
+
+/**
+ * Shared scope filters for project error stats APIs (charts).
+ * 项目错误统计 API（图表）共用的范围筛选参数。
+ */
+export interface IssueStatsQuery {
+  /** Relative window in hours when `since`/`until` omitted (default 12). 相对窗口小时数。 */
+  hours?: number;
+  /** ISO8601 event timestamp lower bound. 事件时间下限。 */
+  since?: string;
+  /** ISO8601 event timestamp upper bound. 事件时间上限。 */
+  until?: string;
+  /** Filter events to issues with this workflow status. 按 Issue 状态过滤事件。 */
+  status?: IssueStatus;
+  /** Filter by environment on the issue. 按 Issue 环境过滤。 */
+  environment?: string;
+  /** Filter by exception type on the issue. 按 Issue 异常类型过滤。 */
+  exception_type?: string;
+  /** Filter by capture mechanism on the issue. 按 Issue 捕获机制过滤。 */
+  mechanism?: string;
+  /** Filter by severity level on the issue. 按 Issue 严重级别过滤。 */
+  level?: string;
 }
 
 /**

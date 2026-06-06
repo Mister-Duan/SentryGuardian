@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import type { Issue, IssueStatus, ProjectResponse } from '@sentry-guardian/types';
+import type { Issue, ProjectResponse } from '@sentry-guardian/types';
 import { IssueBulkBar } from '../components/issues/IssueBulkBar.js';
 import { IssueListToolbar, type IssueSort } from '../components/issues/IssueListToolbar.js';
 import { ProjectErrorOverview } from '../components/issues/ProjectErrorOverview.js';
@@ -8,11 +8,25 @@ import { Button, Card, Table, TableHead, TableRow } from '../components/ui.js';
 import { usePageHeader } from '../layout/PageHeaderContext.js';
 import { ISSUE_STATUS_LABELS } from '../lib/format-event.js';
 import { labelLevel, labelMechanism } from '../lib/error-labels.js';
+import {
+  type IssueFilterField,
+  type IssueFilterState,
+  clearAllIssueFilters,
+  mergeFilterOptions,
+  setIssueFilter,
+} from '../lib/issue-filters.js';
+import { toIssueScopeQuery, toIssueStatsQuery } from '../lib/issue-scope-query.js';
+import {
+  createRelativeTimeRange,
+  defaultIssueTimeRange,
+  type IssueTimeRange,
+} from '../lib/issue-time-range.js';
 import { useAuth } from '../lib/auth.js';
 
 const REFRESH_MS = 10_000;
 
-type StatusFilter = IssueStatus | 'all';
+const QUICK_FILTER_CLASS =
+  'block max-w-full truncate rounded px-0.5 text-left text-[10px] text-[var(--sg-accent)] hover:underline';
 
 function formatAge(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime();
@@ -23,15 +37,46 @@ function formatAge(iso: string): string {
   return `${Math.floor(h / 24)} 天`;
 }
 
+function FilterableCell({
+  value,
+  label,
+  onFilter,
+}: {
+  value: string | undefined;
+  label: string;
+  onFilter: (value: string) => void;
+}) {
+  if (!value) {
+    return <span className="text-[10px] text-[var(--sg-text-muted)]">—</span>;
+  }
+  return (
+    <button
+      type="button"
+      className={QUICK_FILTER_CLASS}
+      title={`按${label}筛选：${value}`}
+      onClick={() => onFilter(value)}
+    >
+      {value}
+    </button>
+  );
+}
+
 export function IssuesPage() {
   const { api } = useAuth();
   const [searchParams] = useSearchParams();
   const [projects, setProjects] = useState<ProjectResponse[]>([]);
-  const [projectId, setProjectId] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('unresolved');
+  const [filters, setFilters] = useState<IssueFilterState>({
+    project_id: '',
+    status: 'unresolved',
+    environment: '',
+    exception_type: '',
+    mechanism: '',
+    level: '',
+  });
   const [search, setSearch] = useState('');
-  const [environment, setEnvironment] = useState('');
-  const [release, setRelease] = useState('');
+  const [timeRange, setTimeRange] = useState<IssueTimeRange>(() => defaultIssueTimeRange());
+  const [breakdownTypeKeys, setBreakdownTypeKeys] = useState<string[]>([]);
+  const [breakdownMechanismKeys, setBreakdownMechanismKeys] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [total, setTotal] = useState(0);
@@ -41,25 +86,42 @@ export function IssuesPage() {
   const [realtime, setRealtime] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const selectedProject = projects.find((p) => p.id === projectId);
+  const selectedProject = projects.find((p) => p.id === filters.project_id);
   const pageSize = 20;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
+  const filterOptions = useMemo(
+    () => ({
+      projects: projects.map((p) => ({ id: p.id, name: p.name })),
+      exceptionTypeOptions: mergeFilterOptions(breakdownTypeKeys, filters.exception_type),
+      mechanismOptions: mergeFilterOptions(breakdownMechanismKeys, filters.mechanism),
+    }),
+    [projects, breakdownTypeKeys, breakdownMechanismKeys, filters.exception_type, filters.mechanism],
+  );
+
+  const statsQuery = useMemo(
+    () => toIssueStatsQuery(filters, timeRange),
+    [filters, timeRange],
+  );
+
+  const scopeQuery = useMemo(
+    () => toIssueScopeQuery(filters, timeRange),
+    [filters, timeRange],
+  );
+
   useEffect(() => {
     if (searchParams.get('taxonomy') === 'errors') {
-      setStatusFilter('unresolved');
+      setFilters((prev) => ({ ...prev, status: 'unresolved' }));
     }
   }, [searchParams]);
 
   const loadIssues = useCallback(() => {
-    if (!projectId) return;
+    if (!filters.project_id) return;
     void api
       .listIssues({
-        project_id: projectId,
-        ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+        project_id: filters.project_id,
+        ...scopeQuery,
         ...(search ? { search } : {}),
-        ...(environment ? { environment } : {}),
-        ...(release ? { release } : {}),
         page,
         page_size: pageSize,
       })
@@ -70,7 +132,7 @@ export function IssuesPage() {
         setSelected(new Set());
       })
       .catch(() => setError('加载问题列表失败'));
-  }, [api, projectId, statusFilter, search, environment, release, page]);
+  }, [api, filters.project_id, scopeQuery, search, page]);
 
   const sortedIssues = useMemo(() => {
     const copy = [...issues];
@@ -107,7 +169,7 @@ export function IssuesPage() {
   useEffect(() => {
     void api.listProjects().then((list) => {
       setProjects(list);
-      if (list[0]) setProjectId(list[0].id);
+      setFilters((prev) => (prev.project_id ? prev : { ...prev, project_id: list[0]?.id ?? '' }));
     });
   }, [api]);
 
@@ -116,10 +178,56 @@ export function IssuesPage() {
   }, [loadIssues]);
 
   useEffect(() => {
+    if (!filters.project_id) {
+      setBreakdownTypeKeys([]);
+      setBreakdownMechanismKeys([]);
+      return;
+    }
+    void api.errorBreakdown(filters.project_id, statsQuery).then((res) => {
+      setBreakdownTypeKeys(res.by_type.map((item) => item.key));
+      setBreakdownMechanismKeys(res.by_mechanism.map((item) => item.key));
+    });
+  }, [api, filters.project_id, statsQuery]);
+
+  useEffect(() => {
+    if (timeRange.preset === 'custom') return;
+    const timer = setInterval(() => {
+      setTimeRange(createRelativeTimeRange(timeRange.preset));
+    }, 60_000);
+    return () => clearInterval(timer);
+  }, [timeRange.preset]);
+
+  useEffect(() => {
     if (!realtime) return;
     const timer = setInterval(loadIssues, REFRESH_MS);
     return () => clearInterval(timer);
   }, [loadIssues, realtime]);
+
+  function applyQuickFilter(field: IssueFilterField, value: string) {
+    setFilters((prev) => setIssueFilter(prev, field, value));
+    setPage(1);
+  }
+
+  function updateTimeRange(next: IssueTimeRange) {
+    setTimeRange(next);
+    setPage(1);
+  }
+
+  function updateFilters(next: IssueFilterState) {
+    const projectChanged = next.project_id !== filters.project_id;
+    const scoped = projectChanged
+      ? {
+          ...clearAllIssueFilters(next),
+          project_id: next.project_id,
+        }
+      : next;
+    setFilters(scoped);
+    setPage(1);
+    if (projectChanged) {
+      setBreakdownTypeKeys([]);
+      setBreakdownMechanismKeys([]);
+    }
+  }
 
   async function copyDsn() {
     if (!selectedProject?.dsn) return;
@@ -147,47 +255,28 @@ export function IssuesPage() {
 
   return (
     <div className="space-y-2">
-      {projectId && <ProjectErrorOverview projectId={projectId} />}
-
-      <Card className="!p-0">
-        <div className="p-3 pb-0">
+      <Card className="!p-0 overflow-hidden">
+        <div className="border-b border-[var(--sg-border)] px-3 pt-3 pb-2.5">
           <IssueListToolbar
-            projects={projects}
-            projectId={projectId}
-            onProjectId={(id) => {
-              setProjectId(id);
-              setPage(1);
-            }}
-            statusFilter={statusFilter}
-            onStatusFilter={(s) => {
-              setStatusFilter(s);
-              setPage(1);
-            }}
+            filters={filters}
+            onFiltersChange={updateFilters}
+            filterOptions={filterOptions}
+            timeRange={timeRange}
+            onTimeRangeChange={updateTimeRange}
             search={search}
             onSearch={(s) => {
               setSearch(s);
-              setPage(1);
-            }}
-            environment={environment}
-            onEnvironment={(s) => {
-              setEnvironment(s);
-              setPage(1);
-            }}
-            release={release}
-            onRelease={(s) => {
-              setRelease(s);
               setPage(1);
             }}
             sort={sort}
             onSort={setSort}
             realtime={realtime}
             onRealtimeToggle={() => setRealtime((v) => !v)}
-            dateLabel="近 24 小时"
           />
         </div>
 
         {selectedProject?.dsn && (
-          <div className="mx-3 mb-2 flex items-center gap-2 rounded border border-[var(--sg-border)] bg-[var(--sg-content-bg)] px-2 py-1">
+          <div className="flex items-center gap-2 border-b border-[var(--sg-border)] bg-[var(--sg-content-bg)] px-3 py-1.5">
             <p className="min-w-0 flex-1 truncate font-mono text-[10px] text-[var(--sg-text-muted)]">
               {selectedProject.dsn}
             </p>
@@ -197,6 +286,14 @@ export function IssuesPage() {
           </div>
         )}
 
+        {filters.project_id && (
+          <ProjectErrorOverview
+            projectId={filters.project_id}
+            statsQuery={statsQuery}
+            timeRange={timeRange}
+          />
+        )}
+
         <IssueBulkBar
           selectedCount={selected.size}
           totalOnPage={sortedIssues.length}
@@ -204,9 +301,9 @@ export function IssuesPage() {
           onSelectAll={toggleSelectAll}
         />
 
-        {error && <p className="mx-3 mb-2 text-xs text-[var(--sg-danger)]">{error}</p>}
+        {error && <p className="px-3 pb-1 text-xs text-[var(--sg-danger)]">{error}</p>}
 
-        <Table className="mx-3 mb-2">
+        <Table className="mb-1 px-3">
           <TableHead>
             <tr>
               <th className="w-8 pb-2" />
@@ -248,18 +345,36 @@ export function IssuesPage() {
                     </span>
                   )}
                 </td>
-                <td className="max-w-[80px] py-1.5 pr-2 text-[10px]">
-                  <span className="block truncate" title={issue.exception_type}>
-                    {issue.exception_type ?? '—'}
-                  </span>
+                <td className="max-w-[80px] py-1.5 pr-2">
+                  <FilterableCell
+                    value={issue.exception_type}
+                    label="异常类型"
+                    onFilter={(v) => applyQuickFilter('exception_type', v)}
+                  />
                 </td>
-                <td className="max-w-[80px] py-1.5 pr-2 text-[10px]">
-                  <span className="block truncate" title={issue.mechanism}>
-                    {issue.mechanism ? labelMechanism(issue.mechanism) : '—'}
-                  </span>
+                <td className="max-w-[80px] py-1.5 pr-2">
+                  {issue.mechanism ? (
+                    <button
+                      type="button"
+                      className={QUICK_FILTER_CLASS}
+                      title={`按捕获类型筛选：${labelMechanism(issue.mechanism)}`}
+                      onClick={() => applyQuickFilter('mechanism', issue.mechanism!)}
+                    >
+                      {labelMechanism(issue.mechanism)}
+                    </button>
+                  ) : (
+                    <span className="text-[10px] text-[var(--sg-text-muted)]">—</span>
+                  )}
                 </td>
-                <td className="py-1.5 pr-2 text-[10px]">
-                  {labelLevel(issue.level)}
+                <td className="py-1.5 pr-2">
+                  <button
+                    type="button"
+                    className={QUICK_FILTER_CLASS}
+                    title={`按严重级别筛选：${labelLevel(issue.level)}`}
+                    onClick={() => applyQuickFilter('level', issue.level)}
+                  >
+                    {labelLevel(issue.level)}
+                  </button>
                 </td>
                 <td className="py-1.5 pr-2 text-[10px] tabular-nums text-[var(--sg-text-muted)]">
                   {formatAge(issue.last_seen)}
@@ -272,7 +387,15 @@ export function IssuesPage() {
                 </td>
                 <td className="py-1.5 pr-2 text-right text-xs tabular-nums">{issue.event_count}</td>
                 <td className="py-1.5 text-right text-[10px] text-[var(--sg-text-muted)]">—</td>
-                <td className="py-1.5 text-xs">{ISSUE_STATUS_LABELS[issue.status]}</td>
+                <td className="py-1.5 text-xs">
+                  <button
+                    type="button"
+                    className={QUICK_FILTER_CLASS}
+                    onClick={() => applyQuickFilter('status', issue.status)}
+                  >
+                    {ISSUE_STATUS_LABELS[issue.status]}
+                  </button>
+                </td>
               </TableRow>
             ))}
           </tbody>

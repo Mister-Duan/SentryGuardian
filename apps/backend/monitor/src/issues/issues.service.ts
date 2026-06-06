@@ -16,6 +16,7 @@ import type {
 import { toIssueErrorBreakdownResponse } from '../stats/error-breakdown.js';
 import { EventsService } from '../events/events.service.js';
 import { SymbolicatorService } from '../symbolicator/symbolicator.service.js';
+import { buildIssueListWhere } from './issues.logic.js';
 
 function toApiStatus(status: PrismaIssueStatus): IssueStatus {
   return status.toLowerCase() as IssueStatus;
@@ -71,23 +72,7 @@ export class IssuesService {
   async list(query: IssueListQuery): Promise<IssueListResponse> {
     const page = query.page ?? 1;
     const pageSize = Math.min(query.page_size ?? 20, 100);
-    const where = {
-      ...(query.project_id ? { projectId: query.project_id } : {}),
-      ...(query.status
-        ? { status: query.status.toUpperCase() as PrismaIssueStatus }
-        : {}),
-      ...(query.environment ? { environment: query.environment } : {}),
-      ...(query.release ? { release: query.release } : {}),
-      ...(query.search
-        ? {
-            OR: [
-              { title: { contains: query.search, mode: 'insensitive' as const } },
-              { culprit: { contains: query.search, mode: 'insensitive' as const } },
-              { fingerprint: { contains: query.search, mode: 'insensitive' as const } },
-            ],
-          }
-        : {}),
-    };
+    const where = buildIssueListWhere(query);
 
     const [items, total] = await Promise.all([
       this.prisma.issue.findMany({

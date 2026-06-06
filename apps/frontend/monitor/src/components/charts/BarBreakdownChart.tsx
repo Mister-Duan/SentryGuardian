@@ -5,6 +5,10 @@ type Props = {
   items: ErrorBreakdownItem[];
   emptyText?: string;
   labelFn?: (key: string) => string;
+  /** Denser rows for side-by-side layout. 并排布局时使用更紧凑行高。 */
+  compact?: boolean;
+  /** Max bars to render. 最多展示条数。 */
+  maxItems?: number;
 };
 
 /**
@@ -16,19 +20,24 @@ export function BarBreakdownChart({
   items,
   emptyText = '暂无数据',
   labelFn = (k) => k,
+  compact = false,
+  maxItems = 12,
 }: Props) {
-  const max = Math.max(1, ...items.map((i) => i.count));
+  const shown = items.slice(0, maxItems);
+  const max = Math.max(1, ...shown.map((i) => i.count));
 
   return (
-    <div>
-      <h3 className="mb-2 text-xs font-semibold text-[var(--sg-text)]">{title}</h3>
-      {items.length === 0 ? (
-        <p className="text-xs text-[var(--sg-text-muted)]">{emptyText}</p>
+    <div
+      className={`flex h-full min-h-0 flex-col rounded border border-[var(--sg-border)] bg-[var(--sg-content-bg)] ${compact ? 'p-1.5' : 'p-2'}`}
+    >
+      <h3 className="mb-1 text-[10px] font-semibold text-[var(--sg-text)]">{title}</h3>
+      {shown.length === 0 ? (
+        <p className="text-[10px] text-[var(--sg-text-muted)]">{emptyText}</p>
       ) : (
-        <ul className="space-y-1.5">
-          {items.map((item) => (
-            <li key={item.key} className="text-xs">
-              <div className="mb-0.5 flex justify-between gap-2">
+        <ul className={compact ? 'space-y-1' : 'space-y-1.5'}>
+          {shown.map((item) => (
+            <li key={item.key} className="text-[10px]">
+              <div className="mb-0.5 flex justify-between gap-1">
                 <span className="truncate" title={item.key}>
                   {labelFn(item.key)}
                 </span>
@@ -36,7 +45,9 @@ export function BarBreakdownChart({
                   {item.count}
                 </span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-[var(--sg-border)]">
+              <div
+                className={`overflow-hidden rounded-full bg-[var(--sg-border)] ${compact ? 'h-1' : 'h-1.5'}`}
+              >
                 <div
                   className="h-full rounded-full"
                   style={{

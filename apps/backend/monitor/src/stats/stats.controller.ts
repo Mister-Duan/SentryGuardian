@@ -2,6 +2,7 @@ import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import type {
   ErrorBreakdownResponse,
   ErrorTypeTrendResponse,
+  IssueStatsQuery,
   IssueTrendResponse,
   ReleaseCompareResponse,
   TransactionListResponse,
@@ -17,19 +18,18 @@ export class StatsController {
   @Get('error-type-trends')
   errorTypeTrends(
     @Param('projectId') projectId: string,
-    @Query('hours') hours?: string,
-    @Query('dimension') dimension?: string,
+    @Query() query: IssueStatsQuery & { dimension?: string },
   ): Promise<ErrorTypeTrendResponse> {
-    const dim = dimension === 'mechanism' ? 'mechanism' : 'type';
-    return this.statsService.errorTypeTrends(projectId, Number(hours ?? 24), dim);
+    const dim = query.dimension === 'mechanism' ? 'mechanism' : 'type';
+    return this.statsService.errorTypeTrends(projectId, query, dim);
   }
 
   @Get('error-breakdown')
   errorBreakdown(
     @Param('projectId') projectId: string,
-    @Query('hours') hours?: string,
+    @Query() query: IssueStatsQuery,
   ): Promise<ErrorBreakdownResponse> {
-    return this.statsService.errorBreakdown(projectId, Number(hours ?? 24));
+    return this.statsService.errorBreakdown(projectId, query);
   }
 
   @Get('trends')
@@ -37,7 +37,7 @@ export class StatsController {
     @Param('projectId') projectId: string,
     @Query('hours') hours?: string,
   ): Promise<IssueTrendResponse> {
-    return this.statsService.issueTrends(projectId, Number(hours ?? 24));
+    return this.statsService.issueTrends(projectId, Number(hours ?? 12));
   }
 
   @Get('releases/compare')

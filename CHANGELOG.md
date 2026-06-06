@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Database migration: backfill `issues.exception_type` and `issues.mechanism` from latest event payloads
+- Monitor: issue list filters for exception type, capture mechanism, and severity level
 - Examples: `examples/shared/error-demos.js` 覆盖全部默认错误类型；vanilla 按钮面板 + `csp-lab.html`；vue-vite 复用演示并增加 Vue 组件错误
 - fix(sdk): CSP violations listen on window + document; use effectiveDirective; examples csp-lab DSN fallback and img-src demo
 - Browser SDK: CSP violations, HTTP fetch/XHR failures, `console.error` capture, browser context; expanded resource tags (`iframe`, `video`, `audio`, `source`); global handler skips duplicate resource errors and records script line/column
@@ -23,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Monitor: error trend chart X-axis ticks and labels span full plot width with readable time labels
+- Monitor: error trend chart uses dynamic time buckets (finer for shorter ranges) with fixed thin columns; reduced overview height
+- Monitor: issue stream default window is 12h with preset/custom time range picker; charts sit between filters and table and honor active filter pills
+- Monitor: project scope shown as a Kibana-style filter pill; mechanism filter options use live error breakdown keys
+- Monitor: issue list filters use Kibana-style pills, add-filter popover, and click-to-filter on table cells
 - Monitor: issue page error overview uses tabs to switch between trend and breakdown charts
 - Monitor: issue list columns for exception type, capture mechanism, and severity level
 - Monitor: event breadcrumbs shown newest-first by timestamp on issue detail

@@ -10,6 +10,7 @@ import type {
   IssueEventListResponse,
   IssueListQuery,
   IssueListResponse,
+  IssueStatsQuery,
   ErrorBreakdownResponse,
   ErrorTypeTrendResponse,
   IssueErrorBreakdownResponse,
@@ -111,6 +112,11 @@ export class ApiClient {
     if (query?.search) params.set('search', query.search);
     if (query?.environment) params.set('environment', query.environment);
     if (query?.release) params.set('release', query.release);
+    if (query?.exception_type) params.set('exception_type', query.exception_type);
+    if (query?.mechanism) params.set('mechanism', query.mechanism);
+    if (query?.level) params.set('level', query.level);
+    if (query?.since) params.set('since', query.since);
+    if (query?.until) params.set('until', query.until);
     if (query?.page != null) params.set('page', String(query.page));
     if (query?.page_size != null) params.set('page_size', String(query.page_size));
     const q = params.toString() ? `?${params.toString()}` : '';
@@ -200,11 +206,20 @@ export class ApiClient {
 
   async errorTypeTrends(
     projectId: string,
-    hours = 24,
+    query: IssueStatsQuery,
     dimension: 'type' | 'mechanism' = 'type',
   ): Promise<ErrorTypeTrendResponse> {
+    const params = new URLSearchParams({ dimension });
+    if (query.hours != null) params.set('hours', String(query.hours));
+    if (query.since) params.set('since', query.since);
+    if (query.until) params.set('until', query.until);
+    if (query.status) params.set('status', query.status);
+    if (query.environment) params.set('environment', query.environment);
+    if (query.exception_type) params.set('exception_type', query.exception_type);
+    if (query.mechanism) params.set('mechanism', query.mechanism);
+    if (query.level) params.set('level', query.level);
     const res = await fetch(
-      `${API_BASE}/api/projects/${projectId}/error-type-trends?hours=${hours}&dimension=${dimension}`,
+      `${API_BASE}/api/projects/${projectId}/error-type-trends?${params.toString()}`,
       { headers: this.headers() },
     );
     if (!res.ok) {
@@ -213,11 +228,20 @@ export class ApiClient {
     return res.json() as Promise<ErrorTypeTrendResponse>;
   }
 
-  async errorBreakdown(projectId: string, hours = 24): Promise<ErrorBreakdownResponse> {
-    const res = await fetch(
-      `${API_BASE}/api/projects/${projectId}/error-breakdown?hours=${hours}`,
-      { headers: this.headers() },
-    );
+  async errorBreakdown(projectId: string, query: IssueStatsQuery): Promise<ErrorBreakdownResponse> {
+    const params = new URLSearchParams();
+    if (query.hours != null) params.set('hours', String(query.hours));
+    if (query.since) params.set('since', query.since);
+    if (query.until) params.set('until', query.until);
+    if (query.status) params.set('status', query.status);
+    if (query.environment) params.set('environment', query.environment);
+    if (query.exception_type) params.set('exception_type', query.exception_type);
+    if (query.mechanism) params.set('mechanism', query.mechanism);
+    if (query.level) params.set('level', query.level);
+    const q = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/error-breakdown${q}`, {
+      headers: this.headers(),
+    });
     if (!res.ok) {
       throw new Error('Failed to load error breakdown');
     }

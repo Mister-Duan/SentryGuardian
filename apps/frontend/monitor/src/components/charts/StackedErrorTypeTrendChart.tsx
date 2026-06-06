@@ -12,29 +12,66 @@ const SERIES_COLORS = [
   '#a29bfe',
 ];
 
+/** Max bar width (px); columns share plot width evenly. 柱体最大宽度；列均分绘图区宽度。 */
+const MAX_BAR_WIDTH_PX = 8;
+
 type Props = {
   title: string;
   data: ErrorTypeTrendResponse;
   labelFn?: (key: string) => string;
+  /** Tailwind height class for plot area. 绘图区 Tailwind 高度类。 */
+  heightClass?: string;
 };
 
 function countAt(series: ErrorTypeTrendResponse['series'][0], bucket: string): number {
   return series.points.find((p) => p.bucket === bucket)?.count ?? 0;
 }
 
-function formatBucketLabel(iso: string, hours: number): string {
+function formatBucketLabel(iso: string, bucketMs: number): string {
   const d = new Date(iso);
-  if (hours <= 24) {
+  if (bucketMs < 24 * 60 * 60_000) {
     return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   }
   return d.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', hour: '2-digit' });
+}
+
+/** Pick label indices (always include first & last). 选取刻度标签索引（含首尾）。 */
+function labelTickIndices(bucketCount: number, maxLabels = 8): number[] {
+  if (bucketCount <= 0) return [];
+  if (bucketCount <= maxLabels) {
+    return Array.from({ length: bucketCount }, (_, i) => i);
+  }
+  const stride = Math.ceil((bucketCount - 1) / (maxLabels - 1));
+  const indices: number[] = [0];
+  for (let i = stride; i < bucketCount - 1; i += stride) {
+    indices.push(i);
+  }
+  if (indices[indices.length - 1] !== bucketCount - 1) {
+    indices.push(bucketCount - 1);
+  }
+  return indices;
+}
+
+function tickLeftPercent(index: number, total: number): number {
+  return ((index + 0.5) / total) * 100;
+}
+
+function labelAlign(index: number, total: number): string {
+  if (index === 0) return 'translate-x-0 text-left';
+  if (index === total - 1) return '-translate-x-full text-right';
+  return '-translate-x-1/2 text-center';
 }
 
 /**
  * Stacked column chart: X = time buckets, Y = event count by error type.
  * 堆叠柱状图：横轴时间、纵轴各错误类型事件量。
  */
-export function StackedErrorTypeTrendChart({ title, data, labelFn = (k) => k }: Props) {
+export function StackedErrorTypeTrendChart({
+  title,
+  data,
+  labelFn = (k) => k,
+  heightClass = 'h-28',
+}: Props) {
   const { buckets, series } = data;
   const activeSeries = series.filter((s) => s.points.some((p) => p.count > 0));
   const displayLabel = (key: string) => (key === '__other__' ? '其他' : labelFn(key));
@@ -42,8 +79,8 @@ export function StackedErrorTypeTrendChart({ title, data, labelFn = (k) => k }: 
   if (buckets.length === 0 || activeSeries.length === 0) {
     return (
       <div>
-        <h3 className="mb-2 text-xs font-semibold text-[var(--sg-text)]">{title}</h3>
-        <p className="text-xs text-[var(--sg-text-muted)]">暂无数据</p>
+        <h3 className="mb-1 text-[10px] font-semibold text-[var(--sg-text)]">{title}</h3>
+        <p className="text-[10px] text-[var(--sg-text-muted)]">暂无数据</p>
       </div>
     );
   }
@@ -52,22 +89,24 @@ export function StackedErrorTypeTrendChart({ title, data, labelFn = (k) => k }: 
     activeSeries.reduce((sum, s) => sum + countAt(s, bucket), 0),
   );
   const maxTotal = Math.max(1, ...columnTotals);
-
   const yTicks = [0, Math.ceil(maxTotal / 2), maxTotal];
+  const labelIndices = labelTickIndices(buckets.length);
 
   return (
-    <div>
-      <h3 className="mb-2 text-xs font-semibold text-[var(--sg-text)]">{title}</h3>
+    <div className="flex min-h-0 flex-col">
+      <h3 className="mb-0.5 text-[10px] font-semibold text-[var(--sg-text)]">{title}</h3>
 
-      <div className="flex gap-2">
-        <div className="flex h-44 w-8 shrink-0 flex-col justify-between py-0.5 text-right text-[10px] tabular-nums text-[var(--sg-text-muted)]">
+      <div className="flex gap-1.5">
+        <div
+          className={`flex w-6 shrink-0 flex-col justify-between text-right text-[9px] tabular-nums text-[var(--sg-text-muted)] ${heightClass}`}
+        >
           {[...yTicks].reverse().map((tick) => (
             <span key={tick}>{tick}</span>
           ))}
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="relative h-44 border-b border-l border-[var(--sg-border)]">
+          <div className={`relative w-full border-b border-l border-[var(--sg-border)] ${heightClass}`}>
             {yTicks.slice(1, -1).map((tick) => (
               <div
                 key={tick}
@@ -76,20 +115,36 @@ export function StackedErrorTypeTrendChart({ title, data, labelFn = (k) => k }: 
               />
             ))}
 
-            <div className="absolute inset-0 flex items-end gap-0.5 px-0.5">
+            {/* X-axis minor ticks across full plot width / 铺满横轴的刻度线 */}
+            {buckets.map((bucket, i) => (
+              <div
+                key={`tick-${bucket}`}
+                className="pointer-events-none absolute bottom-0 w-px bg-[var(--sg-border)]"
+                style={{
+                  left: `${tickLeftPercent(i, buckets.length)}%`,
+                  height: 4,
+                  transform: 'translateX(-50%)',
+                }}
+              />
+            ))}
+
+            <div className="absolute inset-0 flex items-end">
               {buckets.map((bucket, bi) => {
                 const total = columnTotals[bi] ?? 0;
                 const columnHeight = total > 0 ? (total / maxTotal) * 100 : 0;
                 return (
                   <div
                     key={bucket}
-                    className="flex min-w-[6px] flex-1 flex-col justify-end"
-                    style={{ height: '100%' }}
-                    title={`${formatBucketLabel(bucket, data.hours)}：共 ${total} 条`}
+                    className="flex h-full flex-1 items-end justify-center"
+                    title={`${formatBucketLabel(bucket, data.bucket_ms)}：共 ${total} 条`}
                   >
                     <div
-                      className="flex w-full flex-col justify-end overflow-hidden rounded-t-sm"
-                      style={{ height: `${columnHeight}%`, minHeight: total > 0 ? '2px' : 0 }}
+                      className="flex flex-col justify-end overflow-hidden rounded-t-[1px]"
+                      style={{
+                        width: `min(${MAX_BAR_WIDTH_PX}px, 80%)`,
+                        height: `${columnHeight}%`,
+                        minHeight: total > 0 ? '1px' : 0,
+                      }}
                     >
                       {activeSeries.map((s, si) => {
                         const c = countAt(s, bucket);
@@ -114,29 +169,29 @@ export function StackedErrorTypeTrendChart({ title, data, labelFn = (k) => k }: 
             </div>
           </div>
 
-          <div className="mt-1 flex gap-0.5 overflow-hidden">
-            {buckets.map((bucket, i) => {
-              const show =
-                buckets.length <= 12 || i % Math.ceil(buckets.length / 8) === 0 || i === buckets.length - 1;
+          {/* X-axis labels aligned to tick positions / 与刻度对齐的 X 轴标签 */}
+          <div className="relative mt-1 h-4 w-full">
+            {labelIndices.map((i) => {
+              const bucket = buckets[i]!;
               return (
-                <div key={bucket} className="min-w-[6px] flex-1 text-center">
-                  {show && (
-                    <span className="text-[9px] text-[var(--sg-text-muted)]">
-                      {formatBucketLabel(bucket, data.hours)}
-                    </span>
-                  )}
-                </div>
+                <span
+                  key={bucket}
+                  className={`absolute top-0 whitespace-nowrap text-[9px] leading-none text-[var(--sg-text-muted)] ${labelAlign(i, buckets.length)}`}
+                  style={{ left: `${tickLeftPercent(i, buckets.length)}%` }}
+                >
+                  {formatBucketLabel(bucket, data.bucket_ms)}
+                </span>
               );
             })}
           </div>
         </div>
       </div>
 
-      <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
+      <ul className="mt-1 flex max-h-4 flex-wrap gap-x-2 gap-y-0 overflow-hidden">
         {activeSeries.map((s, i) => (
-          <li key={s.key} className="flex items-center gap-1 text-[10px] text-[var(--sg-text)]">
+          <li key={s.key} className="flex items-center gap-0.5 text-[9px] text-[var(--sg-text)]">
             <span
-              className="inline-block h-2 w-2 rounded-sm"
+              className="inline-block h-1.5 w-1.5 rounded-sm"
               style={{ background: SERIES_COLORS[i % SERIES_COLORS.length] }}
             />
             {displayLabel(s.key)}

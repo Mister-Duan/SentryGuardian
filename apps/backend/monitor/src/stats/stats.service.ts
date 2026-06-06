@@ -4,75 +4,104 @@ import type {
   ErrorBreakdownResponse,
   ErrorEvent,
   ErrorTypeTrendResponse,
+  IssueListQuery,
+  IssueStatsQuery,
   IssueTrendResponse,
   ReleaseCompareResponse,
   TransactionEvent,
   TransactionListResponse,
   TransactionSummary,
 } from '@sentry-guardian/types';
+import { buildIssueListWhere } from '../issues/issues.logic.js';
 import { buildErrorTypeTrends, toErrorBreakdownResponse } from './error-breakdown.js';
+import { hasIssueTaxonomyFilters, resolveTimeWindow } from './stats.query.js';
 
 @Injectable()
 export class StatsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async errorTypeTrends(
+  private async matchingIssueIds(
     projectId: string,
-    hours: number,
-    dimension: 'type' | 'mechanism' = 'type',
-  ): Promise<ErrorTypeTrendResponse> {
-    const windowHours = Math.min(Math.max(hours, 1), 168);
-    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000);
+    query: IssueStatsQuery,
+  ): Promise<string[] | null> {
+    const scope: IssueListQuery = {
+      project_id: projectId,
+      status: query.status,
+      environment: query.environment,
+      exception_type: query.exception_type,
+      mechanism: query.mechanism,
+      level: query.level,
+    };
+    if (!hasIssueTaxonomyFilters(scope)) {
+      return null;
+    }
+    const rows = await this.prisma.issue.findMany({
+      where: buildIssueListWhere(scope),
+      select: { id: true },
+    });
+    return rows.map((r) => r.id);
+  }
+
+  private async fetchScopedErrorEvents(projectId: string, query: IssueStatsQuery) {
+    const window = resolveTimeWindow(query);
+    const issueIds = await this.matchingIssueIds(projectId, query);
+
+    if (issueIds !== null && issueIds.length === 0) {
+      return { window, rows: [] as { timestamp: Date; payload: ErrorEvent }[] };
+    }
+
     const rows = await this.prisma.event.findMany({
       where: {
         projectId,
         eventType: 'ERROR',
-        timestamp: { gte: since },
+        timestamp: { gte: window.since, lte: window.until },
+        ...(issueIds !== null ? { issueId: { in: issueIds } } : {}),
       },
       select: { timestamp: true, payload: true },
       orderBy: { timestamp: 'asc' },
       take: 10000,
     });
-    return buildErrorTypeTrends(
-      rows.map((r) => ({
+
+    return {
+      window,
+      rows: rows.map((r) => ({
         timestamp: r.timestamp,
         payload: r.payload as unknown as ErrorEvent,
       })),
-      windowHours,
-      dimension,
-    );
+    };
   }
 
-  async errorBreakdown(projectId: string, hours: number): Promise<ErrorBreakdownResponse> {
-    const windowHours = Math.min(Math.max(hours, 1), 168);
-    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000);
-    const rows = await this.prisma.event.findMany({
-      where: {
-        projectId,
-        eventType: 'ERROR',
-        timestamp: { gte: since },
-      },
-      select: { payload: true },
-      take: 5000,
+  async errorTypeTrends(
+    projectId: string,
+    query: IssueStatsQuery,
+    dimension: 'type' | 'mechanism' = 'type',
+  ): Promise<ErrorTypeTrendResponse> {
+    const { window, rows } = await this.fetchScopedErrorEvents(projectId, query);
+    return buildErrorTypeTrends(rows, window.hours, dimension, 8, {
+      since: window.since,
+      until: window.until,
     });
-    const payloads = rows.map((r) => r.payload as unknown as ErrorEvent);
-    return toErrorBreakdownResponse(payloads, windowHours);
+  }
+
+  async errorBreakdown(projectId: string, query: IssueStatsQuery): Promise<ErrorBreakdownResponse> {
+    const { window, rows } = await this.fetchScopedErrorEvents(projectId, query);
+    const payloads = rows.map((r) => r.payload);
+    return toErrorBreakdownResponse(payloads, window.hours);
   }
 
   async issueTrends(projectId: string, hours: number): Promise<IssueTrendResponse> {
-    const windowHours = Math.min(Math.max(hours, 1), 168);
-    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000);
+    const window = resolveTimeWindow({ hours });
     const events = await this.prisma.event.findMany({
       where: {
         projectId,
         eventType: 'ERROR',
-        timestamp: { gte: since },
+        timestamp: { gte: window.since, lte: window.until },
       },
       select: { timestamp: true },
       orderBy: { timestamp: 'asc' },
     });
 
-    const bucketMs = windowHours <= 24 ? 60 * 60 * 1000 : 6 * 60 * 60 * 1000;
+    const bucketMs = window.hours <= 24 ? 60 * 60 * 1000 : 6 * 60 * 60 * 1000;
     const buckets = new Map<string, number>();
     for (const e of events) {
       const start = new Date(Math.floor(e.timestamp.getTime() / bucketMs) * bucketMs);
@@ -81,7 +110,7 @@ export class StatsService {
     }
 
     return {
-      hours: windowHours,
+      hours: window.hours,
       buckets: [...buckets.entries()].map(([bucket, count]) => ({ bucket, count })),
     };
   }

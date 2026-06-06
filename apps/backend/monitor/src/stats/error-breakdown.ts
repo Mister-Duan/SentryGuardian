@@ -36,24 +36,69 @@ export function primaryMechanism(payload: ErrorEvent): string {
   );
 }
 
-function bucketMsForWindow(windowHours: number): number {
-  return windowHours <= 24 ? 60 * 60 * 1000 : 6 * 60 * 60 * 1000;
-}
-
 function floorToBucket(iso: Date, bucketMs: number): string {
   const start = new Date(Math.floor(iso.getTime() / bucketMs) * bucketMs);
   return start.toISOString();
 }
 
-function listBucketStarts(windowHours: number): { bucketMs: number; buckets: string[] } {
-  const bucketMs = bucketMsForWindow(windowHours);
-  const now = Date.now();
-  const since = now - windowHours * 60 * 60 * 1000;
+const MIN_TREND_BUCKETS = 12;
+const MAX_TREND_BUCKETS = 48;
+
+/** Candidate bucket sizes (ms), finest first. 候选分桶粒度（毫秒），从细到粗。 */
+const BUCKET_CANDIDATES_MS = [
+  5 * 60_000,
+  15 * 60_000,
+  30 * 60_000,
+  60 * 60_000,
+  2 * 60 * 60_000,
+  3 * 60 * 60_000,
+  6 * 60 * 60_000,
+  12 * 60 * 60_000,
+  24 * 60 * 60_000,
+];
+
+/**
+ * Pick bucket size from span so the chart has ~12–48 columns (finer for shorter windows).
+ * 按时间跨度选择分桶粒度，使图表约 12–48 根柱（短窗口更细）。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * resolveBucketMs(3_600_000) // 1h span
+ * // Output / 输出
+ * 300_000 // 5 minutes
+ * ```
+ */
+export function resolveBucketMs(spanMs: number): number {
+  const span = Math.max(spanMs, 60_000);
+  for (const candidate of BUCKET_CANDIDATES_MS) {
+    const count = Math.ceil(span / candidate);
+    if (count >= MIN_TREND_BUCKETS && count <= MAX_TREND_BUCKETS) {
+      return candidate;
+    }
+  }
+  const coarse = BUCKET_CANDIDATES_MS[BUCKET_CANDIDATES_MS.length - 1]!;
+  if (Math.ceil(span / coarse) <= MAX_TREND_BUCKETS) {
+    return coarse;
+  }
+  return Math.ceil(span / MAX_TREND_BUCKETS);
+}
+
+function listBucketStartsForRange(since: Date, until: Date): { bucketMs: number; buckets: string[] } {
+  const spanMs = Math.max(until.getTime() - since.getTime(), 60_000);
+  const bucketMs = resolveBucketMs(spanMs);
   const buckets: string[] = [];
-  for (let t = Math.floor(since / bucketMs) * bucketMs; t <= now; t += bucketMs) {
+  const start = Math.floor(since.getTime() / bucketMs) * bucketMs;
+  for (let t = start; t <= until.getTime(); t += bucketMs) {
     buckets.push(new Date(t).toISOString());
   }
   return { bucketMs, buckets };
+}
+
+function listBucketStarts(windowHours: number): { bucketMs: number; buckets: string[] } {
+  const until = new Date();
+  const since = new Date(until.getTime() - windowHours * 60 * 60 * 1000);
+  return listBucketStartsForRange(since, until);
 }
 
 export function aggregateErrorPayloads(payloads: ErrorEvent[]): {
@@ -100,8 +145,11 @@ export function buildErrorTypeTrends(
   windowHours: number,
   dimension: 'type' | 'mechanism' = 'type',
   topN = 8,
+  range?: { since: Date; until: Date },
 ): ErrorTypeTrendResponse {
-  const { bucketMs, buckets } = listBucketStarts(windowHours);
+  const { bucketMs, buckets } = range
+    ? listBucketStartsForRange(range.since, range.until)
+    : listBucketStarts(windowHours);
   const keyFn = dimension === 'mechanism' ? primaryMechanism : primaryType;
 
   const totals = new Map<string, number>();

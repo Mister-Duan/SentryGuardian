@@ -38,3 +38,9 @@ export function labelErrorType(key: string): string {
 export function labelLevel(key: string): string {
   return LEVEL_LABELS[key] ?? key;
 }
+
+/** Known capture mechanism keys for filter dropdowns. 捕获机制筛选项键列表。 */
+export const MECHANISM_FILTER_OPTIONS = Object.keys(MECHANISM_LABELS);
+
+/** Known severity level keys for filter dropdowns. 严重级别筛选项键列表。 */
+export const LEVEL_FILTER_OPTIONS = Object.keys(LEVEL_LABELS);
