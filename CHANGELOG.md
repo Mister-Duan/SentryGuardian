@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Browser SDK: **BREAKING CHANGE** — `performanceIntegration`, `browserTracingIntegration`, and perfume.js helpers (`markNTBT`, `markStep`, …) moved to subpath exports `@sentry-guardian/browser/performance` and `@sentry-guardian/browser/tracing`; main entry is error-monitoring only for smaller app bundles
+
 ### Added
+
+- Browser SDK: subpath exports `./performance` and `./tracing` with `sideEffects: false` for tree-shaking
 
 - Monitor: performance list drops HTTP status column (available on `http.client` event payload); merges transaction/metric into「类型」and duration/value into「数值」columns
 - Monitor: draggable table column reorder with localStorage persistence (Issues, Performance, Releases pages); default min column width 100px without max-width cap

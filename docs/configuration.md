@@ -170,10 +170,10 @@ CLI 参数：`--project-id`、`--token`（JWT）、`--release`、`--dir`（默�
 
 ### 可选性能集成（手动加入 `integrations`）
 
-| 集成 | 导入 | 作用 |
-|------|------|------|
-| `Performance` | `performanceIntegration` | LCP、CLS、TTFB → `TRANSACTION` 事件 |
-| `BrowserTracing` | `browserTracingIntegration` | 路由导航、慢 fetch（可设 `slowThresholdMs`） |
+| 集成 | 子路径导入 | 作用 |
+|------|------------|------|
+| `Performance` | `@sentry-guardian/browser/performance` → `performanceIntegration` | LCP、CLS、TTFB → `TRANSACTION` 事件 |
+| `BrowserTracing` | `@sentry-guardian/browser/tracing` → `browserTracingIntegration` | 慢 fetch（可设 `slowThresholdMs`） |
 
 **性能 URL 过滤**（与 `init({ denyUrls })` 无关，后者仅过滤错误事件）：
 
@@ -183,11 +183,9 @@ CLI 参数：`--project-id`、`--token`（JWT）、`--release`、`--dir`（默�
 | `ignoreIngest` | `boolean` | `true` | 为 `true` 时自动排除 SDK ingest URL（由 DSN `envelopeUrl` 与 `tunnel` 推导） |
 
 ```typescript
-import {
-  init,
-  performanceIntegration,
-  browserTracingIntegration,
-} from '@sentry-guardian/browser';
+import { init } from '@sentry-guardian/browser';
+import { performanceIntegration } from '@sentry-guardian/browser/performance';
+import { browserTracingIntegration } from '@sentry-guardian/browser/tracing';
 
 init({
   dsn: '...',

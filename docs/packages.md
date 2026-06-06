@@ -53,11 +53,17 @@ Monorepo 中 `packages/` 下各包的**实现进度**与文档入口。架构职
 
 ## `@sentry-guardian/browser`
 
-**职责**：浏览器 SDK 主入口——`init`、`BrowserClient`、P0 integrations、`FetchTransport`、堆栈解析；性能由 [perfume.js](https://github.com/Zizzamia/perfume.js) 采集并经 `perfume-bridge` 映射为事务。
+**职责**：浏览器 SDK 主入口——`init`、`BrowserClient`、P0 integrations、`FetchTransport`、堆栈解析。
 
-**主要导出**：`init`、`captureException`、`getDefaultIntegrations`、`performanceIntegration`、`markNTBT`、`markStep`、`FetchTransport`、`parseStack`。
+**子路径（按需、减小主包体积）**：
 
-**依赖**：`core`、`browser-utils`、`types`、`perfume.js`。
+| 子路径 | 导出 |
+|--------|------|
+| `.` | `init`、`captureException`、`getDefaultIntegrations`、`FetchTransport`、`parseStack` |
+| `./performance` | `performanceIntegration`、`markNTBT`、`markStep` 等（[perfume.js](https://github.com/Zizzamia/perfume.js)） |
+| `./tracing` | `browserTracingIntegration`（慢 fetch，不含 perfume） |
+
+**依赖**：`core`、`browser-utils`、`types`；`perfume.js` 仅由 `./performance` 子路径使用。
 
 ## `@sentry-guardian/vue`
 

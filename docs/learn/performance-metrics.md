@@ -65,7 +65,7 @@ perfume `data` 为 **number**。时间类指标的时间起点均为 **本次页
 | **RT** | `RT` | `redirect-time` | 重定向耗时（ms） | 重定向链耗时 | `initPerfume` 时，若 `redirectTime > 0` | 有 |
 
 ```typescript
-import { markNTBT, trackUJNavigation } from '@sentry-guardian/browser';
+import { markNTBT, trackUJNavigation } from '@sentry-guardian/browser/performance';
 
 router.listen(() => {
   markNTBT();           // 开始 NTBT 2s 窗口

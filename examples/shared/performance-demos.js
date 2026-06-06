@@ -28,10 +28,10 @@ const PERFUME_PIPELINE_NOTE =
  * Build grouped performance demos for an initialized browser SDK.
  * 构建绑定已初始化 SDK 的分组性能演示。
  *
- * @param {typeof import('@sentry-guardian/browser')} sdk Browser SDK namespace / 浏览器 SDK 命名空间
+ * @param {typeof import('@sentry-guardian/browser/performance')} perfSdk Performance subpath exports / 性能子路径导出
  * @returns {PerformanceDemoGroup[]}
  */
-export function buildPerformanceDemoGroups(sdk) {
+export function buildPerformanceDemoGroups(perfSdk) {
   return [
     {
       title: 'Web Vitals',
@@ -144,7 +144,7 @@ export function buildPerformanceDemoGroups(sdk) {
           description:
             'perfume：调用 markNTBT() 起 2s 窗口，累加其间 longtask；经 idle 进 analyticsTracker。SPA 路由 listen 中应配合调用',
           run: async () => {
-            sdk.markNTBT?.();
+            perfSdk.markNTBT?.();
             showPerfHint('已 markNTBT；2s 内注入长任务，idle 后上报 NTBT。');
             await delay(100);
             busyBlock(80);
@@ -221,9 +221,9 @@ export function buildPerformanceDemoGroups(sdk) {
           description:
             'perfume：steps 配置起止 mark 后，连续 markStep 完成一步；metricName userJourneyStep，data 为步骤耗时（ms）',
           run: async () => {
-            sdk.markStep?.('demo_checkout_start');
+            perfSdk.markStep?.('demo_checkout_start');
             await delay(80);
-            sdk.markStep?.('demo_checkout_end');
+            perfSdk.markStep?.('demo_checkout_end');
             showPerfHint('已 markStep 起止；idle 后上报 userJourneyStep。');
           },
         },
@@ -234,7 +234,7 @@ export function buildPerformanceDemoGroups(sdk) {
           description:
             'perfume：SPA 路由变化时调用，清除未完成的 stale step，避免错误 userJourneyStep；本身不产生指标',
           run: () => {
-            sdk.trackUJNavigation?.();
+            perfSdk.trackUJNavigation?.();
             showPerfHint('已 trackUJNavigation；实际 SPA 应在 router.listen 中调用。');
           },
         },
@@ -245,9 +245,9 @@ export function buildPerformanceDemoGroups(sdk) {
           description:
             'perfume：start(name)→end(name) 测 User Timing；metricName 为 name，经 idle 回调。耗时须在 maxMeasureTime 内',
           run: () => {
-            sdk.start?.('demo-task');
+            perfSdk.start?.('demo-task');
             busyBlock(50);
-            sdk.end?.('demo-task');
+            perfSdk.end?.('demo-task');
             showPerfHint('已 start/end demo-task；idle 后上报 perf.measure.demo-task。');
           },
         },

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import * as Sentry from '@sentry-guardian/browser';
+import * as SentryPerf from '@sentry-guardian/browser/performance';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { DEMO_TABS, navigateDemoTab, normalizeDemoPath, resolveDemoTab } from '../../shared/demo-routes.js';
 import { buildErrorDemoGroups } from '../../shared/error-demos.js';
@@ -16,7 +17,7 @@ const tabHint = computed(
 
 const groups = computed(() => {
   if (activeTab.value === 'perf') {
-    return buildPerformanceDemoGroups(Sentry);
+    return buildPerformanceDemoGroups(SentryPerf);
   }
   return [...buildErrorDemoGroups(Sentry), vueErrorDemoGroup(() => throwVueError())];
 });

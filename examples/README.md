@@ -16,7 +16,7 @@
 | `shared/error-demos.js` | 错误演示清单 |
 | `shared/performance-demos.js` | 性能演示清单 |
 | `shared/demo-routes.js` | `/error` · `/perf` Tab 路由 |
-| `shared/example-performance.js` | `performanceIntegration` + `browserTracingIntegration` |
+| `shared/example-performance.js` | 从 `/performance`、`/tracing` 子路径组装 integrations |
 | `shared/vite-mock-api.js` | `/mock/404`、`/mock/500`、`/mock/slow` |
 
 ## 错误类型对照表
@@ -34,7 +34,7 @@
 
 ## 性能演示对照表（`/perf`）
 
-SDK 通过 `shared/example-performance.js` 启用 `performanceIntegration`（perfume.js）与 `browserTracingIntegration`（慢请求阈值 300ms）。面板文案区分 **perfume `analyticsTracker` 时机** 与 **SDK 上报**。详见 [performance-metrics.md](../docs/learn/performance-metrics.md)。
+SDK 通过 `shared/example-performance.js` 从 `@sentry-guardian/browser/performance` 与 `/tracing` 按需启用集成（慢请求阈值 300ms）。面板文案区分 **perfume `analyticsTracker` 时机** 与 **SDK 上报**。详见 [performance-metrics.md](../docs/learn/performance-metrics.md)。
 
 **perfume 通则**：多数指标经 `requestIdleCallback` 才进 `analyticsTracker`；**CLS / INP** 在 `document.hidden` 时**同步**回调。SDK 默认 `lcp.reportAllChanges`，Vitals 立即 POST，`resource.timing` 约 400ms 批量。
 

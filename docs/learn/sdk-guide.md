@@ -187,12 +187,12 @@ app.use(router).mount('#app');
 
 启用 Web Vitals 与路由追踪（事务事件，非完整 APM）：
 
+性能集成在**子路径**按需导入，主包 `@sentry-guardian/browser` 不含 perfume.js，减小仅错误监控场景的 bundle 体积：
+
 ```typescript
-import {
-  init,
-  performanceIntegration,
-  browserTracingIntegration,
-} from '@sentry-guardian/browser';
+import { init } from '@sentry-guardian/browser';
+import { performanceIntegration } from '@sentry-guardian/browser/performance';
+import { browserTracingIntegration } from '@sentry-guardian/browser/tracing';
 
 init({
   dsn: '...',
@@ -239,10 +239,10 @@ browserTracingIntegration({
 });
 ```
 
-SPA 路由可配合 perfume 辅助 API（由 SDK 再导出）：
+SPA 路由可配合 perfume 辅助 API（从性能子路径导出）：
 
 ```typescript
-import { markNTBT, trackUJNavigation } from '@sentry-guardian/browser';
+import { markNTBT, trackUJNavigation } from '@sentry-guardian/browser/performance';
 
 router.listen(() => {
   markNTBT();
@@ -316,7 +316,7 @@ Sentry.init({
 | 本地 CORS | ingest 默认允许跨域；生产收紧 `CORS_ORIGIN` |
 | DSN 里 host 端口 | 开发为 `localhost:3001`，与 monitor `3002` 不同 |
 | Source Map 未符号化 | 确认 `release` 一致且已上传 `.map` 到对应 Release |
-| 性能页无数据 | 检查是否加入 `performanceIntegration` / `browserTracingIntegration` |
+| 性能页无数据 | 检查是否从 `/performance`、`/tracing` 子路径加入 `performanceIntegration` / `browserTracingIntegration` |
 | ingest 429 | 项目默认 100 次/分钟限流；流量尖峰时 SDK 会按 `Retry-After` 退避 |
 
 完整选项表：[configuration.md](../configuration.md#sdk-sentry-guardianbrowser)。

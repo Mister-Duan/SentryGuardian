@@ -37,6 +37,24 @@ Sentry.captureException(new Error('something broke'));
 
 关闭默认集成：`defaultIntegrations: false`，再传入自定义 `integrations`。
 
+## 性能（可选子路径）
+
+主包不含 [perfume.js](https://github.com/Zizzamia/perfume.js)。需要 Web Vitals / 资源计时等时：
+
+```ts
+import { init } from '@sentry-guardian/browser';
+import { performanceIntegration } from '@sentry-guardian/browser/performance';
+import { browserTracingIntegration } from '@sentry-guardian/browser/tracing';
+
+init({
+  dsn: '...',
+  integrations: [
+    performanceIntegration(),
+    browserTracingIntegration({ slowThresholdMs: 3000 }),
+  ],
+});
+```
+
 ## 文档
 
 - [SDK 使用指南](../../docs/learn/sdk-guide.md)

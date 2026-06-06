@@ -10,7 +10,7 @@ if (dsn) {
     dsn,
     environment: 'development',
     release: 'vue-example@0.1.0',
-    integrations: examplePerformanceIntegrations(Sentry),
+    integrations: examplePerformanceIntegrations(),
   });
 }
 

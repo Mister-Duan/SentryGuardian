@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry-guardian/browser';
+import * as SentryPerf from '@sentry-guardian/browser/performance';
 import { renderDemoTabBar, renderDemoTabHint } from '../shared/demo-tab-bar.js';
 import {
   DEMO_TAB_PERF,
@@ -36,7 +37,7 @@ if (dsn) {
     dsn,
     environment: 'development',
     release: 'vanilla-example@0.1.0',
-    integrations: examplePerformanceIntegrations(Sentry),
+    integrations: examplePerformanceIntegrations(),
   });
   if (import.meta.env.VITE_DSN) {
     statusEl.textContent = `SDK 已初始化（含性能集成）· release vanilla-example@0.1.0 · DSN ${maskDsn(dsn)}`;
@@ -84,7 +85,7 @@ function renderDemos(sdk, tabId) {
 
   const groups =
     tabId === DEMO_TAB_PERF
-      ? buildPerformanceDemoGroups(sdk)
+      ? buildPerformanceDemoGroups(SentryPerf)
       : buildErrorDemoGroups(sdk);
 
   for (const group of groups) {

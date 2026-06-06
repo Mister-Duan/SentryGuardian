@@ -75,9 +75,14 @@ SDK **有意**将 LCP 设为 `reportAllChanges: true`（覆盖 perfume 默认）
 - `http.client`：`browserTracingIntegration` 在 `captureTransaction` 前过滤
 - **不**作用于错误 `inboundFilters`；**不**过滤 `dataConsumption`（聚合 KB）
 
-## SPA 辅助 API（re-export）
+## 子路径与 SPA API
 
-从 `@sentry-guardian/browser` 导出：`markNTBT`, `markStep`, `markStepOnce`, `trackUJNavigation`, `start`, `end`, `clear`。
+| 子路径 | 导出 |
+|--------|------|
+| `@sentry-guardian/browser/performance` | `performanceIntegration`、`markNTBT`, `markStep`, `markStepOnce`, `trackUJNavigation`, `start`, `end`, `clear`（perfume.js） |
+| `@sentry-guardian/browser/tracing` | `browserTracingIntegration`（不含 perfume.js） |
+
+主入口 `@sentry-guardian/browser` 仅含错误监控与 P0 集成，**不**导出上述性能 API，以便应用 bundle tree-shake。
 
 ## 维护
 
