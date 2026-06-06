@@ -1,21 +1,73 @@
 import type { ErrorEvent } from '@sentry-guardian/types';
 import { Card } from './ui.js';
 import {
+  displayBreadcrumbs,
   displayStackFrames,
   formatBreadcrumbTime,
   formatExceptionTitle,
   formatFrameLocation,
 } from '../lib/format-event.js';
+import {
+  labelErrorType,
+  labelLevel,
+  labelMechanism,
+  LEVEL_LABELS,
+} from '../lib/error-labels.js';
+
+function LevelBadge({ level }: { level: string }) {
+  const colors: Record<string, string> = {
+    fatal: 'bg-red-100 text-red-800',
+    error: 'bg-red-50 text-red-700',
+    warning: 'bg-amber-50 text-amber-800',
+    info: 'bg-blue-50 text-blue-700',
+    debug: 'bg-gray-100 text-gray-600',
+  };
+  return (
+    <span
+      className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase ${colors[level] ?? 'bg-gray-100'}`}
+    >
+      {labelLevel(level)}
+    </span>
+  );
+}
 
 /**
  * Readable breakdown of an `ErrorEvent` for the issue detail page.
+ * Issue 详情页可读的错误事件分解展示。
  */
 export function EventDetail({ event }: { event: ErrorEvent }) {
   const exceptions = event.exception?.values ?? [];
+  const primary = exceptions[0];
+  const errorTypeTag = event.tags?.['error.type'];
+  const browserExtra = event.extra?.browser as Record<string, unknown> | undefined;
 
   return (
     <div className="space-y-3">
-      {(event.environment || event.release || event.request?.url) && (
+      <Card className="!p-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <LevelBadge level={event.level} />
+          {errorTypeTag && (
+            <span className="rounded bg-[var(--sg-border)] px-1.5 py-0.5 text-[10px] text-[var(--sg-text-muted)]">
+              {labelErrorType(errorTypeTag)}
+            </span>
+          )}
+          {primary?.mechanism && (
+            <span className="text-[10px] text-[var(--sg-text-muted)]">
+              来源：{labelMechanism(primary.mechanism.type)}
+              {primary.mechanism.handled ? '（已处理）' : '（未处理）'}
+            </span>
+          )}
+          <span className="text-[10px] tabular-nums text-[var(--sg-text-muted)]">
+            {new Date(event.timestamp).toLocaleString()}
+          </span>
+        </div>
+      </Card>
+
+      {(event.environment ||
+        event.release ||
+        event.request?.url ||
+        event.user ||
+        (event.tags && Object.keys(event.tags).length > 0)) && (
         <Card>
           <h2 className="mb-1.5 text-sm font-semibold">上下文</h2>
           <dl className="grid gap-1.5 text-xs">
@@ -37,6 +89,53 @@ export function EventDetail({ event }: { event: ErrorEvent }) {
                 <dd className="break-all font-mono">{event.request.url}</dd>
               </div>
             )}
+            {event.user && (
+              <div>
+                <dt className="text-[var(--sg-text-muted)]">用户</dt>
+                <dd>
+                  {[event.user.id, event.user.email, event.user.username]
+                    .filter(Boolean)
+                    .join(' · ') || '—'}
+                </dd>
+              </div>
+            )}
+            {event.tags && Object.keys(event.tags).length > 0 && (
+              <div>
+                <dt className="text-[var(--sg-text-muted)]">标签</dt>
+                <dd className="flex flex-wrap gap-1">
+                  {Object.entries(event.tags).map(([k, v]) => (
+                    <span
+                      key={k}
+                      className="rounded border border-[var(--sg-border)] px-1 py-0.5 font-mono text-[10px]"
+                    >
+                      {k}={v}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+            )}
+          </dl>
+        </Card>
+      )}
+
+      {browserExtra && (
+        <Card>
+          <h2 className="mb-1.5 text-sm font-semibold">浏览器</h2>
+          <dl className="grid gap-1 text-xs text-[var(--sg-text-muted)]">
+            {typeof browserExtra.user_agent === 'string' && (
+              <div>
+                <dt>User-Agent</dt>
+                <dd className="break-all font-mono text-[var(--sg-text)]">
+                  {browserExtra.user_agent}
+                </dd>
+              </div>
+            )}
+            {typeof browserExtra.language === 'string' && (
+              <div>
+                <dt>语言</dt>
+                <dd>{browserExtra.language}</dd>
+              </div>
+            )}
           </dl>
         </Card>
       )}
@@ -50,6 +149,11 @@ export function EventDetail({ event }: { event: ErrorEvent }) {
                 <p className="font-mono text-xs text-[var(--sg-danger)]">
                   {formatExceptionTitle(ex)}
                 </p>
+                {ex.mechanism && index > 0 && (
+                  <p className="mt-0.5 text-[10px] text-[var(--sg-text-muted)]">
+                    {labelMechanism(ex.mechanism.type)}
+                  </p>
+                )}
                 {ex.stacktrace?.frames && ex.stacktrace.frames.length > 0 && (
                   <ol className="mt-1 space-y-0.5 font-mono text-[11px]">
                     {displayStackFrames(ex.stacktrace.frames).map((frame, frameIndex) => (
@@ -85,11 +189,27 @@ export function EventDetail({ event }: { event: ErrorEvent }) {
         </Card>
       )}
 
+      {event.extra && Object.keys(event.extra).some((k) => k !== 'browser') && (
+        <Card>
+          <h2 className="mb-1.5 text-sm font-semibold">附加信息</h2>
+          <dl className="space-y-1 text-xs">
+            {Object.entries(event.extra)
+              .filter(([k]) => k !== 'browser')
+              .map(([k, v]) => (
+                <div key={k}>
+                  <dt className="text-[var(--sg-text-muted)]">{k}</dt>
+                  <dd className="break-all font-mono">{JSON.stringify(v)}</dd>
+                </div>
+              ))}
+          </dl>
+        </Card>
+      )}
+
       {event.breadcrumbs && event.breadcrumbs.length > 0 && (
         <Card>
           <h2 className="mb-2 text-sm font-semibold">面包屑</h2>
           <ul className="space-y-1 text-xs">
-            {event.breadcrumbs.map((crumb, index) => (
+            {displayBreadcrumbs(event.breadcrumbs).map((crumb, index) => (
               <li
                 key={index}
                 className="flex gap-2 border-b border-[var(--sg-border)] py-1 last:border-0"
@@ -97,8 +217,22 @@ export function EventDetail({ event }: { event: ErrorEvent }) {
                 <span className="shrink-0 text-[var(--sg-text-muted)]">
                   {formatBreadcrumbTime(crumb.timestamp)}
                 </span>
-                <span>
-                  {[crumb.category, crumb.message].filter(Boolean).join(' · ') || crumb.type || '—'}
+                <span className="min-w-0 flex-1">
+                  <span className="text-[var(--sg-text-muted)]">
+                    {[crumb.category, crumb.level ? LEVEL_LABELS[crumb.level] ?? crumb.level : null]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                  {(crumb.message || crumb.type) && (
+                    <span className="ml-1">
+                      {crumb.message || crumb.type}
+                    </span>
+                  )}
+                  {crumb.data && Object.keys(crumb.data).length > 0 && (
+                    <span className="mt-0.5 block truncate font-mono text-[10px] text-[var(--sg-text-muted)]">
+                      {JSON.stringify(crumb.data)}
+                    </span>
+                  )}
                 </span>
               </li>
             ))}

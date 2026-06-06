@@ -1,5 +1,7 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import type {
+  ErrorBreakdownResponse,
+  ErrorTypeTrendResponse,
   IssueTrendResponse,
   ReleaseCompareResponse,
   TransactionListResponse,
@@ -11,6 +13,24 @@ import { StatsService } from './stats.service.js';
 @UseGuards(JwtAuthGuard)
 export class StatsController {
   constructor(private readonly statsService: StatsService) {}
+
+  @Get('error-type-trends')
+  errorTypeTrends(
+    @Param('projectId') projectId: string,
+    @Query('hours') hours?: string,
+    @Query('dimension') dimension?: string,
+  ): Promise<ErrorTypeTrendResponse> {
+    const dim = dimension === 'mechanism' ? 'mechanism' : 'type';
+    return this.statsService.errorTypeTrends(projectId, Number(hours ?? 24), dim);
+  }
+
+  @Get('error-breakdown')
+  errorBreakdown(
+    @Param('projectId') projectId: string,
+    @Query('hours') hours?: string,
+  ): Promise<ErrorBreakdownResponse> {
+    return this.statsService.errorBreakdown(projectId, Number(hours ?? 24));
+  }
 
   @Get('trends')
   trends(

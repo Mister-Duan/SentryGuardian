@@ -35,6 +35,12 @@ export type {
   IssueEventListResponse,
 } from './event-api.js';
 export type {
+  ErrorBreakdownItem,
+  ErrorBreakdownResponse,
+  ErrorTypeTrendPoint,
+  ErrorTypeTrendResponse,
+  ErrorTypeTrendSeries,
+  IssueErrorBreakdownResponse,
   IssueTrendResponse,
   ReleaseCompareResponse,
   ReleaseStats,

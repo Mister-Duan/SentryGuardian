@@ -2,8 +2,12 @@ import { dedupeIntegration, type Integration } from '@sentry-guardian/core';
 import {
   breadcrumbsIntegration,
   browserApiErrorsIntegration,
+  browserContextIntegration,
+  captureConsoleIntegration,
+  cspErrorsIntegration,
   globalHandlersIntegration,
   httpContextIntegration,
+  httpErrorsIntegration,
   inboundFiltersIntegration,
   linkedErrorsIntegration,
   type InboundFiltersOptions,
@@ -52,6 +56,10 @@ export function getDefaultIntegrations(options: DefaultIntegrationsOptions = {})
     linkedErrorsIntegration(),
     breadcrumbsIntegration(),
     browserApiErrorsIntegration(),
+    cspErrorsIntegration(),
+    httpErrorsIntegration(),
+    captureConsoleIntegration(),
+    browserContextIntegration(),
   ];
 
   const names = new Set(custom.map((i) => i.name));

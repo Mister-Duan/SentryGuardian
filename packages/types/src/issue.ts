@@ -52,4 +52,8 @@ export interface Issue {
   users_seen: number;
   /** Primary source location for display (e.g. `app.js:10`). 展示用的主要来源位置（如 `app.js:10`）。 */
   culprit?: string;
+  /** Exception class from the latest event (e.g. `TypeError`). 最近事件的异常类型。 */
+  exception_type?: string;
+  /** SDK capture mechanism from the latest event (e.g. `onerror`). 最近事件的捕获机制。 */
+  mechanism?: string;
 }

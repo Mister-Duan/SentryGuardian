@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; connect-src 'self' http://localhost:3001 http://127.0.0.1:3001 ws://localhost:5174 ws://localhost:5175; img-src 'self'; style-src 'self' 'unsafe-inline'"
+    />
+    <title>CSP 违规演示 · SentryGuardian</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 40rem;
+        margin: 2rem auto;
+        line-height: 1.5;
+      }
+      button {
+        display: block;
+        margin: 0.5rem 0;
+        padding: 0.5rem 0.75rem;
+      }
+      #csp-status {
+        font-size: 0.85rem;
+        color: #6d4c00;
+        background: #fff8e1;
+        padding: 0.5rem;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CSP 违规演示</h1>
+    <p id="csp-status">SDK 初始化中…</p>
+    <p>
+      本页通过 <code>meta</code> 启用 CSP。推荐先点<strong>外部图片</strong>（最稳定触发
+      <code>securitypolicyviolation</code>）。
+    </p>
+    <button type="button" id="csp-external-img">外部图片（img-src 违规）</button>
+    <button type="button" id="csp-external-script">外部 script（script-src 违规）</button>
+    <button type="button" id="csp-eval">eval（script-src 违规）</button>
+    <script type="module" src="/csp-lab.js"></script>
+  </body>
+</html>

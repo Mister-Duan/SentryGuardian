@@ -116,3 +116,87 @@ export interface ReleaseStats {
 export interface ReleaseCompareResponse {
   items: ReleaseStats[];
 }
+
+/**
+ * One bucket in an error breakdown chart.
+ * 错误分布图中的一个分组项。
+ */
+export interface ErrorBreakdownItem {
+  /** Group key (e.g. exception type or mechanism id). 分组键。 */
+  key: string;
+  /** Human-readable label for UI. UI 展示用标签。 */
+  label: string;
+  /** Event count in the window. 窗口内事件数。 */
+  count: number;
+}
+
+/**
+ * Project-level error breakdown for charts.
+ * 项目级错误分布（图表用）。
+ */
+export interface ErrorBreakdownResponse {
+  /** Analysis window in hours. 分析窗口（小时）。 */
+  hours: number;
+  /** Counts by exception type name. 按异常类型计数。 */
+  by_type: ErrorBreakdownItem[];
+  /** Counts by capture mechanism. 按捕获机制计数。 */
+  by_mechanism: ErrorBreakdownItem[];
+  /** Counts by event level. 按事件级别计数。 */
+  by_level: ErrorBreakdownItem[];
+}
+
+/**
+ * Per-issue error breakdown and volume trend.
+ * 单个 Issue 的错误分布与事件量趋势。
+ */
+export interface IssueErrorBreakdownResponse {
+  /** Counts by exception type. 按异常类型计数。 */
+  by_type: ErrorBreakdownItem[];
+  /** Counts by capture mechanism. 按捕获机制计数。 */
+  by_mechanism: ErrorBreakdownItem[];
+  /** Event volume buckets (24h hourly). 事件量时间桶（24h 按小时）。 */
+  trends: TrendBucket[];
+  /** Stacked time series by exception type. 按异常类型分组的堆叠时间序列。 */
+  type_trends: ErrorTypeTrendResponse;
+}
+
+/**
+ * One time bucket count for a single error type series.
+ * 单条错误类型序列在某个时间桶的计数。
+ */
+export interface ErrorTypeTrendPoint {
+  /** Bucket start (ISO). 桶起点时间。 */
+  bucket: string;
+  /** Events in bucket for this type. 该类型在桶内的事件数。 */
+  count: number;
+}
+
+/**
+ * Error counts over time for one type/mechanism key.
+ * 某一错误类型/机制随时间变化的事件数序列。
+ */
+export interface ErrorTypeTrendSeries {
+  /** Series key (exception type or mechanism id). 序列键。 */
+  key: string;
+  /** Display label. 展示标签。 */
+  label: string;
+  /** Points aligned to {@link ErrorTypeTrendResponse.buckets}. 与 buckets 对齐的数据点。 */
+  points: ErrorTypeTrendPoint[];
+}
+
+/**
+ * Stacked chart payload: time on X-axis, error types on Y (stacked counts).
+ * 堆叠图数据：横轴时间、纵轴各错误类型事件量。
+ */
+export interface ErrorTypeTrendResponse {
+  /** Analysis window in hours. 分析窗口（小时）。 */
+  hours: number;
+  /** Bucket width in milliseconds. 桶宽度（毫秒）。 */
+  bucket_ms: number;
+  /** Grouping dimension. 分组维度。 */
+  dimension: 'type' | 'mechanism';
+  /** Ordered bucket starts (ISO), X-axis. 有序时间桶（横轴）。 */
+  buckets: string[];
+  /** One series per error type (top N + optional Other). 各错误类型序列（纵轴堆叠）。 */
+  series: ErrorTypeTrendSeries[];
+}

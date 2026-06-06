@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/c
 import type {
   Issue,
   IssueDetailResponse,
+  IssueErrorBreakdownResponse,
   IssueEventListQuery,
   IssueEventListResponse,
   IssueListQuery,
@@ -19,6 +20,11 @@ export class IssuesController {
   @Get()
   list(@Query() query: IssueListQuery): Promise<IssueListResponse> {
     return this.issuesService.list(query);
+  }
+
+  @Get(':id/error-breakdown')
+  errorBreakdown(@Param('id') id: string): Promise<IssueErrorBreakdownResponse> {
+    return this.issuesService.errorBreakdown(id);
   }
 
   @Get(':id/events')

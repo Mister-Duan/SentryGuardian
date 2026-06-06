@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MockTransport, BufferTransport } from '@sentry-guardian/core';
 import { init, getClient, close } from './sdk.js';
+import { getDefaultIntegrations } from './default-integrations.js';
 import { FetchTransport } from './transports/fetch.js';
 
 const dsn = 'http://localhost:3001/api/sentry/demo';
@@ -11,9 +12,18 @@ describe('browser init', () => {
   });
 
   it('registers default integrations and client', () => {
-    const client = init({ dsn, transport: new BufferTransport(new MockTransport({ url: 'x' })) });
+    const client = init({
+      dsn,
+      transport: new BufferTransport(new MockTransport({ url: 'x' })),
+      defaultIntegrations: false,
+    });
     expect(client).toBe(getClient());
     expect(client.getOptions().sdk.name).toBe('sentry-guardian.javascript.browser');
+    const names = getDefaultIntegrations().map((i) => i.name);
+    expect(names).toContain('CspErrors');
+    expect(names).toContain('HttpErrors');
+    expect(names).toContain('CaptureConsole');
+    expect(names).toContain('BrowserContext');
   });
 
   it('FetchTransport posts serialized envelope', async () => {

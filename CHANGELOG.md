@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Examples: `examples/shared/error-demos.js` 覆盖全部默认错误类型；vanilla 按钮面板 + `csp-lab.html`；vue-vite 复用演示并增加 Vue 组件错误
+- fix(sdk): CSP violations listen on window + document; use effectiveDirective; examples csp-lab DSN fallback and img-src demo
+- Browser SDK: CSP violations, HTTP fetch/XHR failures, `console.error` capture, browser context; expanded resource tags (`iframe`, `video`, `audio`, `source`); global handler skips duplicate resource errors and records script line/column
+- Monitor: stacked error-type trend chart (time × type/mechanism counts); `GET /error-type-trends`
+- Monitor: error breakdown APIs (`/error-breakdown`), issue detail charts (type / mechanism / volume), enriched `EventDetail` (level, tags, mechanism, browser context)
 - Post-MVP Phase 12～21: issue event history API, search/pagination, Source Map symbolicator, `@sentry-guardian/vue`, performance transactions, release compare, project CRUD, setup wizard, alerts (webhook), trends, comments, ingest rate limit, event retention, Docker full stack
 - `@sentry-guardian/vue`: Vue 3 `vueIntegration` + `vueRouterIntegration`; `examples/vue-vite`
 - `scripts/upload-sourcemaps.mjs` for CI source map upload
@@ -18,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Monitor: issue page error overview uses tabs to switch between trend and breakdown charts
+- Monitor: issue list columns for exception type, capture mechanism, and severity level
+- Monitor: event breadcrumbs shown newest-first by timestamp on issue detail
 - DSN ingest: project validation in `EnvelopeService.ingest` (removed unused `DsnAuthGuard`); explicit `@Inject` on DSN Nest providers for Vitest compatibility
 - **BREAKING CHANGE:** DSN format is now `{scheme}://{host}/api/sentry/{projectId}` (no `publicKey@` in URL). Ingest route is `POST /api/sentry/{projectId}/envelope/`. `buildDsn(projectId, host)` signature changed.
 

@@ -1,4 +1,4 @@
-import { Client, type ClientOptions } from '@sentry-guardian/core';
+import { Client, type CaptureHint, type ClientOptions } from '@sentry-guardian/core';
 import type { ErrorEvent, ExceptionValue } from '@sentry-guardian/types';
 import { parseStack } from './stack-parser.js';
 
@@ -44,10 +44,7 @@ export class BrowserClient extends Client {
     this.linkedErrorsEnabled = options.linkedErrors !== false;
   }
 
-  protected override buildErrorEvent(
-    error: unknown,
-    hint?: { mechanism?: string },
-  ): ErrorEvent | null {
+  protected override buildErrorEvent(error: unknown, hint?: CaptureHint): ErrorEvent | null {
     const event = super.buildErrorEvent(error, hint);
     if (!event?.exception?.values?.length) {
       return event;
@@ -58,10 +55,41 @@ export class BrowserClient extends Client {
       return event;
     }
 
+    const withSynthetic = this.applySyntheticLocation(values, hint?.syntheticLocation);
+
     return {
       ...event,
-      exception: { values },
+      exception: { values: withSynthetic },
     };
+  }
+
+  private applySyntheticLocation(
+    values: ExceptionValue[],
+    location?: CaptureHint['syntheticLocation'],
+  ): ExceptionValue[] {
+    if (!location?.filename || values.length === 0) {
+      return values;
+    }
+    const head = values[0]!;
+    if (head.stacktrace?.frames?.length) {
+      return values;
+    }
+    return [
+      {
+        ...head,
+        stacktrace: {
+          frames: [
+            {
+              filename: location.filename,
+              lineno: location.lineno,
+              colno: location.colno,
+              in_app: true,
+            },
+          ],
+        },
+      },
+      ...values.slice(1),
+    ];
   }
 
   private buildExceptionValues(error: unknown, mechanism?: string): ExceptionValue[] {

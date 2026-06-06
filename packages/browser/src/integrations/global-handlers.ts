@@ -1,4 +1,4 @@
-import type { Client, Integration } from '@sentry-guardian/core';
+import type { Client, CaptureHint, Integration } from '@sentry-guardian/core';
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -33,17 +33,44 @@ export function globalHandlersIntegration(): Integration {
       }
 
       const onError = (event: Event) => {
-        if (event instanceof ErrorEvent && event.error !== undefined) {
-          client.captureException(event.error, { mechanism: 'onerror' });
+        if (event.target && event.target !== window) {
           return;
         }
-        const message =
-          event instanceof ErrorEvent ? String(event.message) : 'Unknown error';
-        client.captureException(message, { mechanism: 'onerror' });
+
+        if (event instanceof ErrorEvent) {
+          if (event.error !== undefined) {
+            client.captureException(event.error, { mechanism: 'onerror' });
+            return;
+          }
+
+          const hint: CaptureHint = {
+            mechanism: 'onerror',
+            tags: { 'error.type': 'javascript' },
+            extra: {
+              filename: event.filename,
+              lineno: event.lineno,
+              colno: event.colno,
+            },
+            syntheticLocation: event.filename
+              ? {
+                  filename: event.filename,
+                  lineno: event.lineno,
+                  colno: event.colno,
+                }
+              : undefined,
+          };
+          client.captureException(String(event.message), hint);
+          return;
+        }
+
+        client.captureException('Unknown error', { mechanism: 'onerror' });
       };
 
       const onRejection = (event: PromiseRejectionEvent) => {
-        client.captureException(event.reason, { mechanism: 'onunhandledrejection' });
+        client.captureException(event.reason, {
+          mechanism: 'onunhandledrejection',
+          tags: { 'error.type': 'unhandledrejection' },
+        });
       };
 
       window.addEventListener('error', onError);

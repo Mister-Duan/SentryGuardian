@@ -5,6 +5,7 @@ import type {
   ErrorEvent,
   Issue,
   IssueDetailResponse,
+  IssueErrorBreakdownResponse,
   IssueEventListQuery,
   IssueEventListResponse,
   IssueListQuery,
@@ -12,6 +13,7 @@ import type {
   IssueStatus,
   UpdateIssueStatusRequest,
 } from '@sentry-guardian/types';
+import { toIssueErrorBreakdownResponse } from '../stats/error-breakdown.js';
 import { EventsService } from '../events/events.service.js';
 import { SymbolicatorService } from '../symbolicator/symbolicator.service.js';
 
@@ -31,6 +33,8 @@ function mapIssue(row: {
   eventCount: number;
   usersSeen: number;
   culprit: string | null;
+  exceptionType: string | null;
+  mechanism: string | null;
   environment: string | null;
   release: string | null;
   tags: string | null;
@@ -47,6 +51,8 @@ function mapIssue(row: {
     event_count: row.eventCount,
     users_seen: row.usersSeen,
     culprit: row.culprit ?? undefined,
+    exception_type: row.exceptionType ?? undefined,
+    mechanism: row.mechanism ?? undefined,
   };
 }
 
@@ -126,6 +132,23 @@ export class IssuesService {
       page,
       page_size: pageSize,
     };
+  }
+
+  async errorBreakdown(issueId: string): Promise<IssueErrorBreakdownResponse> {
+    const issue = await this.prisma.issue.findUnique({ where: { id: issueId } });
+    if (!issue) {
+      throw new NotFoundException('Issue not found');
+    }
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const rows = await this.prisma.event.findMany({
+      where: { issueId, eventType: 'ERROR', timestamp: { gte: since } },
+      select: { payload: true, timestamp: true },
+      orderBy: { timestamp: 'asc' },
+      take: 2000,
+    });
+    const payloads = rows.map((r) => r.payload as unknown as ErrorEvent);
+    const timestamps = rows.map((r) => r.timestamp);
+    return toIssueErrorBreakdownResponse(payloads, timestamps);
   }
 
   async getById(id: string): Promise<IssueDetailResponse> {

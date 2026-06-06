@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  displayBreadcrumbs,
   displayStackFrames,
   formatBreadcrumbTime,
   formatExceptionTitle,
@@ -39,6 +40,17 @@ describe('formatBreadcrumbTime', () => {
   it('formats unix seconds to locale string', () => {
     const formatted = formatBreadcrumbTime(1717416000);
     expect(formatted).toMatch(/\d/);
+  });
+});
+
+describe('displayBreadcrumbs', () => {
+  it('sorts by timestamp descending', () => {
+    const sorted = displayBreadcrumbs([
+      { timestamp: 10, message: 'mid' },
+      { timestamp: 20, message: 'new' },
+      { timestamp: 5, message: 'old' },
+    ]);
+    expect(sorted.map((c) => c.message)).toEqual(['new', 'mid', 'old']);
   });
 });
 

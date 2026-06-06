@@ -2,6 +2,7 @@ import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@ne
 import { PrismaService } from '@sentry-guardian/nest-prisma';
 import type { ErrorEvent } from '@sentry-guardian/types';
 import { AlerterService } from '../alerter/alerter.service.js';
+import { primaryMechanism, primaryType } from '../stats/error-breakdown.js';
 import { eventCulprit, eventFingerprint, eventTitle } from './grouper.logic.js';
 
 const BATCH_SIZE = 50;
@@ -58,6 +59,8 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
       const environment = event.environment ?? null;
       const release = event.release ?? null;
       const tagLine = tagsString(event) ?? null;
+      const exceptionType = primaryType(event);
+      const mechanism = primaryMechanism(event);
 
       const existing = await this.prisma.issue.findUnique({
         where: {
@@ -101,6 +104,8 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
           eventCount: 1,
           usersSeen: event.user?.id ? 1 : 0,
           culprit,
+          exceptionType,
+          mechanism,
           environment,
           release,
           tags: tagLine,
@@ -112,6 +117,8 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
           eventCount: { increment: 1 },
           usersSeen: userIncrement ? { increment: userIncrement } : undefined,
           culprit: culprit ?? undefined,
+          exceptionType,
+          mechanism,
           environment: environment ?? undefined,
           release: release ?? undefined,
           tags: tagLine ?? undefined,

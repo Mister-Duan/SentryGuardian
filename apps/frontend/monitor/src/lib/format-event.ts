@@ -1,4 +1,4 @@
-import type { ExceptionValue, IssueStatus, StackFrame } from '@sentry-guardian/types';
+import type { Breadcrumb, ExceptionValue, IssueStatus, StackFrame } from '@sentry-guardian/types';
 
 /**
  * Format a stack frame location for the issue detail UI.
@@ -68,4 +68,23 @@ export const ISSUE_STATUS_LABELS: Record<IssueStatus, string> = {
 /** Stack frames for display (newest call first). 用于展示的栈帧（最新调用在前）。 */
 export function displayStackFrames(frames: StackFrame[]): StackFrame[] {
   return [...frames].reverse();
+}
+
+/**
+ * Breadcrumbs for display (newest first by timestamp).
+ * 用于展示的面包屑（按时间戳倒序，最新在前）。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * displayBreadcrumbs([
+ *   { timestamp: 1, message: 'old' },
+ *   { timestamp: 3, message: 'new' },
+ * ])
+ * // Output / 输出
+ * [{ timestamp: 3, message: 'new' }, { timestamp: 1, message: 'old' }]
+ * ```
+ */
+export function displayBreadcrumbs(breadcrumbs: Breadcrumb[]): Breadcrumb[] {
+  return [...breadcrumbs].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
 }

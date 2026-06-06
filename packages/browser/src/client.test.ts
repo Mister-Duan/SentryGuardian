@@ -27,6 +27,28 @@ describe('BrowserClient', () => {
     expect(frames.some((f) => f.filename === 'app.js')).toBe(true);
   });
 
+  it('adds synthetic stack frame from capture hint', async () => {
+    const inner = new MockTransport({ url: 'https://localhost/envelope/' });
+    const client = new BrowserClient({
+      dsn: 'http://localhost:3001/api/sentry/demo',
+      sdk,
+      transport: new BufferTransport(inner),
+      integrations: [],
+    });
+
+    client.captureException('Script error.', {
+      mechanism: 'onerror',
+      syntheticLocation: { filename: 'https://app.example/main.js', lineno: 10, colno: 4 },
+    });
+    await client.flush(500);
+
+    const payload = inner.sent[0]!.items[0]!.payload as {
+      exception: { values: { stacktrace?: { frames: { filename?: string }[] } }[] };
+    };
+    const frames = payload.exception.values[0]!.stacktrace?.frames ?? [];
+    expect(frames.some((f) => f.filename?.includes('main.js'))).toBe(true);
+  });
+
   it('includes linked Error.cause chain', async () => {
     const inner = new MockTransport({ url: 'https://localhost/envelope/' });
     const client = new BrowserClient({

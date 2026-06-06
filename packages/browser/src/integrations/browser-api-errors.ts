@@ -4,9 +4,24 @@ function isBrowser(): boolean {
   return typeof window !== 'undefined';
 }
 
+const RESOURCE_TAGS = new Set([
+  'script',
+  'img',
+  'link',
+  'iframe',
+  'video',
+  'audio',
+  'source',
+]);
+
+function resourceSrc(element: HTMLElement): string | undefined {
+  const el = element as HTMLScriptElement & HTMLImageElement & HTMLLinkElement;
+  return el.src || el.href || undefined;
+}
+
 /**
- * Capture script / image / link resource load failures.
- * 捕获 script / img / link 等资源加载失败。
+ * Capture resource load failures (script, image, media, iframe, etc.).
+ * 捕获资源加载失败（script、图片、媒体、iframe 等）。
  *
  * @example
  * ```ts
@@ -33,15 +48,17 @@ export function browserApiErrorsIntegration(): Integration {
           }
           const element = target as HTMLElement;
           const tag = element.tagName?.toLowerCase();
-          if (tag !== 'script' && tag !== 'img' && tag !== 'link') {
+          if (!tag || !RESOURCE_TAGS.has(tag)) {
             return;
           }
-          const src =
-            (element as HTMLScriptElement).src ||
-            (element as HTMLImageElement).src ||
-            (element as HTMLLinkElement).href;
-          client.captureException(`Resource failed to load: ${tag} ${src}`, {
+          const src = resourceSrc(element);
+          client.captureException(`Resource failed to load: ${tag}${src ? ` ${src}` : ''}`, {
             mechanism: 'onerror',
+            tags: {
+              'error.type': 'resource',
+              'resource.tag': tag,
+            },
+            extra: { tag, src },
           });
         },
         true,

@@ -5,6 +5,7 @@
  */
 
 export * from './sdk.js';
+export * from './capture-hint.js';
 export * from './client.js';
 export * from './scope.js';
 export * from './integration.js';

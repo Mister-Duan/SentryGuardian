@@ -3,9 +3,11 @@ import { Link, useSearchParams } from 'react-router-dom';
 import type { Issue, IssueStatus, ProjectResponse } from '@sentry-guardian/types';
 import { IssueBulkBar } from '../components/issues/IssueBulkBar.js';
 import { IssueListToolbar, type IssueSort } from '../components/issues/IssueListToolbar.js';
+import { ProjectErrorOverview } from '../components/issues/ProjectErrorOverview.js';
 import { Button, Card, Table, TableHead, TableRow } from '../components/ui.js';
 import { usePageHeader } from '../layout/PageHeaderContext.js';
 import { ISSUE_STATUS_LABELS } from '../lib/format-event.js';
+import { labelLevel, labelMechanism } from '../lib/error-labels.js';
 import { useAuth } from '../lib/auth.js';
 
 const REFRESH_MS = 10_000;
@@ -35,7 +37,6 @@ export function IssuesPage() {
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [trendBuckets, setTrendBuckets] = useState<{ bucket: string; count: number }[]>([]);
   const [sort, setSort] = useState<IssueSort>('last_seen');
   const [realtime, setRealtime] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -69,7 +70,6 @@ export function IssuesPage() {
         setSelected(new Set());
       })
       .catch(() => setError('加载问题列表失败'));
-    void api.issueTrends(projectId, 24).then((t) => setTrendBuckets(t.buckets));
   }, [api, projectId, statusFilter, search, environment, release, page]);
 
   const sortedIssues = useMemo(() => {
@@ -147,24 +147,7 @@ export function IssuesPage() {
 
   return (
     <div className="space-y-2">
-      {trendBuckets.length > 0 && (
-        <Card className="!py-2">
-          <div className="flex h-10 items-end gap-0.5">
-            {trendBuckets.map((b) => (
-              <div
-                key={b.bucket}
-                className="min-w-[3px] flex-1 rounded-t-sm"
-                style={{
-                  height: `${Math.max(6, Math.min(100, b.count * 8))}%`,
-                  background: 'var(--sg-accent)',
-                  opacity: 0.8,
-                }}
-                title={`${b.bucket}: ${b.count}`}
-              />
-            ))}
-          </div>
-        </Card>
-      )}
+      {projectId && <ProjectErrorOverview projectId={projectId} />}
 
       <Card className="!p-0">
         <div className="p-3 pb-0">
@@ -228,6 +211,9 @@ export function IssuesPage() {
             <tr>
               <th className="w-8 pb-2" />
               <th className="pb-2 pr-2">问题</th>
+              <th className="w-20 pb-2 pr-2">异常类型</th>
+              <th className="w-20 pb-2 pr-2">捕获类型</th>
+              <th className="w-14 pb-2 pr-2">严重级别</th>
               <th className="w-14 pb-2 pr-2">最近出现</th>
               <th className="w-10 pb-2 pr-2">时长</th>
               <th className="w-12 pb-2 pr-2 text-right">趋势</th>
@@ -247,7 +233,7 @@ export function IssuesPage() {
                     className="rounded border-[var(--sg-border)]"
                   />
                 </td>
-                <td className="max-w-[240px] py-1.5 pr-2">
+                <td className="max-w-[200px] py-1.5 pr-2">
                   <Link
                     className="block truncate font-medium hover:underline"
                     style={{ color: 'var(--sg-accent)' }}
@@ -261,6 +247,19 @@ export function IssuesPage() {
                       {issue.culprit}
                     </span>
                   )}
+                </td>
+                <td className="max-w-[80px] py-1.5 pr-2 text-[10px]">
+                  <span className="block truncate" title={issue.exception_type}>
+                    {issue.exception_type ?? '—'}
+                  </span>
+                </td>
+                <td className="max-w-[80px] py-1.5 pr-2 text-[10px]">
+                  <span className="block truncate" title={issue.mechanism}>
+                    {issue.mechanism ? labelMechanism(issue.mechanism) : '—'}
+                  </span>
+                </td>
+                <td className="py-1.5 pr-2 text-[10px]">
+                  {labelLevel(issue.level)}
                 </td>
                 <td className="py-1.5 pr-2 text-[10px] tabular-nums text-[var(--sg-text-muted)]">
                   {formatAge(issue.last_seen)}

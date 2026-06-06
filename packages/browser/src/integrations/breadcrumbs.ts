@@ -62,6 +62,16 @@ export function breadcrumbsIntegration(): Integration {
         addNavigation(window.location.href);
       };
 
+      const replaceState = history.replaceState.bind(history);
+      history.replaceState = (...args: Parameters<History['replaceState']>) => {
+        replaceState(...args);
+        addNavigation(window.location.href);
+      };
+
+      window.addEventListener('hashchange', () => {
+        addNavigation(window.location.href);
+      });
+
       document.addEventListener(
         'click',
         (event) => {

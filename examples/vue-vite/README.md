@@ -1,6 +1,8 @@
-# Vue 3 + Vite 示例
+# Vue 3 + Vite 错误类型演示
 
-演示 `@sentry-guardian/vue`：`vueIntegration` + `vueRouterIntegration`。
+演示 `@sentry-guardian/vue`（`vueIntegration`）及 browser SDK 默认集成的**全部错误类型**。
+
+与 `examples/vanilla` 共用 `shared/error-demos.js`，并额外提供 **Vue 组件内 throw** 演示。
 
 ## 前置
 
@@ -15,9 +17,12 @@ pnpm install
 pnpm dev
 ```
 
-打开页面后点击 **Throw test error**，在控制台 Issue 列表查看。
+默认端口 **5175**（避免与 vanilla :5174 冲突）。
+
+打开页面后按分组点击按钮；CSP 实验页请运行 vanilla 示例后访问 http://localhost:5174/csp-lab.html 。
 
 ## 相关文档
 
+- [examples/README.md](../README.md)
 - [docs/learn/sdk-guide.md](../../docs/learn/sdk-guide.md)
 - [packages/vue/README.md](../../packages/vue/README.md)

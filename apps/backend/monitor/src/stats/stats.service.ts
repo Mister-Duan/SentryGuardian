@@ -1,16 +1,63 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@sentry-guardian/nest-prisma';
 import type {
+  ErrorBreakdownResponse,
+  ErrorEvent,
+  ErrorTypeTrendResponse,
   IssueTrendResponse,
   ReleaseCompareResponse,
   TransactionEvent,
   TransactionListResponse,
   TransactionSummary,
 } from '@sentry-guardian/types';
+import { buildErrorTypeTrends, toErrorBreakdownResponse } from './error-breakdown.js';
 
 @Injectable()
 export class StatsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async errorTypeTrends(
+    projectId: string,
+    hours: number,
+    dimension: 'type' | 'mechanism' = 'type',
+  ): Promise<ErrorTypeTrendResponse> {
+    const windowHours = Math.min(Math.max(hours, 1), 168);
+    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000);
+    const rows = await this.prisma.event.findMany({
+      where: {
+        projectId,
+        eventType: 'ERROR',
+        timestamp: { gte: since },
+      },
+      select: { timestamp: true, payload: true },
+      orderBy: { timestamp: 'asc' },
+      take: 10000,
+    });
+    return buildErrorTypeTrends(
+      rows.map((r) => ({
+        timestamp: r.timestamp,
+        payload: r.payload as unknown as ErrorEvent,
+      })),
+      windowHours,
+      dimension,
+    );
+  }
+
+  async errorBreakdown(projectId: string, hours: number): Promise<ErrorBreakdownResponse> {
+    const windowHours = Math.min(Math.max(hours, 1), 168);
+    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000);
+    const rows = await this.prisma.event.findMany({
+      where: {
+        projectId,
+        eventType: 'ERROR',
+        timestamp: { gte: since },
+      },
+      select: { payload: true },
+      take: 5000,
+    });
+    const payloads = rows.map((r) => r.payload as unknown as ErrorEvent);
+    return toErrorBreakdownResponse(payloads, windowHours);
+  }
 
   async issueTrends(projectId: string, hours: number): Promise<IssueTrendResponse> {
     const windowHours = Math.min(Math.max(hours, 1), 168);

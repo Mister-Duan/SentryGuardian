@@ -93,6 +93,10 @@ model Issue {
   usersSeen   Int         @default(0) @map("users_seen")
   /// Primary source location for UI. UI 展示的主要来源位置。
   culprit     String?
+  /// Latest event exception type (e.g. TypeError). 最近事件的异常类型。
+  exceptionType String? @map("exception_type")
+  /// Latest event capture mechanism (e.g. onerror). 最近事件的捕获机制。
+  mechanism     String? @map("mechanism")
   /// Latest event environment (denormalized). 最近事件环境。
   environment String?
   /// Latest event release (denormalized). 最近事件 release。

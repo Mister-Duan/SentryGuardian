@@ -1,6 +1,6 @@
-# Vanilla 示例
+# Vanilla 错误类型演示
 
-在浏览器中验证 `@sentry-guardian/browser` 上报与本地 ingest（`:3001`）是否连通。
+在浏览器中验证 `@sentry-guardian/browser` **默认集成**捕获的全部错误类型，并在监控控制台查看可视化。
 
 ## 前置条件
 
@@ -23,25 +23,37 @@ pnpm dev
 VITE_DSN='http://localhost:3001/api/sentry/<projectId>' pnpm dev
 ```
 
-本地 seed 与 `buildDsn` 对 `localhost` 使用 **`http://`**。若 DSN 仍写成 `https://`，SDK 的 `parseDsn` 也会在回环地址上改为 HTTP 上报；修改 DSN 或 SDK 后请重新构建 browser 包（见下方故障排查）。
-
 ## 验证
 
 1. 打开 http://localhost:5174
-2. 点击 **Throw test error**
-3. 浏览器 DevTools → Network：应看到 `POST http://localhost:3001/api/<projectId>/envelope/` 返回 **201**
-4. 约 3 秒后，在控制台 http://localhost:5173 的 Issue 列表中应出现新 Issue
+2. 按分组点击按钮（JavaScript、Promise、资源、HTTP、Console、手动 API 等）
+3. DevTools → Network：应看到 `POST …/envelope/` 返回 **201**
+4. 控制台 http://localhost:5173：Issue 列表、**错误分布图**、Issue 详情中的类型/来源图表
+
+### CSP 违规
+
+主页面 CSP 过严会破坏 Vite HMR，因此使用独立页：
+
+- http://localhost:5174/csp-lab.html
+- 或点击面板中的 **打开 CSP 实验页**
+
+### HTTP 模拟接口
+
+开发服务器内置：
+
+- `GET /mock/404`
+- `GET /mock/500`
 
 ## 故障排查
 
 | 现象 | 处理 |
 |------|------|
-| `net::ERR_SSL_PROTOCOL_ERROR` | 上报 URL 仍是 `https://localhost` 时：执行 `pnpm --filter @sentry-guardian/core build && pnpm --filter @sentry-guardian/browser build`，重启本示例 `pnpm dev`；或把 `VITE_DSN` 改为 `http://` |
-| 无上报请求 | 确认已设置 `VITE_DSN`（`main.js` 在缺少 DSN 时不会 `init`） |
-| 401 / 403 | 使用 seed 完整 DSN，勿改 projectId |
-| 连接被拒绝 | 确认 `backend-dsn` 在 3001 监听：`curl http://localhost:3001/health` |
+| `net::ERR_SSL_PROTOCOL_ERROR` | 将 `VITE_DSN` 改为 `http://`；或重建 browser 包 |
+| 无上报请求 | 确认已设置 `VITE_DSN` |
+| 401 / 403 | 使用 seed 完整 DSN |
+| 连接被拒绝 | `curl http://localhost:3001/health` |
 
 ## 相关文档
 
-- [configuration.md §DSN](../../docs/configuration.md#dsn-格式)
-- [getting-started.md §第七步](../../docs/getting-started.md#第七步触发一条错误)
+- [examples/README.md](../README.md) — 全量错误类型索引
+- [configuration.md](../../docs/configuration.md)

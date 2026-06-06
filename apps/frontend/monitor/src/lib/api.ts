@@ -10,6 +10,9 @@ import type {
   IssueEventListResponse,
   IssueListQuery,
   IssueListResponse,
+  ErrorBreakdownResponse,
+  ErrorTypeTrendResponse,
+  IssueErrorBreakdownResponse,
   IssueTrendResponse,
   LoginRequest,
   LoginResponse,
@@ -193,6 +196,42 @@ export class ApiClient {
       throw new Error('Upload failed');
     }
     return res.json() as Promise<{ name: string }>;
+  }
+
+  async errorTypeTrends(
+    projectId: string,
+    hours = 24,
+    dimension: 'type' | 'mechanism' = 'type',
+  ): Promise<ErrorTypeTrendResponse> {
+    const res = await fetch(
+      `${API_BASE}/api/projects/${projectId}/error-type-trends?hours=${hours}&dimension=${dimension}`,
+      { headers: this.headers() },
+    );
+    if (!res.ok) {
+      throw new Error('Failed to load error type trends');
+    }
+    return res.json() as Promise<ErrorTypeTrendResponse>;
+  }
+
+  async errorBreakdown(projectId: string, hours = 24): Promise<ErrorBreakdownResponse> {
+    const res = await fetch(
+      `${API_BASE}/api/projects/${projectId}/error-breakdown?hours=${hours}`,
+      { headers: this.headers() },
+    );
+    if (!res.ok) {
+      throw new Error('Failed to load error breakdown');
+    }
+    return res.json() as Promise<ErrorBreakdownResponse>;
+  }
+
+  async issueErrorBreakdown(issueId: string): Promise<IssueErrorBreakdownResponse> {
+    const res = await fetch(`${API_BASE}/api/issues/${issueId}/error-breakdown`, {
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error('Failed to load issue breakdown');
+    }
+    return res.json() as Promise<IssueErrorBreakdownResponse>;
   }
 
   async issueTrends(projectId: string, hours = 24): Promise<IssueTrendResponse> {

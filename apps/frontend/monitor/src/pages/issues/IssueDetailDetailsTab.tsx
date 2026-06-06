@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { EventDetail } from '../../components/EventDetail.js';
+import { IssueErrorCharts } from '../../components/issues/IssueErrorCharts.js';
 import { IssueEventsPanel } from '../../components/IssueEventsPanel.js';
-import { UnsupportedNotice } from '../../components/UnsupportedNotice.js';
 import { Card } from '../../components/ui.js';
 import type { IssueDetailOutletContext } from './issue-detail-context.js';
 
@@ -13,7 +13,7 @@ export function IssueDetailDetailsTab() {
 
   return (
     <div className="space-y-3">
-      <UnsupportedNotice feature="事件图表 / 环境筛选" compact />
+      {issue.id && <IssueErrorCharts issueId={issue.id} />}
       {issue.id && <IssueEventsPanel issueId={issue.id} />}
       {event && <EventDetail event={event} />}
       {event && (

@@ -1,4 +1,5 @@
 import type { ErrorEvent, ExceptionValue, SdkInfo, TransactionEvent, User } from '@sentry-guardian/types';
+import type { CaptureHint } from './capture-hint.js';
 import { normalizeTimestamp } from '@sentry-guardian/utils/string';
 import { generateEventId, parseDsn } from './dsn.js';
 import { createEnvelope, createTransactionEnvelope } from './envelope.js';
@@ -132,7 +133,7 @@ export class Client {
    * 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
    * ```
    */
-  captureException(error: unknown, hint?: { mechanism?: string }): string | undefined {
+  captureException(error: unknown, hint?: CaptureHint): string | undefined {
     if (this.closed || !this.shouldSample()) {
       return undefined;
     }
@@ -267,10 +268,7 @@ export class Client {
     return (await this.transport.close?.(timeout)) ?? true;
   }
 
-  protected buildErrorEvent(
-    error: unknown,
-    hint?: { mechanism?: string },
-  ): ErrorEvent | null {
+  protected buildErrorEvent(error: unknown, hint?: CaptureHint): ErrorEvent | null {
     const scope = this.scopeStack.get();
     const exception = exceptionFromUnknown(error, hint?.mechanism);
     if (!exception) {
@@ -281,17 +279,22 @@ export class Client {
       return null;
     }
 
+    const scopeTags = scope.getTags();
+    const scopeExtra = scope.getExtra();
+    const hintTags = hint?.tags ?? {};
+    const hintExtra = hint?.extra ?? {};
+
     return {
       event_id: generateEventId(),
       timestamp: normalizeTimestamp(),
       platform: 'javascript',
-      level: 'error',
+      level: hint?.level ?? 'error',
       environment: this.options.environment,
       release: this.options.release,
       exception: { values: [exception] },
       user: this.applyPii(scope.getUser()),
-      tags: scope.getTags(),
-      extra: scope.getExtra(),
+      tags: { ...hintTags, ...scopeTags },
+      extra: { ...hintExtra, ...scopeExtra },
       breadcrumbs: scope.getBreadcrumbs(),
       sdk: this.options.sdk,
     };
