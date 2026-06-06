@@ -1,6 +1,12 @@
-import { useEffect, useState } from 'react';
-import type { ProjectResponse, ReleaseCompareResponse, ReleaseResponse } from '@sentry-guardian/types';
-import { Button, Card, FilterBar, FilterField, Input, Select, Table, TableHead, TableRow } from '../components/ui.js';
+import { useEffect, useMemo, useState } from 'react';
+import type {
+  ProjectResponse,
+  ReleaseCompareResponse,
+  ReleaseResponse,
+  ReleaseStats,
+} from '@sentry-guardian/types';
+import { ReorderableTable, type TableColumnDef } from '../components/ReorderableTable.js';
+import { Button, Card, FilterBar, FilterField, Input, Select } from '../components/ui.js';
 import { usePageHeader } from '../layout/PageHeaderContext.js';
 import { useAuth } from '../lib/auth.js';
 
@@ -28,6 +34,60 @@ export function ReleasesPage() {
     void api.listReleases(projectId).then(setReleases);
     void api.releaseCompare(projectId).then(setCompare);
   }, [api, projectId]);
+
+  const releaseColumns = useMemo<TableColumnDef<ReleaseResponse>[]>(
+    () => [
+      {
+        id: 'version',
+        header: '版本',
+        cellClassName: 'text-xs',
+        render: (r) => r.version,
+      },
+      {
+        id: 'artifacts',
+        header: '映射',
+        cellClassName: 'text-xs tabular-nums',
+        render: (r) => r.artifact_count,
+      },
+      {
+        id: 'created_at',
+        header: '创建',
+        cellClassName: 'text-xs text-[var(--sg-text-muted)]',
+        render: (r) => new Date(r.created_at).toLocaleString(),
+      },
+    ],
+    [],
+  );
+
+  const compareColumns = useMemo<TableColumnDef<ReleaseStats>[]>(
+    () => [
+      {
+        id: 'version',
+        header: '版本',
+        cellClassName: 'text-xs',
+        render: (row) => row.version,
+      },
+      {
+        id: 'events',
+        header: '事件',
+        cellClassName: 'text-xs tabular-nums',
+        render: (row) => row.event_count,
+      },
+      {
+        id: 'issues',
+        header: '问题',
+        cellClassName: 'text-xs tabular-nums',
+        render: (row) => row.issue_count,
+      },
+      {
+        id: 'new_issues',
+        header: '24h 新增',
+        cellClassName: 'text-xs tabular-nums',
+        render: (row) => row.new_issues_24h,
+      },
+    ],
+    [],
+  );
 
   async function createRelease(e: React.FormEvent) {
     e.preventDefault();
@@ -96,54 +156,24 @@ export function ReleasesPage() {
 
       <Card>
         <h2 className="mb-2 text-sm font-semibold">版本列表</h2>
-        <Table>
-          <TableHead>
-            <tr>
-              <th className="pb-2 pr-3">版本</th>
-              <th className="pb-2 pr-3 w-20">映射</th>
-              <th className="pb-2">创建</th>
-            </tr>
-          </TableHead>
-          <tbody>
-            {releases.map((r) => (
-              <TableRow key={r.id}>
-                <td className="py-1.5 pr-3 text-xs">{r.version}</td>
-                <td className="py-1.5 pr-3 text-xs tabular-nums">{r.artifact_count}</td>
-                <td className="py-1.5 text-xs text-[var(--sg-text-muted)]">
-                  {new Date(r.created_at).toLocaleString()}
-                </td>
-              </TableRow>
-            ))}
-          </tbody>
-        </Table>
+        <ReorderableTable
+          tableId="releases-list"
+          columns={releaseColumns}
+          rows={releases}
+          getRowKey={(r) => r.id}
+        />
       </Card>
 
       {compare && (
         <Card>
           <h2 className="mb-2 text-sm font-semibold">版本对比</h2>
-          <Table>
-            <TableHead>
-              <tr>
-                <th className="pb-2 pr-3">版本</th>
-                <th className="pb-2 pr-3 w-16">事件</th>
-                <th className="pb-2 pr-3 w-16">问题</th>
-                <th className="pb-2 w-20">24h 新增</th>
-              </tr>
-            </TableHead>
-            <tbody>
-              {compare.items.map((row) => (
-                <TableRow
-                  key={row.version}
-                  className={row.new_issues_24h > 5 ? 'bg-red-50' : ''}
-                >
-                  <td className="py-1.5 pr-3 text-xs">{row.version}</td>
-                  <td className="py-1.5 pr-3 text-xs tabular-nums">{row.event_count}</td>
-                  <td className="py-1.5 pr-3 text-xs tabular-nums">{row.issue_count}</td>
-                  <td className="py-1.5 text-xs tabular-nums">{row.new_issues_24h}</td>
-                </TableRow>
-              ))}
-            </tbody>
-          </Table>
+          <ReorderableTable
+            tableId="releases-compare"
+            columns={compareColumns}
+            rows={compare.items}
+            getRowKey={(row) => row.version}
+            getRowClassName={(row) => (row.new_issues_24h > 5 ? 'bg-red-50' : '')}
+          />
         </Card>
       )}
     </div>

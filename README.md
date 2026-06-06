@@ -166,7 +166,7 @@ SDK 接入（monorepo 内）：
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  dsn: 'http://localhost:3001/api/sentry/<projectId>',
+  dsn: 'http://localhost:3001/api/sentry/envelope/<projectId>',
   environment: 'production',
 });
 ```

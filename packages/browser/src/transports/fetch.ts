@@ -51,4 +51,17 @@ export class FetchTransport implements Transport {
 
     return { statusCode: response.status, headers };
   }
+
+  /**
+   * Synchronous unload send via `navigator.sendBeacon` when available.
+   * 在支持时通过 `navigator.sendBeacon` 同步发送（页面卸载场景）。
+   */
+  sendSync(envelope: Envelope): boolean {
+    if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') {
+      return false;
+    }
+    const body = serializeEnvelope(envelope);
+    const blob = new Blob([body], { type: ENVELOPE_CONTENT_TYPE });
+    return navigator.sendBeacon(this.url, blob);
+  }
 }

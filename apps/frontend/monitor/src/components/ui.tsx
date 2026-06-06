@@ -78,7 +78,7 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
 export function Table({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div className={`overflow-x-auto ${className}`}>
-      <table className="w-full text-left text-sm">{children}</table>
+      <table className="w-full table-auto text-left text-sm">{children}</table>
     </div>
   );
 }

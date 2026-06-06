@@ -14,12 +14,12 @@ SentryGuardian 以**开源高标准**开发，同时支持多种 AI 辅助工具
 
 所有 AI 工具在本仓库产出代码时，须满足：
 
-1. **交付三件套**：审核 diff → 测试跑通 → 文档/CHANGELOG 同步（[delivery-checklist.md](./delivery-checklist.md)）
+1. **交付三件套 + 全链路**：审核 diff → 测试跑通 → 文档/CHANGELOG → **packages/apps/examples 全链路对齐**（[delivery-checklist.md](./delivery-checklist.md)、[data-pipeline-checklist.md](./data-pipeline-checklist.md)）
 2. **MVP 进度**：每步完成后更新 [plans/mvp-implementation.md](../plans/mvp-implementation.md)
 3. **开源质量**：见 [open-source.md](./open-source.md)；公开 API 双语 JSDoc，函数含 Input/Output 示例，见 [doc-comments.md](./doc-comments.md)
 4. **提交规范**：Conventional Commits（[git-commit.mdc](../../.cursor/rules/git-commit.mdc)）
 
-**不得以用户未明确要求为由跳过测试或文档。**
+**不得以用户未明确要求为由跳过测试、文档或全链路分析。**
 
 ## 职责分工
 
@@ -57,3 +57,5 @@ SentryGuardian 以**开源高标准**开发，同时支持多种 AI 辅助工具
 - [ ] `.cursor/rules/` 相关 `.mdc`
 - [ ] `docs/ai-guide/open-source.md`
 - [ ] `docs/ai-guide/delivery-checklist.md`
+- [ ] `docs/ai-guide/data-pipeline-checklist.md`
+- [ ] `.cursor/rules/data-pipeline.mdc`

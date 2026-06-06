@@ -73,7 +73,7 @@ pnpm --filter @sentry-guardian/database db:seed
 **务必保存 seed 输出**，例如：
 
 ```text
-DSN: http://localhost:3001/api/sentry/clxxxxxxxx
+DSN: http://localhost:3001/api/sentry/envelope/clxxxxxxxx
 Admin / 管理员: admin@localhost
 ```
 
@@ -141,7 +141,7 @@ pnpm dev
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  dsn: 'http://localhost:3001/api/sentry/<projectId>',
+  dsn: 'http://localhost:3001/api/sentry/envelope/<projectId>',
   environment: 'development',
   release: 'demo@1.0.0',
 });

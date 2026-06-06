@@ -26,7 +26,7 @@ describe('cspErrorsIntegration', () => {
   it('captures securitypolicyviolation on window', async () => {
     const inner = new MockTransport({ url: 'https://localhost/envelope/' });
     const client = new BrowserClient({
-      dsn: 'http://localhost:3001/api/sentry/demo',
+      dsn: 'http://localhost:3001/api/sentry/envelope/demo',
       sdk,
       transport: new BufferTransport(inner),
       integrations: [cspErrorsIntegration()],
@@ -48,7 +48,7 @@ describe('cspErrorsIntegration', () => {
   it('dedupes duplicate window and document events', async () => {
     const inner = new MockTransport({ url: 'https://localhost/envelope/' });
     const client = new BrowserClient({
-      dsn: 'http://localhost:3001/api/sentry/demo',
+      dsn: 'http://localhost:3001/api/sentry/envelope/demo',
       sdk,
       transport: new BufferTransport(inner),
       integrations: [cspErrorsIntegration()],

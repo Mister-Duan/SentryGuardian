@@ -7,9 +7,9 @@
  * // Input / 输入
  * resolveExampleDsn(import.meta.env.VITE_DSN)
  * // Output / 输出（示例）
- * 'http://localhost:3001/api/sentry/...'
+ * 'http://localhost:3001/api/sentry/envelope/...'
  * ```
  */
 export function resolveExampleDsn(envDsn) {
-  return envDsn || 'http://localhost:3001/api/sentry/cmpzkjt2d0004hyyc79uh0x89';
+  return envDsn || 'http://localhost:3001/api/sentry/envelope/cmpzkjt2d0004hyyc79uh0x89';
 }

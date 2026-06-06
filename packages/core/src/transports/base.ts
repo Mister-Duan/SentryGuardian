@@ -24,8 +24,18 @@ export interface TransportSendResult {
 export interface Transport {
   /** POST one envelope; may buffer internally. 发送一个 Envelope；实现可内部缓冲。 */
   send(envelope: Envelope): Promise<TransportSendResult>;
+  /**
+   * Best-effort synchronous send for page unload (e.g. `sendBeacon`).
+   * 页面卸载时的尽力同步发送（如 `sendBeacon`）。
+   */
+  sendSync?(envelope: Envelope): boolean;
   /** Drain pending envelopes within `timeout` ms. 在 `timeout` 毫秒内排空待发送队列。 */
   flush?(timeout?: number): Promise<boolean>;
+  /**
+   * Drain pending buffer synchronously on page hide.
+   * 页面隐藏时同步排空缓冲区。
+   */
+  flushSync?(): void;
   /** Stop accepting new sends and flush (best effort). 停止接收新发送并尽力 flush。 */
   close?(timeout?: number): Promise<boolean>;
 }
@@ -38,7 +48,7 @@ export interface Transport {
  * ```ts
  * // Sample / 示例
  * const options: TransportOptions = {
- *   url: 'http://localhost:3001/api/sentry/demo/envelope/',
+ *   url: 'http://localhost:3001/api/sentry/envelope/demo/',
  * };
  * ```
  */

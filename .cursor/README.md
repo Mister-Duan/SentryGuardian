@@ -11,6 +11,7 @@
     ├── project-core.mdc         # 始终生效：项目定位与工作流
     ├── open-source-standards.mdc # 始终生效：开源高标准
     ├── delivery-checklist.mdc   # 始终生效：代码交付闭环
+    ├── data-pipeline.mdc        # 始终生效：全链路对齐（packages/apps/examples）
     └── git-commit.mdc           # 始终生效：提交与 Conventional Commits
 ```
 
@@ -24,5 +25,6 @@
 | `docs/ai-guide/open-source.md` | 全员 | 开源标准详细说明 |
 | `docs/ai-guide/doc-comments.md` | 全员 | 代码文档注释（中英文双语） |
 | `docs/ai-guide/delivery-checklist.md` | 全员 | 交付检查清单 |
+| `docs/ai-guide/data-pipeline-checklist.md` | 全员 | 全链路对齐（采集→展示） |
 
 规则冲突时：**用户明确指令 > Team Rules > Project Rules（本目录）**；开源交付标准默认不可降级。

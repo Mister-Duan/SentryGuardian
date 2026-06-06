@@ -7,14 +7,60 @@ import type {
   IssueListQuery,
   IssueStatsQuery,
   IssueTrendResponse,
+  PerformanceSummaryResponse,
   ReleaseCompareResponse,
   TransactionEvent,
+  TransactionListQuery,
   TransactionListResponse,
   TransactionSummary,
 } from '@sentry-guardian/types';
 import { buildIssueListWhere } from '../issues/issues.logic.js';
 import { buildErrorTypeTrends, toErrorBreakdownResponse } from './error-breakdown.js';
+import { buildPerformanceSummary } from './performance.logic.js';
 import { hasIssueTaxonomyFilters, resolveTimeWindow } from './stats.query.js';
+
+function buildTransactionWhere(projectId: string, query: TransactionListQuery) {
+  const window = resolveTimeWindow(query);
+  const base = {
+    projectId,
+    eventType: 'TRANSACTION' as const,
+    timestamp: { gte: window.since, lte: window.until },
+  };
+  const payloadFilters: { path: string[]; equals: string }[] = [];
+  if (query.metric) {
+    if (query.metric === 'http.client') {
+      payloadFilters.push({ path: ['transaction'], equals: 'http.client' });
+    } else {
+      payloadFilters.push({ path: ['metric'], equals: query.metric });
+    }
+  }
+  if (payloadFilters.length === 0) {
+    return base;
+  }
+  if (payloadFilters.length === 1) {
+    return { ...base, payload: payloadFilters[0] };
+  }
+  return { ...base, AND: payloadFilters.map((payload) => ({ payload })) };
+}
+
+function mapTransactionSummary(row: {
+  id: string;
+  timestamp: Date;
+  payload: unknown;
+}): TransactionSummary {
+  const p = row.payload as TransactionEvent;
+  return {
+    id: row.id,
+    transaction: p.transaction,
+    duration_ms: p.duration_ms,
+    timestamp: row.timestamp.toISOString(),
+    url: p.url,
+    metric: p.metric,
+    metric_value: p.metric_value,
+    status_code: p.status_code,
+    metric_rating: p.metric_rating,
+  };
+}
 
 @Injectable()
 export class StatsService {
@@ -156,13 +202,34 @@ export class StatsService {
     return { items };
   }
 
+  async performanceSummary(
+    projectId: string,
+    query: TransactionListQuery,
+  ): Promise<PerformanceSummaryResponse> {
+    const window = resolveTimeWindow(query);
+    const rows = await this.prisma.event.findMany({
+      where: buildTransactionWhere(projectId, query),
+      select: { timestamp: true, payload: true },
+      orderBy: { timestamp: 'asc' },
+      take: 5000,
+    });
+    return buildPerformanceSummary(
+      rows.map((r) => ({
+        timestamp: r.timestamp,
+        payload: r.payload as unknown as TransactionEvent,
+      })),
+      window.hours,
+      { since: window.since, until: window.until },
+    );
+  }
+
   async listTransactions(
     projectId: string,
-    page: number,
-    pageSize: number,
+    query: TransactionListQuery,
   ): Promise<TransactionListResponse> {
-    const size = Math.min(pageSize, 100);
-    const where = { projectId, eventType: 'TRANSACTION' as const };
+    const page = query.page ?? 1;
+    const size = Math.min(query.page_size ?? 20, 100);
+    const where = buildTransactionWhere(projectId, query);
     const [rows, total] = await Promise.all([
       this.prisma.event.findMany({
         where,
@@ -173,18 +240,11 @@ export class StatsService {
       this.prisma.event.count({ where }),
     ]);
 
-    const items: TransactionSummary[] = rows.map((r) => {
-      const p = r.payload as unknown as TransactionEvent;
-      return {
-        id: r.id,
-        transaction: p.transaction,
-        duration_ms: p.duration_ms,
-        timestamp: r.timestamp.toISOString(),
-        url: p.url,
-        metric: p.metric,
-      };
-    });
-
-    return { items, total, page, page_size: size };
+    return {
+      items: rows.map(mapTransactionSummary),
+      total,
+      page,
+      page_size: size,
+    };
   }
 }

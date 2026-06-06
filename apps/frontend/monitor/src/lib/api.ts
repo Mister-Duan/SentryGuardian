@@ -17,6 +17,7 @@ import type {
   IssueTrendResponse,
   LoginRequest,
   LoginResponse,
+  PerformanceSummaryResponse,
   ProjectResponse,
   ReleaseCompareResponse,
   ReleaseResponse,
@@ -24,9 +25,11 @@ import type {
   SetupRequest,
   SetupResponse,
   SetupStatusResponse,
+  TransactionListQuery,
   TransactionListResponse,
   UpdateIssueStatusRequest,
 } from '@sentry-guardian/types';
+import { appendTransactionParams } from './performance-query.js';
 import type { Issue } from '@sentry-guardian/types';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
@@ -278,11 +281,32 @@ export class ApiClient {
     return res.json() as Promise<ReleaseCompareResponse>;
   }
 
-  async listTransactions(projectId: string, page = 1): Promise<TransactionListResponse> {
-    const res = await fetch(
-      `${API_BASE}/api/projects/${projectId}/transactions?page=${page}`,
-      { headers: this.headers() },
-    );
+  async performanceSummary(
+    projectId: string,
+    query: TransactionListQuery,
+  ): Promise<PerformanceSummaryResponse> {
+    const params = new URLSearchParams();
+    appendTransactionParams(params, query);
+    const q = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/performance-summary${q}`, {
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error('Failed to load performance summary');
+    }
+    return res.json() as Promise<PerformanceSummaryResponse>;
+  }
+
+  async listTransactions(
+    projectId: string,
+    query: TransactionListQuery = {},
+  ): Promise<TransactionListResponse> {
+    const params = new URLSearchParams();
+    appendTransactionParams(params, query);
+    const q = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE}/api/projects/${projectId}/transactions${q}`, {
+      headers: this.headers(),
+    });
     if (!res.ok) {
       throw new Error('Failed to load transactions');
     }

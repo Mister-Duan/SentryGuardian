@@ -18,6 +18,7 @@ SentryGuardian 项目文档索引。
 | [learn/concepts.md](./learn/concepts.md) | Event、Issue、DSN、Envelope |
 | [learn/data-flow.md](./learn/data-flow.md) | 端到端数据流与幂等 |
 | [learn/sdk-guide.md](./learn/sdk-guide.md) | 浏览器 SDK 接入详解 |
+| [learn/performance-metrics.md](./learn/performance-metrics.md) | **性能指标参考**（perfume `metricName` 全表与含义） |
 | [learn/packages-source-guide.md](./learn/packages-source-guide.md) | **packages 源码入门**（流程、字段、阅读顺序） |
 | [learn/console-guide.md](./learn/console-guide.md) | 监控控制台与 API |
 | [learn/self-hosting.md](./learn/self-hosting.md) | Lite 自托管部署 |
@@ -41,5 +42,7 @@ SentryGuardian 项目文档索引。
 | [ai-guide/doc-comments.md](./ai-guide/doc-comments.md) | 代码注释（用途 + 双语 + 示例） |
 | [ai-guide/open-source.md](./ai-guide/open-source.md) | 开源开发标准 |
 | [ai-guide/delivery-checklist.md](./ai-guide/delivery-checklist.md) | 交付检查清单 |
+| [ai-guide/data-pipeline-checklist.md](./ai-guide/data-pipeline-checklist.md) | **全链路对齐**（采集→展示） |
+| [ai-guide/performance-design.md](./ai-guide/performance-design.md) | 性能采集设计（参考 perfume.js） |
 | [ai-guide/collaboration.md](./ai-guide/collaboration.md) | 多工具协作 |
 | [../.cursor/README.md](../.cursor/README.md) | Cursor 规则 |

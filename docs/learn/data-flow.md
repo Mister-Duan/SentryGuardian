@@ -16,7 +16,7 @@ sequenceDiagram
 
   App->>SDK: 未捕获错误 / captureException
   SDK->>SDK: 集成、beforeSend、采样、去重
-  SDK->>DSN: POST /api/sentry/{projectId}/envelope
+  SDK->>DSN: POST /api/sentry/envelope/{projectId}
   DSN->>DSN: 鉴权、解析、脱敏
   DSN->>DB: INSERT events (幂等 event_id)
   Grp->>DB: SELECT aggregated_at IS NULL
@@ -60,7 +60,7 @@ BrowserClient → BufferTransport → FetchTransport → ingest
 
 ## 阶段 3：ingest（dsn）
 
-`POST /api/sentry/:projectId/envelope`：
+`POST /api/sentry/envelope/:projectId`：
 
 1. **项目校验**：`EnvelopeService.ingest` 校验 URL 中的 `projectId` 必须存在于 `projects` 表，否则 `401`
 2. **大小限制**：超过 `MAX_ENVELOPE_BYTES` → `413`
@@ -102,6 +102,19 @@ Release / Source Map：`POST /api/projects/:id/releases` + artifact 上传 → �
 
 告警：Grouper 创建新 Issue 时 `alerter.onNewIssue`；维护任务每小时扫描 `error_rate` 规则。
 
+### 性能事务（TRANSACTION）
+
+与错误事件共用 ingest 与 `events` 表，`event_type = TRANSACTION`：
+
+```text
+examples（performanceIntegration / browserTracingIntegration）
+  → SDK captureTransaction → dsn 入库
+  → monitor stats（performance-summary、transactions）
+  → 控制台「性能」页
+```
+
+AI 改动性能相关代码时须走 [data-pipeline-checklist.md](../ai-guide/data-pipeline-checklist.md) 全链路自检。
+
 前端开发时 Vite 将 `/api` 代理到 `localhost:3002`。
 
 ## 去重与采样（多层）
@@ -131,3 +144,4 @@ SDK dedupe（2s 内相同 type|message）
 
 - 动手验证：[getting-started.md](../getting-started.md)
 - SDK 配置细节：[sdk-guide.md](./sdk-guide.md)
+- AI 全链路自检：[data-pipeline-checklist.md](../ai-guide/data-pipeline-checklist.md)

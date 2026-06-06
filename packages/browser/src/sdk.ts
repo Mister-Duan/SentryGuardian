@@ -1,6 +1,7 @@
 import { BufferTransport, parseDsn } from '@sentry-guardian/core';
 import { BrowserClient, type BrowserClientOptions } from './client.js';
 import { getDefaultIntegrations } from './default-integrations.js';
+import { registerPageLifecycleFlush } from './page-lifecycle.js';
 import { FetchTransport } from './transports/fetch.js';
 
 let activeClient: BrowserClient | undefined;
@@ -15,7 +16,7 @@ const SDK_VERSION = '0.1.0';
  * ```ts
  * // Sample / 示例
  * const options: BrowserInitOptions = {
- *   dsn: 'http://localhost:3001/api/sentry/demo',
+ *   dsn: 'http://localhost:3001/api/sentry/envelope/demo',
  *   environment: 'production',
  *   denyUrls: [/extensions\//],
  * };
@@ -49,7 +50,7 @@ export interface BrowserInitOptions
  * @example
  * ```ts
  * // Input / 输入
- * init({ dsn: 'http://localhost:3001/api/sentry/proj_1' })
+ * init({ dsn: 'http://localhost:3001/api/sentry/envelope/proj_1' })
  * // Output / 输出
  * BrowserClient
  * ```
@@ -88,6 +89,7 @@ export function init(options: BrowserInitOptions): BrowserClient {
   const client = new BrowserClient({
     ...clientOptions,
     dsn,
+    ingestUrl: targetUrl,
     sdk: {
       name: 'sentry-guardian.javascript.browser',
       version: SDK_VERSION,
@@ -96,6 +98,7 @@ export function init(options: BrowserInitOptions): BrowserClient {
     integrations,
   });
 
+  registerPageLifecycleFlush(client);
   activeClient = client;
   return client;
 }

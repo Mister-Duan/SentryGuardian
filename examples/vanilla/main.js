@@ -1,41 +1,93 @@
 import * as Sentry from '@sentry-guardian/browser';
+import { renderDemoTabBar, renderDemoTabHint } from '../shared/demo-tab-bar.js';
+import {
+  DEMO_TAB_PERF,
+  navigateDemoTab,
+  normalizeDemoPath,
+  resolveDemoTab,
+} from '../shared/demo-routes.js';
 import { buildErrorDemoGroups } from '../shared/error-demos.js';
+import { examplePerformanceIntegrations } from '../shared/example-performance.js';
 import { resolveExampleDsn } from '../shared/example-dsn.js';
+import { buildPerformanceDemoGroups } from '../shared/performance-demos.js';
+
+// import { initPerfume } from 'perfume.js';
+
+// initPerfume({
+//   resourceTiming: true,
+//   analyticsTracker: options => {
+//     console.log('options', options?.metricName, options);
+//   }
+// });
+
+
 
 const dsn = resolveExampleDsn(import.meta.env.VITE_DSN);
 
 const statusEl = document.getElementById('sdk-status');
+const tabBarEl = document.getElementById('demo-tabs');
+const tabHintEl = document.getElementById('demo-tab-hint');
 const root = document.getElementById('demo-root');
+
+let activeTab = normalizeDemoPath();
 
 if (dsn) {
   Sentry.init({
     dsn,
     environment: 'development',
     release: 'vanilla-example@0.1.0',
+    integrations: examplePerformanceIntegrations(Sentry),
   });
   if (import.meta.env.VITE_DSN) {
-    statusEl.textContent = `SDK 已初始化 · release vanilla-example@0.1.0 · DSN ${maskDsn(dsn)}`;
+    statusEl.textContent = `SDK 已初始化（含性能集成）· release vanilla-example@0.1.0 · DSN ${maskDsn(dsn)}`;
     statusEl.className = 'status status--ok';
   } else {
     statusEl.textContent = `未设置 VITE_DSN，已使用 seed 回退 · DSN ${maskDsn(dsn)}`;
     statusEl.className = 'status status--warn';
   }
-  renderDemos(Sentry);
+  bindTabs();
+  renderDemos(Sentry, activeTab);
 } else {
   statusEl.textContent = '未配置 VITE_DSN，SDK 未初始化。';
   statusEl.className = 'status status--warn';
 }
 
-/**
- * Render demo button groups.
- * 渲染演示按钮分组。
- *
- * @param {typeof Sentry} sdk
- */
-function renderDemos(sdk) {
-  if (!root) return;
+function bindTabs() {
+  if (!tabBarEl) return;
 
-  for (const group of buildErrorDemoGroups(sdk)) {
+  const show = (tabId) => {
+    activeTab = tabId;
+    renderDemoTabBar(tabBarEl, tabId, (next) => {
+      navigateDemoTab(next);
+      show(next);
+    });
+    if (tabHintEl) {
+      renderDemoTabHint(tabHintEl, tabId);
+    }
+    renderDemos(Sentry, tabId);
+  };
+
+  window.addEventListener('popstate', () => {
+    show(resolveDemoTab());
+  });
+
+  show(activeTab);
+}
+
+/**
+ * @param {typeof Sentry} sdk
+ * @param {'error' | 'perf'} tabId
+ */
+function renderDemos(sdk, tabId) {
+  if (!root) return;
+  root.innerHTML = '';
+
+  const groups =
+    tabId === DEMO_TAB_PERF
+      ? buildPerformanceDemoGroups(sdk)
+      : buildErrorDemoGroups(sdk);
+
+  for (const group of groups) {
     const section = document.createElement('section');
     section.innerHTML = `
       <h2>${group.title}</h2>

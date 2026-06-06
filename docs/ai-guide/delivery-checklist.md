@@ -10,13 +10,16 @@
     ↓
 改动中：小步实现 + 定向 lint
     ↓
-改动后（交付三件套）：
+改动后（交付三件套 + 全链路）：
     ① 全方位审核（本次 diff）
     ② 补全/更新测试并跑通
     ③ 同步文档与 CHANGELOG
+    ④ 全链路对齐（packages / apps / examples：采集→存储→分析→展示）
     ↓
 任务完成（用户明确要求时再 commit）
 ```
+
+④ 细则见 [data-pipeline-checklist.md](./data-pipeline-checklist.md)。
 
 ## ① 全方位代码审核
 
@@ -85,6 +88,19 @@ pnpm typecheck               # 类型检查
 - 纯内部 refactor 且对外行为、API 完全不变（须在审核结论中说明）
 - 仅修正注释错别字且不影响语义
 
+## ④ 全链路对齐（概要）
+
+监控相关改动须分析 **`packages/` · `apps/` · `examples/`** 是否需同步，保证 **采集 → 接收/存储 → 分析 → 展示** 可 E2E 验证。
+
+| 层 | 位置 |
+|----|------|
+| 采集 + 演示 | `packages/browser` `vue` `types`；`examples/` |
+| 存储 | `apps/backend/dsn`、Prisma、grouper |
+| 分析 | `apps/backend/monitor` stats/issues |
+| 展示 | `apps/frontend/monitor`、`docs/learn/console-guide.md` |
+
+对话中须附 **全链路结论**（各层已同步 / 无需改动 / 已知限制）。完整矩阵见 [data-pipeline-checklist.md](./data-pipeline-checklist.md)。
+
 ## 违规判定
 
 以下情况视为**任务未完成**：
@@ -93,6 +109,7 @@ pnpm typecheck               # 类型检查
 - 改了公开 API 未更新文档
 - 用户可见变更未记 CHANGELOG
 - 完成 MVP 计划步骤却未更新 `docs/plans/mvp-implementation.md`
+- 监控能力改动未做全链路分析，或 examples 无法验证却未说明
 - diff 含密钥、调试代码或无关大范围格式化
 
 ## 与 Git 提交的关系

@@ -259,7 +259,7 @@ Vue 框架适配，**不是**独立 SDK，通过 Integration 挂到 `browser`。
 
 | 职责 | 说明 |
 |------|------|
-| 接收 Envelope | `POST /api/sentry/{projectId}/envelope/` |
+| 接收 Envelope | `POST /api/sentry/envelope/{projectId}/` |
 | DSN 鉴权 | 校验 URL 中 `projectId` 存在；按项目 `rate_limit_per_minute` 限流 |
 | Payload 校验 | JSON schema、大小上限、必填字段 |
 | 限流 | 按 project / IP；返回 `429` + `Retry-After` |
@@ -338,11 +338,11 @@ monitor/worker: 读 pending → fingerprint → upsert issues → 标记 done �
 ### 6.1 DSN
 
 ```text
-https://{host}/api/sentry/{projectId}
+https://{host}/api/sentry/envelope/{projectId}
 ```
 
 - SDK `init({ dsn })` 解析出 host、projectId。
-- 上报 URL：`POST {origin}/api/sentry/{projectId}/envelope/`
+- 上报 URL：`POST {origin}/api/sentry/envelope/{projectId}/`
 - 请求头：`Content-Type: application/x-sentry-envelope`（或 `application/json` 简化版，MVP 可二选一后定稿）
 - Secret key 仅用于服务端管理接口，**不出现在浏览器**。
 
@@ -505,7 +505,7 @@ TTL 与分区策略在实现阶段按留存天数（默认 30/90 天可配置）
 
 | 项 | 说明 |
 |----|------|
-| **CORS** | `POST /api/sentry/{projectId}/envelope/` 对浏览器 SDK 开放；按 project 配置 `allowedOrigins`（MVP 可 `*` + 文档警告，生产建议白名单） |
+| **CORS** | `POST /api/sentry/envelope/{projectId}/` 对浏览器 SDK 开放；按 project 配置 `allowedOrigins`（MVP 可 `*` + 文档警告，生产建议白名单） |
 | **HTTPS** | 生产强制 TLS；DSN 使用 `https://` |
 | **Payload 上限** | 单 Envelope 大小上限（如 1MB），超限 `413` |
 | **CSP / 广告拦截** | SDK 失败时写入 `client_report`（P1）；文档说明域名放行 |

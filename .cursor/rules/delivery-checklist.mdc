@@ -8,8 +8,10 @@ alwaysApply: true
 任何**代码改动**任务完成前（含用户要求 commit 之前）须执行：
 
 ```text
-分析 → 基线测试通过 → 实施 → ① 审核 diff → ② 测试跑通 → ③ 文档同步 → 完成
+分析 → 基线测试通过 → 实施 → ① 审核 diff → ② 测试跑通 → ③ 文档同步 → ④ 全链路对齐 → 完成
 ```
+
+④ 见 [data-pipeline.mdc](./data-pipeline.mdc) 与 [data-pipeline-checklist.md](../docs/ai-guide/data-pipeline-checklist.md)（`packages/` · `apps/` · `examples/`：采集→存储→分析→展示）。
 
 ## ① 审核（本次 diff）
 

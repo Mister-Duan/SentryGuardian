@@ -13,6 +13,10 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isSuccessStatus(statusCode: number): boolean {
+  return statusCode >= 200 && statusCode < 300;
+}
+
 function parseRetryAfterMs(headers?: Record<string, string>): number {
   if (!headers) return DEFAULT_RETRY_DELAY_MS;
   const raw = headers['retry-after'] ?? headers['Retry-After'];
@@ -67,6 +71,26 @@ export class BufferTransport implements Transport {
     return this.buffer.length;
   }
 
+  /** Underlying transport (for sync unload hooks). 底层 Transport（供卸载同步钩子使用）。 */
+  getInnerTransport(): Transport {
+    return this.inner;
+  }
+
+  sendSync(envelope: Envelope): boolean {
+    return this.inner.sendSync?.(envelope) ?? false;
+  }
+
+  flushSync(): void {
+    while (this.buffer.length > 0) {
+      const item = this.buffer[0]!;
+      if (this.inner.sendSync?.(item.envelope)) {
+        this.buffer.shift();
+        continue;
+      }
+      break;
+    }
+  }
+
   async send(envelope: Envelope): Promise<TransportSendResult> {
     if (this.closed) {
       return { statusCode: 503 };
@@ -100,7 +124,7 @@ export class BufferTransport implements Transport {
       while (this.buffer.length > 0) {
         const item = this.buffer[0]!;
         const result = await this.inner.send(item.envelope);
-        if (result.statusCode === 200) {
+        if (isSuccessStatus(result.statusCode)) {
           this.buffer.shift();
           continue;
         }

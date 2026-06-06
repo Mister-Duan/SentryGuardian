@@ -69,7 +69,7 @@ export interface CreateProjectRequest {
  *   id: 'proj_1',
  *   name: 'Demo',
  *   slug: 'demo',
- *   dsn: 'http://localhost:3001/api/sentry/proj_1',
+ *   dsn: 'http://localhost:3001/api/sentry/envelope/proj_1',
  * };
  * ```
  */

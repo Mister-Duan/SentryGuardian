@@ -44,10 +44,17 @@ export type {
   IssueTrendResponse,
   ReleaseCompareResponse,
   ReleaseStats,
+  DurationTrendBucket,
+  PerformanceSummaryResponse,
   TransactionEvent,
+  TransactionListQuery,
   TransactionListResponse,
   TransactionSummary,
   TrendBucket,
+  VitalTrendPoint,
+  VitalTrendResponse,
+  VitalTrendSeries,
+  VitalsSummaryItem,
 } from './performance.js';
 export type {
   AlertRuleRequest,

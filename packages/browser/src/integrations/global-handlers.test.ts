@@ -13,7 +13,7 @@ describe('globalHandlersIntegration', () => {
   it('skips resource error events (target !== window)', async () => {
     const inner = new MockTransport({ url: 'https://localhost/envelope/' });
     const client = new BrowserClient({
-      dsn: 'http://localhost:3001/api/sentry/demo',
+      dsn: 'http://localhost:3001/api/sentry/envelope/demo',
       sdk,
       transport: new BufferTransport(inner),
       integrations: [globalHandlersIntegration()],

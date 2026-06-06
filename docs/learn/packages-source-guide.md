@@ -73,7 +73,7 @@ pnpm add @sentry-guardian/browser
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  dsn: 'http://localhost:3001/api/sentry/项目ID',
+  dsn: 'http://localhost:3001/api/sentry/envelope/项目ID',
   environment: 'production',
 });
 ```
@@ -125,7 +125,7 @@ Sentry.init({
 ### 第 3 步：HTTP 发到后端（不在 packages 里，但要心里有数）
 
 ```http
-POST http://localhost:3001/api/sentry/{projectId}/envelope/
+POST http://localhost:3001/api/sentry/envelope/{projectId}/
 Content-Type: application/x-sentry-guardian-envelope
 ```
 
@@ -325,7 +325,7 @@ browser/src/sdk.ts
 格式：
 
 ```text
-{scheme}://{host}[:port]/api/sentry/{projectId}
+{scheme}://{host}[:port]/api/sentry/envelope/{projectId}
 ```
 
 | 部分 | 含义 |

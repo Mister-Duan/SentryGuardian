@@ -4,7 +4,8 @@ import type { Issue, ProjectResponse } from '@sentry-guardian/types';
 import { IssueBulkBar } from '../components/issues/IssueBulkBar.js';
 import { IssueListToolbar, type IssueSort } from '../components/issues/IssueListToolbar.js';
 import { ProjectErrorOverview } from '../components/issues/ProjectErrorOverview.js';
-import { Button, Card, Table, TableHead, TableRow } from '../components/ui.js';
+import { ReorderableTable, type TableColumnDef } from '../components/ReorderableTable.js';
+import { Button, Card } from '../components/ui.js';
 import { usePageHeader } from '../layout/PageHeaderContext.js';
 import { ISSUE_STATUS_LABELS } from '../lib/format-event.js';
 import { labelLevel, labelMechanism } from '../lib/error-labels.js';
@@ -203,10 +204,10 @@ export function IssuesPage() {
     return () => clearInterval(timer);
   }, [loadIssues, realtime]);
 
-  function applyQuickFilter(field: IssueFilterField, value: string) {
+  const applyQuickFilter = useCallback((field: IssueFilterField, value: string) => {
     setFilters((prev) => setIssueFilter(prev, field, value));
     setPage(1);
-  }
+  }, []);
 
   function updateTimeRange(next: IssueTimeRange) {
     setTimeRange(next);
@@ -252,6 +253,136 @@ export function IssuesPage() {
       setSelected(new Set(sortedIssues.map((i) => i.id)));
     }
   }
+
+  const issueColumns = useMemo<TableColumnDef<Issue>[]>(
+    () => [
+      {
+        id: 'select',
+        header: '',
+        locked: true,
+        headerClassName: 'w-8',
+        render: (issue) => (
+          <input
+            type="checkbox"
+            checked={selected.has(issue.id)}
+            onChange={() => toggleSelect(issue.id)}
+            className="rounded border-[var(--sg-border)]"
+          />
+        ),
+      },
+      {
+        id: 'title',
+        header: '问题',
+        render: (issue) => (
+          <>
+            <Link
+              className="block font-medium hover:underline"
+              style={{ color: 'var(--sg-accent)' }}
+              to={`/issues/${issue.id}`}
+              title={issue.title}
+            >
+              {issue.title}
+            </Link>
+            {issue.culprit && (
+              <span className="block text-[10px] text-[var(--sg-text-muted)]">
+                {issue.culprit}
+              </span>
+            )}
+          </>
+        ),
+      },
+      {
+        id: 'exception_type',
+        header: '异常类型',
+        render: (issue) => (
+          <FilterableCell
+            value={issue.exception_type}
+            label="异常类型"
+            onFilter={(v) => applyQuickFilter('exception_type', v)}
+          />
+        ),
+      },
+      {
+        id: 'mechanism',
+        header: '捕获类型',
+        render: (issue) =>
+          issue.mechanism ? (
+            <button
+              type="button"
+              className={QUICK_FILTER_CLASS}
+              title={`按捕获类型筛选：${labelMechanism(issue.mechanism)}`}
+              onClick={() => applyQuickFilter('mechanism', issue.mechanism!)}
+            >
+              {labelMechanism(issue.mechanism)}
+            </button>
+          ) : (
+            <span className="text-[10px] text-[var(--sg-text-muted)]">—</span>
+          ),
+      },
+      {
+        id: 'level',
+        header: '严重级别',
+        render: (issue) => (
+          <button
+            type="button"
+            className={QUICK_FILTER_CLASS}
+            title={`按严重级别筛选：${labelLevel(issue.level)}`}
+            onClick={() => applyQuickFilter('level', issue.level)}
+          >
+            {labelLevel(issue.level)}
+          </button>
+        ),
+      },
+      {
+        id: 'last_seen',
+        header: '最近出现',
+        cellClassName: 'text-[10px] tabular-nums text-[var(--sg-text-muted)]',
+        render: (issue) => formatAge(issue.last_seen),
+      },
+      {
+        id: 'age',
+        header: '时长',
+        cellClassName: 'text-[10px] tabular-nums text-[var(--sg-text-muted)]',
+        render: (issue) => formatAge(issue.first_seen),
+      },
+      {
+        id: 'trend',
+        header: '趋势',
+        headerClassName: 'text-right',
+        cellClassName: 'text-right text-[10px] text-[var(--sg-text-muted)]',
+        render: () => '—',
+      },
+      {
+        id: 'events',
+        header: '事件',
+        headerClassName: 'text-right',
+        cellClassName: 'text-right text-xs tabular-nums',
+        render: (issue) => issue.event_count,
+      },
+      {
+        id: 'users',
+        header: '用户',
+        headerClassName: 'text-right',
+        cellClassName: 'text-right text-[10px] text-[var(--sg-text-muted)]',
+        render: () => '—',
+      },
+      {
+        id: 'status',
+        header: '状态',
+        cellClassName: 'text-xs',
+        render: (issue) => (
+          <button
+            type="button"
+            className={QUICK_FILTER_CLASS}
+            onClick={() => applyQuickFilter('status', issue.status)}
+          >
+            {ISSUE_STATUS_LABELS[issue.status]}
+          </button>
+        ),
+      },
+    ],
+    [applyQuickFilter, selected],
+  );
 
   return (
     <div className="space-y-2">
@@ -303,103 +434,13 @@ export function IssuesPage() {
 
         {error && <p className="px-3 pb-1 text-xs text-[var(--sg-danger)]">{error}</p>}
 
-        <Table className="mb-1 px-3">
-          <TableHead>
-            <tr>
-              <th className="w-8 pb-2" />
-              <th className="pb-2 pr-2">问题</th>
-              <th className="w-20 pb-2 pr-2">异常类型</th>
-              <th className="w-20 pb-2 pr-2">捕获类型</th>
-              <th className="w-14 pb-2 pr-2">严重级别</th>
-              <th className="w-14 pb-2 pr-2">最近出现</th>
-              <th className="w-10 pb-2 pr-2">时长</th>
-              <th className="w-12 pb-2 pr-2 text-right">趋势</th>
-              <th className="w-12 pb-2 pr-2 text-right">事件</th>
-              <th className="w-12 pb-2 pr-2 text-right">用户</th>
-              <th className="w-16 pb-2">状态</th>
-            </tr>
-          </TableHead>
-          <tbody>
-            {sortedIssues.map((issue) => (
-              <TableRow key={issue.id}>
-                <td className="py-1.5">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(issue.id)}
-                    onChange={() => toggleSelect(issue.id)}
-                    className="rounded border-[var(--sg-border)]"
-                  />
-                </td>
-                <td className="max-w-[200px] py-1.5 pr-2">
-                  <Link
-                    className="block truncate font-medium hover:underline"
-                    style={{ color: 'var(--sg-accent)' }}
-                    to={`/issues/${issue.id}`}
-                    title={issue.title}
-                  >
-                    {issue.title}
-                  </Link>
-                  {issue.culprit && (
-                    <span className="block truncate text-[10px] text-[var(--sg-text-muted)]">
-                      {issue.culprit}
-                    </span>
-                  )}
-                </td>
-                <td className="max-w-[80px] py-1.5 pr-2">
-                  <FilterableCell
-                    value={issue.exception_type}
-                    label="异常类型"
-                    onFilter={(v) => applyQuickFilter('exception_type', v)}
-                  />
-                </td>
-                <td className="max-w-[80px] py-1.5 pr-2">
-                  {issue.mechanism ? (
-                    <button
-                      type="button"
-                      className={QUICK_FILTER_CLASS}
-                      title={`按捕获类型筛选：${labelMechanism(issue.mechanism)}`}
-                      onClick={() => applyQuickFilter('mechanism', issue.mechanism!)}
-                    >
-                      {labelMechanism(issue.mechanism)}
-                    </button>
-                  ) : (
-                    <span className="text-[10px] text-[var(--sg-text-muted)]">—</span>
-                  )}
-                </td>
-                <td className="py-1.5 pr-2">
-                  <button
-                    type="button"
-                    className={QUICK_FILTER_CLASS}
-                    title={`按严重级别筛选：${labelLevel(issue.level)}`}
-                    onClick={() => applyQuickFilter('level', issue.level)}
-                  >
-                    {labelLevel(issue.level)}
-                  </button>
-                </td>
-                <td className="py-1.5 pr-2 text-[10px] tabular-nums text-[var(--sg-text-muted)]">
-                  {formatAge(issue.last_seen)}
-                </td>
-                <td className="py-1.5 pr-2 text-[10px] tabular-nums text-[var(--sg-text-muted)]">
-                  {formatAge(issue.first_seen)}
-                </td>
-                <td className="py-1.5 pr-2 text-right text-[10px] text-[var(--sg-text-muted)]">
-                  —
-                </td>
-                <td className="py-1.5 pr-2 text-right text-xs tabular-nums">{issue.event_count}</td>
-                <td className="py-1.5 text-right text-[10px] text-[var(--sg-text-muted)]">—</td>
-                <td className="py-1.5 text-xs">
-                  <button
-                    type="button"
-                    className={QUICK_FILTER_CLASS}
-                    onClick={() => applyQuickFilter('status', issue.status)}
-                  >
-                    {ISSUE_STATUS_LABELS[issue.status]}
-                  </button>
-                </td>
-              </TableRow>
-            ))}
-          </tbody>
-        </Table>
+        <ReorderableTable
+          tableId="issues-list"
+          columns={issueColumns}
+          rows={sortedIssues}
+          getRowKey={(issue) => issue.id}
+          className="mb-1 px-3"
+        />
 
         {sortedIssues.length === 0 && (
           <p className="py-6 text-center text-xs text-[var(--sg-text-muted)]">暂无问题</p>

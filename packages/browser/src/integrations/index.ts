@@ -8,5 +8,5 @@ export { cspErrorsIntegration } from './csp-errors.js';
 export { httpErrorsIntegration, type HttpErrorsOptions } from './http-errors.js';
 export { captureConsoleIntegration, type CaptureConsoleOptions } from './capture-console.js';
 export { browserContextIntegration } from './browser-context.js';
-export { performanceIntegration } from './performance.js';
-export { browserTracingIntegration } from './browser-tracing.js';
+export { performanceIntegration, type PerformanceIntegrationOptions } from './performance.js';
+export { browserTracingIntegration, type BrowserTracingIntegrationOptions } from './browser-tracing.js';

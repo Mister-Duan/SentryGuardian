@@ -60,7 +60,7 @@
 | 趋势条 | 近 24 小时 Issue 新增趋势（`GET /api/projects/:id/trends`） |
 | DSN 提示 | 当前项目的 ingest 地址，一键复制 |
 | 刷新 | 手动刷新；列表每 10 秒自动轮询 |
-| 表格 | 标题、状态（中文）、次数、最近发生时间 |
+| 表格 | 标题、状态（中文）、次数、最近发生时间；**表头可拖动调整列顺序**（顺序保存在浏览器 localStorage） |
 
 ### Issue 详情 `/issues/:id`
 
@@ -88,15 +88,20 @@
 
 ### Releases `/releases`
 
-- 按项目查看 Release 列表
+- 按项目查看 Release 列表（表头可拖动列顺序，localStorage 持久化）
 - 创建版本号
 - 上传 `.map` 文件（multipart `file` 字段）
 - CI 可用 `scripts/upload-sourcemaps.mjs` 批量上传
 
 ### 性能 `/performance`
 
-- 展示 `event_type = TRANSACTION` 的事件（LCP、CLS、TTFB、路由导航等）
-- 需 SDK 启用 `performanceIntegration` / `browserTracingIntegration`
+- 默认展示近 **12 小时**内 `event_type = TRANSACTION` 的事件，支持预设/自定义时间区间
+- **性能概览**：LCP / CLS / TTFB / FCP / INP 行内 P75；堆叠「事务类型」时间趋势；Vital P75 折线；HTTP 平均耗时趋势；按类型分布
+- **筛选**：Kibana 风格 pill（项目、类型）与「+ 添加筛选」；时间区间与 Issues 页一致；点击表格事务/指标列快速加筛
+- **事务表**：类型（事务 + 指标合并）、数值（耗时 + 指标值合并）、**评级**、URL、时间；HTTP 状态码见行内 `status_code`（`http.client` 事件详情）；支持分页（含 FID、TBT、NTBT、`nav.*`、`resource.timing`、`data.*` 等）；表头可拖动列顺序（localStorage 持久化）
+- **指标含义**：各 `metric` / perfume `metricName` 的定义与时间段说明见 [performance-metrics.md](./performance-metrics.md)
+- 需 SDK 启用 `performanceIntegration`（perfume.js）/ `browserTracingIntegration`
+- API：`GET /api/projects/:id/performance-summary?since=&until=&metric=`、`GET .../transactions`（同上查询参数）
 
 ### 告警 `/alerts`
 

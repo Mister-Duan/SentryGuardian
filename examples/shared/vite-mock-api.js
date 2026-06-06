@@ -21,6 +21,25 @@ export function mockHttpErrorsPlugin() {
         res.statusCode = 500;
         res.end('Internal Server Error');
       });
+      server.middlewares.use('/mock/slow', (req, res) => {
+        const url = new URL(req.url ?? '/', 'http://localhost');
+        const delay = Math.min(Math.max(Number(url.searchParams.get('delay') ?? 800) || 800, 50), 5000);
+        setTimeout(() => {
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ ok: true, delay_ms: delay }));
+        }, delay);
+      });
+      server.middlewares.use('/mock/asset.js', (_req, res) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/javascript');
+        res.end('/* SentryGuardian perf demo asset */');
+      });
+      server.middlewares.use('/mock/redirect', (_req, res) => {
+        res.statusCode = 302;
+        res.setHeader('Location', '/perf');
+        res.end();
+      });
     },
   };
 }

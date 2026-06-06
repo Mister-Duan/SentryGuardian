@@ -1,0 +1,33 @@
+---
+description: 全链路对齐（采集→存储→分析→展示），每次代码改动强制分析 packages/apps/examples
+alwaysApply: true
+---
+
+# 全链路对齐（强制）
+
+SentryGuardian 是**成套监控系统**。任何**代码改动**完成前，除 [delivery-checklist.mdc](./delivery-checklist.mdc) 外，须执行 **④ 全链路对齐**：
+
+```text
+采集 packages/ + examples/
+  → 接收/存储 apps/backend/dsn + database + grouper
+  → 分析 apps/backend/monitor（stats/issues）
+  → 展示 apps/frontend/monitor + docs
+```
+
+## 必做
+
+1. **改动前**：标注主要动层（采集 / 存储 / 分析 / 展示），列出可能波及的 `packages/`、`apps/`、`examples/`
+2. **改动后**：在对话附 **全链路结论**（每层「已同步 / 无需改动 / 已知限制」）
+3. **examples**：新增采集能力、控制台指标或图表时，须让 `examples/` 能 E2E 验证（init integration、演示按钮或 mock API），或文档写明替代步骤
+
+## 快速对照
+
+| 改动类型 | 扩散检查 |
+|----------|----------|
+| SDK / 事件字段 | `types` → ingest → grouper/stats → UI → examples |
+| 统计 / 列表 API | `types` → service → controller → `api.ts` → 页面 → `configuration.md` |
+| 控制台 UI | 后端 query 是否支持；examples 能否造数据 |
+
+细则与能力域 E2E 表见 [docs/ai-guide/data-pipeline-checklist.md](../docs/ai-guide/data-pipeline-checklist.md)。
+
+**不得以用户未提及 examples 或后端为由跳过分析。**

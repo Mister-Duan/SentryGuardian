@@ -56,7 +56,7 @@ MVP 算法（`@sentry-guardian/utils`）：
 **项目级上报凭证**，嵌入在 SDK 的 `init({ dsn })` 中。
 
 ```text
-{scheme}://{host}[:port]/api/sentry/{projectId}
+{scheme}://{host}[:port]/api/sentry/envelope/{projectId}
 ```
 
 | 部分 | 谁持有 | 说明 |

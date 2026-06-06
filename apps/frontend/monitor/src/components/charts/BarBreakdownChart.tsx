@@ -9,6 +9,8 @@ type Props = {
   compact?: boolean;
   /** Max bars to render. 最多展示条数。 */
   maxItems?: number;
+  /** No outer border/padding (tab panel). 无外边框（Tab 面板内）。 */
+  flat?: boolean;
 };
 
 /**
@@ -22,21 +24,28 @@ export function BarBreakdownChart({
   labelFn = (k) => k,
   compact = false,
   maxItems = 12,
+  flat = false,
 }: Props) {
   const shown = items.slice(0, maxItems);
   const max = Math.max(1, ...shown.map((i) => i.count));
 
   return (
     <div
-      className={`flex h-full min-h-0 flex-col rounded border border-[var(--sg-border)] bg-[var(--sg-content-bg)] ${compact ? 'p-1.5' : 'p-2'}`}
+      className={
+        flat
+          ? 'flex h-full min-h-0 flex-col'
+          : `flex h-full min-h-0 flex-col rounded border border-[var(--sg-border)] bg-[var(--sg-content-bg)] ${compact ? 'p-1.5' : 'p-2'}`
+      }
     >
-      <h3 className="mb-1 text-[10px] font-semibold text-[var(--sg-text)]">{title}</h3>
+      {title ? (
+        <h3 className="mb-0.5 text-[10px] font-semibold text-[var(--sg-text)]">{title}</h3>
+      ) : null}
       {shown.length === 0 ? (
         <p className="text-[10px] text-[var(--sg-text-muted)]">{emptyText}</p>
       ) : (
-        <ul className={compact ? 'space-y-1' : 'space-y-1.5'}>
+        <ul className={flat ? 'space-y-0.5' : compact ? 'space-y-1' : 'space-y-1.5'}>
           {shown.map((item) => (
-            <li key={item.key} className="text-[10px]">
+            <li key={item.key} className={flat ? 'text-[9px]' : 'text-[10px]'}>
               <div className="mb-0.5 flex justify-between gap-1">
                 <span className="truncate" title={item.key}>
                   {labelFn(item.key)}

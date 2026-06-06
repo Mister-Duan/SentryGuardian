@@ -16,10 +16,11 @@
 任何**代码改动**任务完成前必须执行（不可因用户未提及而跳过）：
 
 ```text
-分析 → 基线测试 → 实施 → ① 审核 diff → ② 测试跑通 → ③ 文档/CHANGELOG 同步 → 完成
+分析 → 基线测试 → 实施 → ① 审核 diff → ② 测试跑通 → ③ 文档/CHANGELOG 同步 → ④ 全链路对齐 → 完成
 ```
 
-细则见 [docs/ai-guide/delivery-checklist.md](./docs/ai-guide/delivery-checklist.md) 与 `.cursor/rules/delivery-checklist.mdc`。
+- 交付细则：[docs/ai-guide/delivery-checklist.md](./docs/ai-guide/delivery-checklist.md) 与 `.cursor/rules/delivery-checklist.mdc`
+- **全链路对齐**（`packages/` · `apps/` · `examples/`：采集→存储→分析→展示）：[docs/ai-guide/data-pipeline-checklist.md](./docs/ai-guide/data-pipeline-checklist.md) 与 `.cursor/rules/data-pipeline.mdc`
 
 ## MVP 实施进度
 
@@ -44,8 +45,9 @@ SentryGuardian/
 3. **借鉴不复制**：参考 Sentry 的前端监控与 Issue 设计，在本仓库做轻量、独立的成套实现
 4. **成本意识**：架构与依赖选择优先考虑个人 / 小企业单机部署，避免引入不必要的重型组件
 5. **开源质量**：行为变更必测、公开 API 必文档、用户可见变更必 CHANGELOG
-6. **不 over-engineer**：避免为单行逻辑抽 helper、过度抽象
-7. **注释**：公开 API 须写清**用途/作用**、**中英文双语**；**导出函数**须 **Input/Output `@example`**；**导出类型/接口的每个字段**须用途说明；**调整函数/字段时须同步更新**注释与示例（见 [doc-comments.md](./docs/ai-guide/doc-comments.md)）
+6. **全链路对齐**：监控相关改动须分析 `packages/`、`apps/`、`examples/` 是否需同步，保证采集→展示可 E2E 验证（见 [data-pipeline-checklist.md](./docs/ai-guide/data-pipeline-checklist.md)）
+7. **不 over-engineer**：避免为单行逻辑抽 helper、过度抽象
+8. **注释**：公开 API 须写清**用途/作用**、**中英文双语**；**导出函数**须 **Input/Output `@example`**；**导出类型/接口的每个字段**须用途说明；**调整函数/字段时须同步更新**注释与示例（见 [doc-comments.md](./docs/ai-guide/doc-comments.md)）
 
 ## 禁止事项
 
@@ -54,7 +56,7 @@ SentryGuardian/
 - 修改 git config；对 `main`/`master` force push
 - 将 Sentry 上游代码直接 vendoring 进本仓库
 - 一次性大规模重写（渐进式改动，保持可运行）
-- **以用户未要求为由省略测试、文档或 CHANGELOG**
+- **以用户未要求为由省略测试、文档、CHANGELOG 或全链路分析**
 
 ## 文档索引
 
@@ -68,6 +70,7 @@ SentryGuardian/
 | [docs/ai-guide/doc-comments.md](./docs/ai-guide/doc-comments.md) | 代码文档注释（中英文双语） |
 | [docs/ai-guide/open-source.md](./docs/ai-guide/open-source.md) | 开源开发标准 |
 | [docs/ai-guide/delivery-checklist.md](./docs/ai-guide/delivery-checklist.md) | 强制交付检查清单 |
+| [docs/ai-guide/data-pipeline-checklist.md](./docs/ai-guide/data-pipeline-checklist.md) | **全链路对齐**（采集→展示，含 examples） |
 | [docs/README.md](./docs/README.md) | 文档索引 |
 | [AGENTS.md](./AGENTS.md) | 本文件：项目级入口 |
 | [.cursor/README.md](./.cursor/README.md) | Cursor 规则说明 |

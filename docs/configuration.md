@@ -81,7 +81,7 @@ VITE_API_URL=https://monitor.example.com pnpm --filter @sentry-guardian/frontend
 ## DSN 格式
 
 ```text
-{scheme}://{host}[:port]/api/sentry/{projectId}
+{scheme}://{host}[:port]/api/sentry/envelope/{projectId}
 ```
 
 | 部分 | 说明 |
@@ -90,20 +90,20 @@ VITE_API_URL=https://monitor.example.com pnpm --filter @sentry-guardian/frontend
 | `host` | ingest 服务地址，如 `localhost:3001` 或 `ingest.example.com`（**不要**带路径） |
 | `projectId` | 项目 ID（cuid），非 slug |
 
-示例：`http://localhost:3001/api/sentry/clxxxxxxxx`
+示例：`http://localhost:3001/api/sentry/envelope/clxxxxxxxx`
 
 ### 协议约定（本地 vs 生产）
 
 | 场景 | DSN / 上报 URL | 说明 |
 |------|----------------|------|
-| 本地开发（`localhost`、`127.0.0.1`、`::1`） | `http://localhost:3001/api/sentry/...` | ingest 默认仅 HTTP；`db:seed` 的 `buildDsn` 生成 `http://` |
-| 生产（自定义域名） | `https://ingest.example.com/api/sentry/...` | 前置 TLS 终结；`buildDsn` 对非回环主机使用 `https://` |
-| DSN 误写 `https://...@localhost` | SDK 仍上报 **`http://localhost:.../envelope/`** | `parseDsn` 对回环主机强制 HTTP |
+| 本地开发（`localhost`、`127.0.0.1`、`::1`） | `http://localhost:3001/api/sentry/envelope/...` | ingest 默认仅 HTTP；`db:seed` 的 `buildDsn` 生成 `http://` |
+| 生产（自定义域名） | `https://ingest.example.com/api/sentry/envelope/...` | 前置 TLS 终结；`buildDsn` 对非回环主机使用 `https://` |
+| DSN 误写 `https://...@localhost` | SDK 仍上报 **`http://localhost:.../api/sentry/envelope/{projectId}/`** | `parseDsn` 对回环主机强制 HTTP |
 
-SDK 实际上报（`parseDsn` 解析后的 `envelopeUrl`）：
+SDK 实际上报（`parseDsn` 解析后的 `envelopeUrl`，与 DSN 路径一致并以 `/` 结尾）：
 
 ```text
-POST {scheme}://{host}/api/sentry/{projectId}/envelope/
+POST {scheme}://{host}/api/sentry/envelope/{projectId}/
 Content-Type: application/x-sentry-guardian-envelope
 ```
 
@@ -175,6 +175,13 @@ CLI 参数：`--project-id`、`--token`（JWT）、`--release`、`--dir`（默�
 | `Performance` | `performanceIntegration` | LCP、CLS、TTFB → `TRANSACTION` 事件 |
 | `BrowserTracing` | `browserTracingIntegration` | 路由导航、慢 fetch（可设 `slowThresholdMs`） |
 
+**性能 URL 过滤**（与 `init({ denyUrls })` 无关，后者仅过滤错误事件）：
+
+| 选项 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `denyUrls` | `(string \| RegExp)[]` | `[]` | 额外排除的资源/fetch URL（子串或正则） |
+| `ignoreIngest` | `boolean` | `true` | 为 `true` 时自动排除 SDK ingest URL（由 DSN `envelopeUrl` 与 `tunnel` 推导） |
+
 ```typescript
 import {
   init,
@@ -185,9 +192,14 @@ import {
 init({
   dsn: '...',
   release: 'my-app@1.2.0',
-  integrations: [performanceIntegration(), browserTracingIntegration()],
+  integrations: [
+    performanceIntegration({ denyUrls: [/analytics\.example\.com/] }),
+    browserTracingIntegration({ slowThresholdMs: 3000 }),
+  ],
 });
 ```
+
+**已知限制**：`dataConsumption`（`data.*`）为 perfume 聚合 KB，无法按单 URL 剔除，仍可能包含 ingest 流量。
 
 事务在控制台 **性能** 页与 `GET /api/projects/:id/transactions` 查看。
 
@@ -209,7 +221,7 @@ init({
 import * as Sentry from '@sentry-guardian/browser';
 
 Sentry.init({
-  dsn: 'http://localhost:3001/api/sentry/<projectId>',
+  dsn: 'http://localhost:3001/api/sentry/envelope/<projectId>',
   environment: import.meta.env.MODE,
   release: 'my-app@1.2.0',
   sampleRate: 1,
@@ -319,7 +331,8 @@ app.use(router).mount('#app');
 | `POST` | `/api/projects/:projectId/releases/:releaseId/artifacts` | multipart 字段 `file`（`.map`） |
 | `GET` | `/api/projects/:projectId/trends` | Query: `hours`（默认 24） |
 | `GET` | `/api/projects/:projectId/releases/compare` | 各 Release 错误数对比 |
-| `GET` | `/api/projects/:projectId/transactions` | 性能事务分页 |
+| `GET` | `/api/projects/:projectId/performance-summary` | 性能概览（Web Vitals、分布、趋势）；`since`/`until`/`metric` |
+| `GET` | `/api/projects/:projectId/transactions` | 性能事务分页；`since`/`until`/`metric`/`page`/`page_size` |
 
 ### 告警
 

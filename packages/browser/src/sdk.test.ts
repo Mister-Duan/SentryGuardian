@@ -4,7 +4,7 @@ import { init, getClient, close } from './sdk.js';
 import { getDefaultIntegrations } from './default-integrations.js';
 import { FetchTransport } from './transports/fetch.js';
 
-const dsn = 'http://localhost:3001/api/sentry/demo';
+const dsn = 'http://localhost:3001/api/sentry/envelope/demo';
 
 describe('browser init', () => {
   afterEach(async () => {

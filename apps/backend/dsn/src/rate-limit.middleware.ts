@@ -13,7 +13,7 @@ export class RateLimitMiddleware implements NestMiddleware {
   constructor(private readonly prisma: PrismaService) {}
 
   async use(req: Request, res: Response, next: NextFunction): Promise<void> {
-    const match = req.path.match(/\/api\/sentry\/([^/]+)\/envelope\/?$/);
+    const match = req.path.match(/\/api\/sentry\/envelope\/([^/]+)\/?$/);
     if (!match || req.method !== 'POST') {
       next();
       return;

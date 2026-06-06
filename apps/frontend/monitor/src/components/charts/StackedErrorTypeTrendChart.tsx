@@ -21,6 +21,8 @@ type Props = {
   labelFn?: (key: string) => string;
   /** Tailwind height class for plot area. 绘图区 Tailwind 高度类。 */
   heightClass?: string;
+  /** Denser axis, labels, and legend. 更紧凑的轴、标签与图例。 */
+  dense?: boolean;
 };
 
 function countAt(series: ErrorTypeTrendResponse['series'][0], bucket: string): number {
@@ -71,6 +73,7 @@ export function StackedErrorTypeTrendChart({
   data,
   labelFn = (k) => k,
   heightClass = 'h-28',
+  dense = false,
 }: Props) {
   const { buckets, series } = data;
   const activeSeries = series.filter((s) => s.points.some((p) => p.count > 0));
@@ -94,11 +97,13 @@ export function StackedErrorTypeTrendChart({
 
   return (
     <div className="flex min-h-0 flex-col">
-      <h3 className="mb-0.5 text-[10px] font-semibold text-[var(--sg-text)]">{title}</h3>
+      {title ? (
+        <h3 className="mb-0.5 text-[10px] font-semibold text-[var(--sg-text)]">{title}</h3>
+      ) : null}
 
-      <div className="flex gap-1.5">
+      <div className={`flex ${dense ? 'gap-1' : 'gap-1.5'}`}>
         <div
-          className={`flex w-6 shrink-0 flex-col justify-between text-right text-[9px] tabular-nums text-[var(--sg-text-muted)] ${heightClass}`}
+          className={`flex shrink-0 flex-col justify-between text-right tabular-nums text-[var(--sg-text-muted)] ${dense ? 'w-5 text-[8px]' : 'w-6 text-[9px]'} ${heightClass}`}
         >
           {[...yTicks].reverse().map((tick) => (
             <span key={tick}>{tick}</span>
@@ -170,13 +175,13 @@ export function StackedErrorTypeTrendChart({
           </div>
 
           {/* X-axis labels aligned to tick positions / 与刻度对齐的 X 轴标签 */}
-          <div className="relative mt-1 h-4 w-full">
+          <div className={`relative mt-0.5 w-full ${dense ? 'h-3' : 'h-4'}`}>
             {labelIndices.map((i) => {
               const bucket = buckets[i]!;
               return (
                 <span
                   key={bucket}
-                  className={`absolute top-0 whitespace-nowrap text-[9px] leading-none text-[var(--sg-text-muted)] ${labelAlign(i, buckets.length)}`}
+                  className={`absolute top-0 whitespace-nowrap leading-none text-[var(--sg-text-muted)] ${dense ? 'text-[8px]' : 'text-[9px]'} ${labelAlign(i, buckets.length)}`}
                   style={{ left: `${tickLeftPercent(i, buckets.length)}%` }}
                 >
                   {formatBucketLabel(bucket, data.bucket_ms)}
@@ -187,11 +192,13 @@ export function StackedErrorTypeTrendChart({
         </div>
       </div>
 
-      <ul className="mt-1 flex max-h-4 flex-wrap gap-x-2 gap-y-0 overflow-hidden">
+      <ul
+        className={`mt-0.5 flex flex-wrap overflow-hidden ${dense ? 'max-h-3 gap-x-1.5 text-[8px]' : 'max-h-4 gap-x-2 text-[9px]'} gap-y-0`}
+      >
         {activeSeries.map((s, i) => (
-          <li key={s.key} className="flex items-center gap-0.5 text-[9px] text-[var(--sg-text)]">
+          <li key={s.key} className="flex items-center gap-0.5 text-[var(--sg-text)]">
             <span
-              className="inline-block h-1.5 w-1.5 rounded-sm"
+              className={`inline-block rounded-sm ${dense ? 'h-1 w-1' : 'h-1.5 w-1.5'}`}
               style={{ background: SERIES_COLORS[i % SERIES_COLORS.length] }}
             />
             {displayLabel(s.key)}

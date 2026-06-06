@@ -156,7 +156,7 @@ server {
 ### 4. 业务方 DSN
 
 ```text
-https://ingest.example.com/api/sentry/{projectId}
+https://ingest.example.com/api/sentry/envelope/{projectId}
 ```
 
 与控制台 / seed 输出一致。`projectId` 为 cuid，请勿在公开文档中暴露生产 DSN。

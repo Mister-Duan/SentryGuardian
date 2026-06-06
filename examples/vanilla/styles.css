@@ -20,6 +20,44 @@ header p {
   margin: 0.25rem 0 0;
 }
 
+.demo-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0;
+}
+
+.demo-tab {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+}
+
+.demo-tab:hover {
+  color: #1a1a1a;
+  background: #eee;
+}
+
+.demo-tab--active {
+  color: #6c5ce7;
+  border-bottom-color: #6c5ce7;
+  background: #fff;
+}
+
+.tab-hint {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  color: #666;
+}
+
 .status {
   margin-top: 0.75rem;
   padding: 0.5rem 0.75rem;

@@ -49,28 +49,28 @@ function ingestScheme(host: string, scheme: 'http' | 'https'): 'http' | 'https' 
  * Parse DSN into ingest URL parts.
  * 解析 DSN 为上报 URL 组成部分。
  *
- * Format / 格式：`{scheme}://{host}[:port]/api/sentry/{projectId}`
+ * Format / 格式：`{scheme}://{host}[:port]/api/sentry/envelope/{projectId}`
  *
  * @example
  * ```ts
  * // Input / 输入（本地常见误写 https，仍解析为 http 上报）
- * parseDsn('https://localhost:3001/api/sentry/my-project')
+ * parseDsn('https://localhost:3001/api/sentry/envelope/my-project')
  * // Output / 输出
- * { projectId: 'my-project', envelopeUrl: 'http://localhost:3001/api/sentry/my-project/envelope/' }
+ * { projectId: 'my-project', envelopeUrl: 'http://localhost:3001/api/sentry/envelope/my-project/' }
  * ```
  */
 export function parseDsn(dsn: string): ParsedDsn {
   const trimmed = dsn.trim().replace(/\/+$/, '');
-  const match = trimmed.match(/^(https?):\/\/([^/]+)\/api\/sentry\/([^/?#]+)$/);
+  const match = trimmed.match(/^(https?):\/\/([^/]+)\/api\/sentry\/envelope\/([^/?#]+)$/);
   if (!match) {
     throw new Error(
-      `Invalid DSN: ${dsn}. Expected format: http://host:port/api/sentry/{projectId}`,
+      `Invalid DSN: ${dsn}. Expected format: http://host:port/api/sentry/envelope/{projectId}`,
     );
   }
   const [, scheme, host, projectId] = match;
   const resolvedScheme = ingestScheme(host, scheme as 'http' | 'https');
   return {
     projectId: projectId!,
-    envelopeUrl: `${resolvedScheme}://${host}/api/sentry/${projectId}/envelope/`,
+    envelopeUrl: `${resolvedScheme}://${host}/api/sentry/envelope/${projectId}/`,
   };
 }

@@ -40,4 +40,39 @@ describe('BufferTransport', () => {
     await buf.flush(100);
     expect(buf.getPendingCount()).toBe(0);
   });
+
+  it('clears buffer on 201 Created from ingest', async () => {
+    const inner = new StatusTransport(201);
+    const buf = new BufferTransport(inner);
+    await buf.send(envelope);
+    await buf.flush(100);
+    expect(buf.getPendingCount()).toBe(0);
+  });
+
+  it('clears buffer on 204 No Content', async () => {
+    const inner = new StatusTransport(204);
+    const buf = new BufferTransport(inner);
+    await buf.send(envelope);
+    await buf.flush(100);
+    expect(buf.getPendingCount()).toBe(0);
+  });
+
+  it('flushSync drains buffer when inner sendSync succeeds', () => {
+    let syncCalls = 0;
+    const inner: Transport = {
+      async send() {
+        return { statusCode: 200 };
+      },
+      sendSync() {
+        syncCalls += 1;
+        return true;
+      },
+    };
+    const buf = new BufferTransport(inner);
+    void buf.send(envelope);
+    expect(buf.getPendingCount()).toBe(1);
+    buf.flushSync();
+    expect(buf.getPendingCount()).toBe(0);
+    expect(syncCalls).toBe(1);
+  });
 });

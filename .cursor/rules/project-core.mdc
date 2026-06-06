@@ -14,7 +14,7 @@ alwaysApply: true
 
 ## 强制交付
 
-代码改动完成前执行交付三件套（审核 + 测试 + 文档），见 `delivery-checklist.mdc` 与 `docs/ai-guide/delivery-checklist.md`。
+代码改动完成前执行交付三件套 + 全链路对齐（审核 + 测试 + 文档 + **packages/apps/examples 采集→展示**），见 `delivery-checklist.mdc`、`data-pipeline.mdc` 与 `docs/ai-guide/delivery-checklist.md`、`docs/ai-guide/data-pipeline-checklist.md`。
 
 执行 MVP 分步计划时，**每步结束须更新** `docs/plans/mvp-implementation.md`（当前步骤、checkbox、变更日志），再向用户汇报。
 

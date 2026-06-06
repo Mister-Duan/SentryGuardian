@@ -1,5 +1,6 @@
 import type { Integration } from '@sentry-guardian/core';
 import type { ErrorEvent } from '@sentry-guardian/types';
+import { urlMatches, type UrlPatternList } from '../lib/url-match.js';
 
 /**
  * Options for {@link inboundFiltersIntegration}.
@@ -16,15 +17,9 @@ import type { ErrorEvent } from '@sentry-guardian/types';
  */
 export interface InboundFiltersOptions {
   /** URL substrings or regexes that drop matching events. 匹配则丢弃事件的 URL 子串或正则。 */
-  denyUrls?: Array<string | RegExp>;
+  denyUrls?: UrlPatternList;
   /** If set, only URLs matching at least one pattern are kept. 若设置，仅保留匹配任一模式的 URL。 */
-  allowUrls?: Array<string | RegExp>;
-}
-
-function urlMatches(patterns: Array<string | RegExp>, url: string): boolean {
-  return patterns.some((pattern) =>
-    typeof pattern === 'string' ? url.includes(pattern) : pattern.test(url),
-  );
+  allowUrls?: UrlPatternList;
 }
 
 /**

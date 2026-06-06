@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Monitor: performance list drops HTTP status column (available on `http.client` event payload); merges transaction/metric into「类型」and duration/value into「数值」columns
+- Monitor: draggable table column reorder with localStorage persistence (Issues, Performance, Releases pages); default min column width 100px without max-width cap
+- Browser SDK: performance URL filtering — `performanceIntegration` / `browserTracingIntegration` accept `denyUrls` and `ignoreIngest` (default excludes SDK ingest URL derived from DSN `envelopeUrl` and `tunnel`); shared `urlMatches` / `resolvePerformanceDenyUrls`
+- Browser SDK: **perfume.js** integration for field performance metrics (Web Vitals, TBT/NTBT, navigation/network/storage, resource/element timing); re-export `markNTBT`, `markStep`, `trackUJNavigation`, `start`/`end`
+- Monitor: performance table **rating** column (`metric_rating`); expanded metric filters (FID, TBT, resource.timing, …)
+- Examples: vanilla and vue-vite enable performance integrations with Web Vitals / slow-fetch demo panel; `/mock/slow` dev endpoint
+- Examples: `/perf` tab covers all perfume.js metric trigger conditions (Web Vitals, NTBT/RT, ET, resource/data, user journey); mock `/mock/asset.js` and `/mock/redirect`
+- Browser SDK: batch perfume transactions per envelope; `pagehide` / `visibilitychange` sync flush via `sendBeacon`
+- Browser SDK: default `reportOptions.lcp.reportAllChanges: true` in `performanceIntegration`
+- Monitor: performance charts — stacked transaction-type trends, Web Vital P75 line chart with threshold bands, HTTP duration trend
+- Monitor: performance page with Web Vitals overview (P75 ratings), metric filter, time range, and pagination; `GET /performance-summary`
 - Database migration: backfill `issues.exception_type` and `issues.mechanism` from latest event payloads
 - Monitor: issue list filters for exception type, capture mechanism, and severity level
 - Examples: `examples/shared/error-demos.js` 覆盖全部默认错误类型；vanilla 按钮面板 + `csp-lab.html`；vue-vite 复用演示并增加 Vue 组件错误
@@ -25,7 +36,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Monitor: error trend chart X-axis ticks and labels span full plot width with readable time labels
+- **BREAKING CHANGE:** DSN and ingest URL are now `{scheme}://{host}/api/sentry/envelope/{projectId}`; `POST` target is the same path with trailing `/` (replaces `/api/sentry/{projectId}/envelope/`)
+- **BREAKING CHANGE:** Removed `vital_reporting` (`instant`/`standard`) from transaction events and APIs; performance data now comes solely from perfume.js semantics
+- Browser SDK: replace custom `src/performance/` module with `perfume-bridge` + `perfume.js` dependency
+- Monitor: performance overview uses tabbed single-panel charts with inline Vital summary; denser chart axes and labels
+- Monitor: performance page uses Kibana-style filter pills (project + metric), table click-to-filter, and denser overview layout aligned with Issues page
+- AI collaboration: mandatory end-to-end pipeline checklist (collect → store → analyze → present) for `packages/` / `apps/` / `examples/`; new `data-pipeline.mdc` rule
 - Monitor: error trend chart uses dynamic time buckets (finer for shorter ranges) with fixed thin columns; reduced overview height
 - Monitor: issue stream default window is 12h with preset/custom time range picker; charts sit between filters and table and honor active filter pills
 - Monitor: project scope shown as a Kibana-style filter pill; mechanism filter options use live error breakdown keys
@@ -65,6 +81,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Browser SDK: `BufferTransport` accepts any 2xx HTTP status (including ingest **201 Created**); previously only 200 cleared the buffer, causing performance transaction uploads to be retried then dropped
+- Browser SDK: `BufferTransport.sendSync` no longer double-enqueues when sync send fails (fallback handled once by `Client.sendEnvelopeSync`)
+- Browser SDK: `perfume-bridge` preserves `perf_context` extensions (`stepName`, `network`, `storage`) for user journey / network / storage metrics
+- Browser SDK: performance ingest URL filter also matches `/api/sentry/envelope/` path (host-agnostic; fixes `localhost` vs `127.0.0.1`); rebuild `@sentry-guardian/browser` dist after pulling
 - `backend-dsn` / `backend-monitor`: exclude `*.test.ts` / `*.e2e.test.ts` from `tsc` build; `predev` / `prebuild` build workspace dependencies (fixes `Cannot find module '@sentry-guardian/core'`)
 - `parseDsn` uses HTTP for loopback hosts even when DSN says `https://` (fixes local `ERR_SSL_PROTOCOL_ERROR`)
 - `buildDsn` uses `http://` for localhost / loopback hosts

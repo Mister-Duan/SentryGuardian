@@ -18,7 +18,10 @@
       }
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
@@ -28,7 +31,8 @@
   "dependencies": {
     "@sentry-guardian/browser-utils": "workspace:*",
     "@sentry-guardian/core": "workspace:*",
-    "@sentry-guardian/types": "workspace:*"
+    "@sentry-guardian/types": "workspace:*",
+    "perfume.js": "^9.4.0"
   },
   "devDependencies": {
     "jsdom": "^26.1.0",

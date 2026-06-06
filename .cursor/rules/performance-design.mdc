@@ -1,0 +1,22 @@
+---
+description: Browser performance via perfume.js
+globs:
+  - packages/browser/src/integrations/perfume-bridge.ts
+  - packages/browser/src/integrations/performance.ts
+  - packages/browser/src/integrations/browser-tracing.ts
+---
+
+# 性能模块
+
+性能采集使用 **[perfume.js](https://github.com/Zizzamia/perfume.js)**（MIT），映射逻辑在 `integrations/perfume-bridge.ts`。详见 `docs/ai-guide/performance-design.md`。
+
+## 强制约定
+
+- 禁止恢复 `vital_reporting` / instant-standard 双模式
+- 新指标在 `mapPerfumeReport` 中映射，并补充 `perfume-bridge.test.ts`
+- `performanceIntegration` 保持薄封装，仅调用 `initPerfume` + bridge
+- 改 `TransactionEvent` 性能字段须同步 types、core `captureTransaction`、控制台文档
+
+## 依赖
+
+- `perfume.js@^9.4`（传递依赖 `web-vitals`）

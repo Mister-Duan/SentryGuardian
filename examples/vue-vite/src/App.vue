@@ -1,19 +1,46 @@
 <script setup lang="ts">
 import * as Sentry from '@sentry-guardian/browser';
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { DEMO_TABS, navigateDemoTab, normalizeDemoPath, resolveDemoTab } from '../../shared/demo-routes.js';
 import { buildErrorDemoGroups } from '../../shared/error-demos.js';
 import { vueErrorDemoGroup } from '../../shared/error-demos-vue.js';
+import { buildPerformanceDemoGroups } from '../../shared/performance-demos.js';
 
 const dsn = import.meta.env.VITE_DSN as string | undefined;
 
+const activeTab = ref<'error' | 'perf'>(normalizeDemoPath());
+
+const tabHint = computed(
+  () => DEMO_TABS.find((t) => t.id === activeTab.value)?.description ?? '',
+);
+
 const groups = computed(() => {
-  const base = buildErrorDemoGroups(Sentry);
-  return [...base, vueErrorDemoGroup(() => throwVueError())];
+  if (activeTab.value === 'perf') {
+    return buildPerformanceDemoGroups(Sentry);
+  }
+  return [...buildErrorDemoGroups(Sentry), vueErrorDemoGroup(() => throwVueError())];
 });
 
 function throwVueError() {
   throw new Error('[demo] Vue component error from SentryGuardian example');
 }
+
+function selectTab(tabId: 'error' | 'perf') {
+  navigateDemoTab(tabId);
+  activeTab.value = tabId;
+}
+
+function onPopState() {
+  activeTab.value = resolveDemoTab();
+}
+
+onMounted(() => {
+  window.addEventListener('popstate', onPopState);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('popstate', onPopState);
+});
 
 function runDemo(run: () => void | Promise<void>) {
   window.setTimeout(async () => {
@@ -39,7 +66,7 @@ function maskDsn(value: string) {
 
 const statusText = ref(
   dsn
-    ? `SDK 已初始化 · release vue-example@0.1.0 · DSN ${maskDsn(dsn)}`
+    ? `SDK 已初始化（含性能集成）· release vue-example@0.1.0 · DSN ${maskDsn(dsn)}`
     : '未配置 VITE_DSN，SDK 未初始化。请复制 .env.example 并填入 DSN。',
 );
 </script>
@@ -47,15 +74,31 @@ const statusText = ref(
 <template>
   <div class="page">
     <header>
-      <h1>SentryGuardian 浏览器错误类型演示 · Vue</h1>
+      <h1>SentryGuardian SDK 演示 · Vue</h1>
       <p>
-        与 <code>examples/vanilla</code> 共用演示清单，并额外包含
-        <code>vueIntegration</code> 捕获的组件错误。
+        与 <code>examples/vanilla</code> 共用演示清单；<strong>错误</strong> Tab 额外包含
+        <code>vueIntegration</code> 组件错误。
       </p>
       <div :class="['status', dsn ? 'status--ok' : 'status--warn']">{{ statusText }}</div>
     </header>
 
-    <section v-for="group in groups" :key="group.title">
+    <nav class="demo-tabs" role="tablist" aria-label="演示分类">
+      <button
+        v-for="tab in DEMO_TABS"
+        :key="tab.id"
+        type="button"
+        class="demo-tab"
+        :class="{ 'demo-tab--active': activeTab === tab.id }"
+        role="tab"
+        :aria-selected="activeTab === tab.id"
+        @click="selectTab(tab.id)"
+      >
+        {{ tab.label }}
+      </button>
+    </nav>
+    <p class="tab-hint">{{ tabHint }}</p>
+
+    <section v-for="group in groups" :key="group.title" role="tabpanel">
       <h2>{{ group.title }}</h2>
       <p v-if="group.description" class="section-desc">{{ group.description }}</p>
       <div class="grid">
@@ -75,9 +118,9 @@ const statusText = ref(
 
     <footer>
       <p>
-        CSP 违规请打开同仓库 vanilla 示例的
+        CSP 违规请打开 vanilla 示例的
         <a href="http://localhost:5174/csp-lab.html" target="_blank" rel="noopener">csp-lab.html</a>
-        （需先运行 vanilla 示例）。
+        （需先运行 vanilla 示例，端口 5174）。
       </p>
     </footer>
   </div>

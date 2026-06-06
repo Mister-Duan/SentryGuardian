@@ -6,7 +6,7 @@ import { EnvelopeService } from './envelope.service.js';
  * Ingest envelope HTTP API.
  * Envelope 上报 HTTP API。
  */
-@Controller('api/sentry/:projectId')
+@Controller('api/sentry/envelope/:projectId')
 export class EnvelopeController {
   constructor(@Inject(EnvelopeService) private readonly envelopeService: EnvelopeService) {}
 
@@ -16,12 +16,12 @@ export class EnvelopeController {
    *
    * @example
    * ```http
-   * POST /api/sentry/{projectId}/envelope/
+   * POST /api/sentry/envelope/{projectId}/
    * // Output / 输出
    * { "stored": 1 }
    * ```
    */
-  @Post('envelope')
+  @Post()
   @HttpCode(201)
   async ingest(
     @Param('projectId') projectId: string,

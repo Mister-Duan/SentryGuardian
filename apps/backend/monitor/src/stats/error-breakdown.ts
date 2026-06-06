@@ -36,7 +36,7 @@ export function primaryMechanism(payload: ErrorEvent): string {
   );
 }
 
-function floorToBucket(iso: Date, bucketMs: number): string {
+export function floorToBucket(iso: Date, bucketMs: number): string {
   const start = new Date(Math.floor(iso.getTime() / bucketMs) * bucketMs);
   return start.toISOString();
 }
@@ -84,7 +84,10 @@ export function resolveBucketMs(spanMs: number): number {
   return Math.ceil(span / MAX_TREND_BUCKETS);
 }
 
-function listBucketStartsForRange(since: Date, until: Date): { bucketMs: number; buckets: string[] } {
+export function listBucketStartsForRange(
+  since: Date,
+  until: Date,
+): { bucketMs: number; buckets: string[] } {
   const spanMs = Math.max(until.getTime() - since.getTime(), 60_000);
   const bucketMs = resolveBucketMs(spanMs);
   const buckets: string[] = [];
@@ -95,7 +98,7 @@ function listBucketStartsForRange(since: Date, until: Date): { bucketMs: number;
   return { bucketMs, buckets };
 }
 
-function listBucketStarts(windowHours: number): { bucketMs: number; buckets: string[] } {
+export function listBucketStarts(windowHours: number): { bucketMs: number; buckets: string[] } {
   const until = new Date();
   const since = new Date(until.getTime() - windowHours * 60 * 60 * 1000);
   return listBucketStartsForRange(since, until);

@@ -1,6 +1,6 @@
-# Vanilla 错误类型演示
+# Vanilla 错误与性能演示
 
-在浏览器中验证 `@sentry-guardian/browser` **默认集成**捕获的全部错误类型，并在监控控制台查看可视化。
+在浏览器中验证 `@sentry-guardian/browser` **默认错误集成**与 **性能集成**（Web Vitals、慢 Fetch），并在监控控制台查看 Issue 与性能页。
 
 ## 前置条件
 
@@ -20,15 +20,17 @@ pnpm dev
 **方式 B — 命令行**
 
 ```bash
-VITE_DSN='http://localhost:3001/api/sentry/<projectId>' pnpm dev
+VITE_DSN='http://localhost:3001/api/sentry/envelope/<projectId>' pnpm dev
 ```
 
 ## 验证
 
 1. 打开 http://localhost:5174
-2. 按分组点击按钮（JavaScript、Promise、资源、HTTP、Console、手动 API 等）
+2. 打开 **/perf** Tab，按分组点击按钮（覆盖 perfume.js 全量指标触发条件 + 慢请求）
 3. DevTools → Network：应看到 `POST …/envelope/` 返回 **201**
-4. 控制台 http://localhost:5173：Issue 列表、**错误分布图**、Issue 详情中的类型/来源图表
+4. 控制台 http://localhost:5173：
+   - **Issues**：错误列表与分布图
+   - **性能**：Vital 概览、事务趋势与慢 `http.client` 记录
 
 ### CSP 违规
 
@@ -43,6 +45,9 @@ VITE_DSN='http://localhost:3001/api/sentry/<projectId>' pnpm dev
 
 - `GET /mock/404`
 - `GET /mock/500`
+- `GET /mock/slow?delay=800` — 可配置延迟（50–5000ms），用于慢请求与 `data.*` 演示
+- `GET /mock/asset.js` — 动态 script，用于 `resource.timing` 演示
+- `GET /mock/redirect` — 302 回到 `/perf`，用于 RT / `nav.redirect` 演示
 
 ## 故障排查
 

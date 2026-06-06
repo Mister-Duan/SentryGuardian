@@ -7,7 +7,8 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@sentry-guardian/browser": "workspace:*"
+    "@sentry-guardian/browser": "workspace:*",
+    "perfume.js": "^9.4.0"
   },
   "devDependencies": {
     "vite": "^6.3.5"

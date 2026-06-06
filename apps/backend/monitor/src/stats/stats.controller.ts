@@ -4,7 +4,9 @@ import type {
   ErrorTypeTrendResponse,
   IssueStatsQuery,
   IssueTrendResponse,
+  PerformanceSummaryResponse,
   ReleaseCompareResponse,
+  TransactionListQuery,
   TransactionListResponse,
 } from '@sentry-guardian/types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
@@ -45,16 +47,19 @@ export class StatsController {
     return this.statsService.releaseCompare(projectId);
   }
 
+  @Get('performance-summary')
+  performanceSummary(
+    @Param('projectId') projectId: string,
+    @Query() query: TransactionListQuery,
+  ): Promise<PerformanceSummaryResponse> {
+    return this.statsService.performanceSummary(projectId, query);
+  }
+
   @Get('transactions')
   transactions(
     @Param('projectId') projectId: string,
-    @Query('page') page?: string,
-    @Query('page_size') pageSize?: string,
+    @Query() query: TransactionListQuery,
   ): Promise<TransactionListResponse> {
-    return this.statsService.listTransactions(
-      projectId,
-      Number(page ?? 1),
-      Number(pageSize ?? 20),
-    );
+    return this.statsService.listTransactions(projectId, query);
   }
 }

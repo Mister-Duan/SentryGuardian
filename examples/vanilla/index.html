@@ -3,23 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SentryGuardian 错误类型演示 · Vanilla</title>
+    <title>SentryGuardian 错误与性能演示 · Vanilla</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header>
-      <h1>SentryGuardian 浏览器错误类型演示</h1>
+      <h1>SentryGuardian SDK 演示</h1>
       <p>
-        覆盖默认 SDK 集成的各类错误采集路径。配置 <code>VITE_DSN</code> 后点击按钮，在监控控制台查看
-        Issue、错误分布与事件详情。
+        配置 <code>VITE_DSN</code> 后，在 <strong>错误</strong> 与 <strong>性能</strong> 两个 Tab
+        中分别触发采集，再到监控控制台对应页面查看。
       </p>
       <div id="sdk-status" class="status status--warn">正在检查 SDK…</div>
     </header>
-    <main id="demo-root"></main>
+    <nav id="demo-tabs"></nav>
+    <p id="demo-tab-hint" class="tab-hint"></p>
+    <main id="demo-root" role="tabpanel"></main>
     <footer>
       <p>
         CSP 违规请在 <a href="/csp-lab.html" target="_blank" rel="noopener">csp-lab.html</a>
-        独立页触发。HTTP 演示依赖 Vite 中间件 <code>/mock/404</code>、<code>/mock/500</code>。
+        独立页触发。HTTP 演示依赖 <code>/mock/404</code>、<code>/mock/500</code>；慢请求演示使用
+        <code>/mock/slow?delay=</code>。
       </p>
     </footer>
     <script type="module" src="/main.js"></script>

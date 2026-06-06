@@ -46,12 +46,29 @@ export function createTransactionEnvelope(
   transaction: TransactionEvent,
   sdk: { name: string; version: string },
 ): Envelope {
-  const items: EnvelopeItem[] = [
-    {
-      header: { type: 'transaction', content_type: 'application/json' },
-      payload: transaction,
-    },
-  ];
+  return createTransactionsEnvelope([transaction], sdk);
+}
+
+/**
+ * Build an envelope containing multiple performance transactions (one ingest POST).
+ * 构建包含多条性能事务的 Envelope（单次 ingest POST）。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * createTransactionsEnvelope([txA, txB], { name: 'test', version: '0.1.0' }).items.length
+ * // Output / 输出
+ * 2
+ * ```
+ */
+export function createTransactionsEnvelope(
+  transactions: TransactionEvent[],
+  sdk: { name: string; version: string },
+): Envelope {
+  const items: EnvelopeItem[] = transactions.map((transaction) => ({
+    header: { type: 'transaction', content_type: 'application/json' },
+    payload: transaction,
+  }));
 
   return {
     header: {

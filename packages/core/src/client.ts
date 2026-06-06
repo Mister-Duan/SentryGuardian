@@ -2,7 +2,7 @@ import type { ErrorEvent, ExceptionValue, SdkInfo, TransactionEvent, User } from
 import type { CaptureHint } from './capture-hint.js';
 import { normalizeTimestamp } from '@sentry-guardian/utils/string';
 import { generateEventId, parseDsn } from './dsn.js';
-import { createEnvelope, createTransactionEnvelope } from './envelope.js';
+import { createEnvelope, createTransactionsEnvelope } from './envelope.js';
 import { EventProcessor, type BeforeSendFn } from './event-processor.js';
 import { setupIntegrations, type Integration } from './integration.js';
 import { ScopeStack } from './scope.js';
@@ -19,7 +19,7 @@ const DEDUPE_WINDOW_MS = 2000;
  * ```ts
  * // Sample / 示例
  * const options: ClientOptions = {
- *   dsn: 'http://localhost:3001/api/sentry/demo',
+ *   dsn: 'http://localhost:3001/api/sentry/envelope/demo',
  *   environment: 'production',
  *   sampleRate: 1,
  *   sdk: { name: 'sentry-guardian.javascript', version: '0.1.0' },
@@ -29,6 +29,11 @@ const DEDUPE_WINDOW_MS = 2000;
 export interface ClientOptions {
   /** Ingest DSN for this project. 本项目的 ingest DSN。 */
   dsn: string;
+  /**
+   * Actual envelope POST URL (tunnel when set); used by performance integrations to exclude ingest traffic.
+   * 实际上报 POST URL（tunnel 优先）；性能集成用于排除 ingest 流量。
+   */
+  ingestUrl?: string;
   /** Deployment environment tag on events. 事件上的部署环境标签。 */
   environment?: string;
   /** Release version tag on events. 事件上的发布版本标签。 */
@@ -214,25 +219,70 @@ export class Client {
         >
       >,
   ): string | undefined {
-    if (this.closed) {
-      return undefined;
+    const ids = this.captureTransactions([partial]);
+    return ids[0];
+  }
+
+  /**
+   * Capture multiple performance transactions in one envelope.
+   * 将多条性能事务合并为一个 Envelope 上报。
+   *
+   * @example
+   * ```ts
+   * // Input / 输入
+   * client.captureTransactions([{ transaction: 'pageload', duration_ms: 1, metric: 'TTFB', metric_value: 1 }])
+   * // Output / 输出
+   * ['f47ac10b-58cc-4372-a567-0e02b2c3d479']
+   * ```
+   */
+  captureTransactions(
+    partials: Array<
+      Pick<import('@sentry-guardian/types').TransactionEvent, 'transaction' | 'duration_ms'> &
+        Partial<
+          Omit<
+            import('@sentry-guardian/types').TransactionEvent,
+            'transaction' | 'duration_ms' | 'type' | 'event_id' | 'timestamp' | 'sdk'
+          >
+        >
+    >,
+  ): string[] {
+    if (this.closed || partials.length === 0) {
+      return [];
     }
-    const tx: TransactionEvent = {
-      event_id: generateEventId(),
-      timestamp: normalizeTimestamp(),
-      type: 'transaction',
-      transaction: partial.transaction,
-      duration_ms: partial.duration_ms,
-      environment: partial.environment ?? this.options.environment,
-      release: partial.release ?? this.options.release,
-      url: partial.url,
-      status_code: partial.status_code,
-      metric: partial.metric,
-      metric_value: partial.metric_value,
-      sdk: this.options.sdk,
-    };
-    void this.sendTransaction(tx);
-    return tx.event_id;
+    const txs = partials.map((partial) => this.buildTransactionEvent(partial));
+    void this.sendTransactions(txs);
+    return txs.map((tx) => tx.event_id);
+  }
+
+  /**
+   * Best-effort synchronous send for page unload (uses transport sync hook when available).
+   * 页面卸载时的尽力同步发送（在 Transport 支持时使用同步钩子）。
+   */
+  captureTransactionsSync(
+    partials: Array<
+      Pick<import('@sentry-guardian/types').TransactionEvent, 'transaction' | 'duration_ms'> &
+        Partial<
+          Omit<
+            import('@sentry-guardian/types').TransactionEvent,
+            'transaction' | 'duration_ms' | 'type' | 'event_id' | 'timestamp' | 'sdk'
+          >
+        >
+    >,
+  ): void {
+    if (this.closed || partials.length === 0) {
+      return;
+    }
+    const txs = partials.map((partial) => this.buildTransactionEvent(partial));
+    const envelope = createTransactionsEnvelope(txs, this.options.sdk);
+    this.sendEnvelopeSync(envelope);
+  }
+
+  /**
+   * Drain buffered envelopes on page hide via sync transport hook.
+   * 页面隐藏时通过 Transport 同步钩子排空缓冲队列。
+   */
+  flushSync(): void {
+    this.transport.flushSync?.();
   }
 
   /**
@@ -305,9 +355,46 @@ export class Client {
     await this.transport.send(envelope);
   }
 
+  protected buildTransactionEvent(
+    partial: Pick<TransactionEvent, 'transaction' | 'duration_ms'> &
+      Partial<Omit<TransactionEvent, 'transaction' | 'duration_ms' | 'type' | 'event_id' | 'timestamp' | 'sdk'>>,
+  ): TransactionEvent {
+    return {
+      event_id: generateEventId(),
+      timestamp: normalizeTimestamp(),
+      type: 'transaction',
+      transaction: partial.transaction,
+      duration_ms: partial.duration_ms,
+      environment: partial.environment ?? this.options.environment,
+      release: partial.release ?? this.options.release,
+      url: partial.url,
+      status_code: partial.status_code,
+      metric: partial.metric,
+      metric_value: partial.metric_value,
+      metric_rating: partial.metric_rating,
+      navigation_type: partial.navigation_type,
+      perf_context: partial.perf_context,
+      sdk: this.options.sdk,
+    };
+  }
+
   protected async sendTransaction(transaction: TransactionEvent): Promise<void> {
-    const envelope = createTransactionEnvelope(transaction, this.options.sdk);
+    await this.sendTransactions([transaction]);
+  }
+
+  protected async sendTransactions(transactions: TransactionEvent[]): Promise<void> {
+    if (transactions.length === 0) {
+      return;
+    }
+    const envelope = createTransactionsEnvelope(transactions, this.options.sdk);
     await this.transport.send(envelope);
+  }
+
+  protected sendEnvelopeSync(envelope: import('@sentry-guardian/types').Envelope): void {
+    if (this.transport.sendSync?.(envelope)) {
+      return;
+    }
+    void this.transport.send(envelope);
   }
 
   private shouldSample(): boolean {

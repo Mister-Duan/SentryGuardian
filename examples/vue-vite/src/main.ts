@@ -1,10 +1,17 @@
 import { createApp } from 'vue';
-import { init, vueIntegration } from '@sentry-guardian/vue';
+import * as Sentry from '@sentry-guardian/browser';
+import { vueIntegration } from '@sentry-guardian/vue';
+import { examplePerformanceIntegrations } from '../../shared/example-performance.js';
 import App from './App.vue';
 
 const dsn = import.meta.env.VITE_DSN;
 if (dsn) {
-  init({ dsn, environment: 'development', release: 'vue-example@0.1.0' });
+  Sentry.init({
+    dsn,
+    environment: 'development',
+    release: 'vue-example@0.1.0',
+    integrations: examplePerformanceIntegrations(Sentry),
+  });
 }
 
 const app = createApp(App);

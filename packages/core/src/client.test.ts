@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Client } from './client.js';
+import type { Transport } from './transports/base.js';
 import { MockTransport } from './transports/base.js';
 import { BufferTransport } from './transports/buffer.js';
 
-const dsn = 'http://localhost:3001/api/sentry/demo';
+const dsn = 'http://localhost:3001/api/sentry/envelope/demo';
 const sdk = { name: 'test.core', version: '0.1.0' };
 
 function createTestClient(overrides: Partial<ConstructorParameters<typeof Client>[0]> = {}) {
@@ -60,5 +61,55 @@ describe('Client', () => {
     const { client } = createTestClient({ sampleRate: 0 });
     expect(client.captureException(new Error('x'))).toBeUndefined();
     vi.restoreAllMocks();
+  });
+
+  it('captureTransactions sends one envelope with multiple items', async () => {
+    const { client, inner } = createTestClient();
+    client.captureTransactions([
+      { transaction: 'time-to-first-byte', duration_ms: 100, metric: 'TTFB', metric_value: 100 },
+      { transaction: 'first-contentful-paint', duration_ms: 200, metric: 'FCP', metric_value: 200 },
+    ]);
+    await client.flush(500);
+    expect(inner.sent).toHaveLength(1);
+    expect(inner.sent[0]!.items).toHaveLength(2);
+  });
+
+  it('captureTransactionsSync uses transport sendSync without buffering', () => {
+    let syncCalls = 0;
+    const inner: Transport = {
+      async send() {
+        return { statusCode: 200 };
+      },
+      sendSync() {
+        syncCalls += 1;
+        return true;
+      },
+    };
+    const transport = new BufferTransport(inner);
+    const client = new Client({ dsn, sdk, transport });
+    client.captureTransactionsSync([
+      { transaction: 'largest-contentful-paint', duration_ms: 1200, metric: 'LCP', metric_value: 1200 },
+    ]);
+    expect(syncCalls).toBe(1);
+    expect(transport.getPendingCount()).toBe(0);
+  });
+
+  it('captureTransactionsSync falls back to async send when sendSync fails', async () => {
+    const inner: Transport = {
+      async send() {
+        return { statusCode: 200 };
+      },
+      sendSync() {
+        return false;
+      },
+    };
+    const transport = new BufferTransport(inner);
+    const client = new Client({ dsn, sdk, transport });
+    client.captureTransactionsSync([
+      { transaction: 'largest-contentful-paint', duration_ms: 1200, metric: 'LCP', metric_value: 1200 },
+    ]);
+    expect(transport.getPendingCount()).toBe(1);
+    await client.flush(500);
+    expect(transport.getPendingCount()).toBe(0);
   });
 });
