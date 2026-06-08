@@ -4,10 +4,11 @@ import type { Issue, ProjectResponse } from '@sentry-guardian/types';
 import { IssueBulkBar } from '../components/issues/IssueBulkBar.js';
 import { IssueListToolbar, type IssueSort } from '../components/issues/IssueListToolbar.js';
 import { ProjectErrorOverview } from '../components/issues/ProjectErrorOverview.js';
+import { FrameOriginBadge } from '../components/FrameOriginBadge.js';
 import { ReorderableTable, type TableColumnDef } from '../components/ReorderableTable.js';
 import { Button, Card } from '../components/ui.js';
 import { usePageHeader } from '../layout/PageHeaderContext.js';
-import { ISSUE_STATUS_LABELS } from '../lib/format-event.js';
+import { ISSUE_STATUS_LABELS, resolveIssueCulpritInApp } from '../lib/format-event.js';
 import { labelLevel, labelMechanism } from '../lib/error-labels.js';
 import {
   type IssueFilterField,
@@ -192,8 +193,9 @@ export function IssuesPage() {
 
   useEffect(() => {
     if (timeRange.preset === 'custom') return;
+    const preset = timeRange.preset;
     const timer = setInterval(() => {
-      setTimeRange(createRelativeTimeRange(timeRange.preset));
+      setTimeRange(createRelativeTimeRange(preset));
     }, 60_000);
     return () => clearInterval(timer);
   }, [timeRange.preset]);
@@ -284,8 +286,11 @@ export function IssuesPage() {
               {issue.title}
             </Link>
             {issue.culprit && (
-              <span className="block text-[10px] text-[var(--sg-text-muted)]">
-                {issue.culprit}
+              <span className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[10px] text-[var(--sg-text-muted)]">
+                <span className="font-mono">{issue.culprit}</span>
+                <FrameOriginBadge
+                  inApp={resolveIssueCulpritInApp(issue.culprit, issue.culprit_in_app)}
+                />
               </span>
             )}
           </>

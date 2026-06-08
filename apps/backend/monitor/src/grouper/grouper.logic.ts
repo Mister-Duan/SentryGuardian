@@ -46,6 +46,50 @@ export function eventFingerprint(event: ErrorEvent): string {
 }
 
 /**
+ * Pick the display culprit frame (prefers top in-app frame).
+ * 选取用于展示的 culprit 栈帧（优先栈顶 in-app 帧）。
+ */
+function pickCulpritFrame(event: ErrorEvent): StackFrame | undefined {
+  const frames = event.exception?.values?.[0]?.stacktrace?.frames ?? [];
+  const inApp = [...frames].reverse().find((f) => f.in_app !== false);
+  return inApp ?? frames[frames.length - 1];
+}
+
+/**
+ * Culprit location and whether it is application code.
+ * culprit 位置及其是否为应用代码。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * eventCulpritInfo({
+ *   exception: {
+ *     values: [{
+ *       type: 'Error',
+ *       value: 'x',
+ *       stacktrace: { frames: [{ filename: 'app.js', lineno: 10, in_app: true }] },
+ *     }],
+ *   },
+ * })
+ * // Output / 输出
+ * { culprit: 'app.js:10', culprit_in_app: true }
+ * ```
+ */
+export function eventCulpritInfo(event: ErrorEvent): {
+  culprit?: string;
+  culprit_in_app?: boolean;
+} {
+  const frame = pickCulpritFrame(event);
+  if (!frame?.filename) {
+    return {};
+  }
+  return {
+    culprit: `${frame.filename}:${frame.lineno ?? 0}`,
+    culprit_in_app: frame.in_app !== false,
+  };
+}
+
+/**
  * Pick culprit string from top in-app frame.
  * 从栈顶应用帧提取 culprit。
  *
@@ -66,11 +110,5 @@ export function eventFingerprint(event: ErrorEvent): string {
  * ```
  */
 export function eventCulprit(event: ErrorEvent): string | undefined {
-  const frames = event.exception?.values?.[0]?.stacktrace?.frames ?? [];
-  const inApp = [...frames].reverse().find((f) => f.in_app !== false);
-  const frame = inApp ?? frames[frames.length - 1];
-  if (!frame?.filename) {
-    return undefined;
-  }
-  return `${frame.filename}:${frame.lineno ?? 0}`;
+  return eventCulpritInfo(event).culprit;
 }

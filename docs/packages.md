@@ -12,6 +12,7 @@ Monorepo 中 `packages/` 下各包的**实现进度**与文档入口。架构职
 | browser-utils | `@sentry-guardian/browser-utils` | **已实现**（internal） | — |
 | browser | `@sentry-guardian/browser` | **已实现** | [packages/browser/README.md](../packages/browser/README.md) |
 | vue | `@sentry-guardian/vue` | **已实现** | [packages/vue/README.md](../packages/vue/README.md) |
+| vite-plugin | `@sentry-guardian/vite-plugin` | **已实现** | [packages/vite-plugin/README.md](../packages/vite-plugin/README.md) |
 | database | `@sentry-guardian/database` | **已实现** | [apps/backend/libs/database/README.md](../apps/backend/libs/database/README.md) |
 | backend-dsn | `@sentry-guardian/backend-dsn` | **已实现** | [apps/backend/README.md](../apps/backend/README.md) |
 | backend-monitor | `@sentry-guardian/backend-monitor` | **已实现** | [apps/backend/README.md](../apps/backend/README.md) |
@@ -72,6 +73,14 @@ Monorepo 中 `packages/` 下各包的**实现进度**与文档入口。架构职
 **主要导出**：`init`、`vueIntegration`、`vueRouterIntegration`（re-export from `browser`）。
 
 **依赖**：`browser`、`core`。
+
+## `@sentry-guardian/vite-plugin`
+
+**职责**：Vite 构建后自动上传 Source Map 到 Monitor Release API。
+
+**主要导出**：`sentryGuardianVitePlugin`、`uploadArtifactsFromDir`。
+
+**依赖**：`vite`（peer）。
 
 ## `@sentry-guardian/database`
 

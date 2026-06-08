@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type {
+  ArtifactResponse,
   ProjectResponse,
   ReleaseCompareResponse,
   ReleaseResponse,
@@ -19,6 +20,8 @@ export function ReleasesPage() {
   const [version, setVersion] = useState('');
   const [uploadReleaseId, setUploadReleaseId] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [bundleUrl, setBundleUrl] = useState('');
+  const [artifacts, setArtifacts] = useState<ArtifactResponse[]>([]);
 
   usePageHeader({ title: '版本', description: '版本管理与源码映射' });
 
@@ -34,6 +37,34 @@ export function ReleasesPage() {
     void api.listReleases(projectId).then(setReleases);
     void api.releaseCompare(projectId).then(setCompare);
   }, [api, projectId]);
+
+  useEffect(() => {
+    if (!projectId || !uploadReleaseId) {
+      setArtifacts([]);
+      return;
+    }
+    void api.listReleaseArtifacts(projectId, uploadReleaseId).then(setArtifacts);
+  }, [api, projectId, uploadReleaseId]);
+
+  const artifactColumns = useMemo<TableColumnDef<ArtifactResponse>[]>(
+    () => [
+      { id: 'name', header: '文件', cellClassName: 'text-xs font-mono', render: (a) => a.name },
+      {
+        id: 'bundle_url',
+        header: 'Bundle URL',
+        cellClassName: 'text-[10px] font-mono text-[var(--sg-text-muted)]',
+        render: (a) => a.bundle_url ?? '—',
+      },
+      {
+        id: 'debug_id',
+        header: 'Debug ID',
+        cellClassName: 'text-[10px] font-mono text-[var(--sg-text-muted)]',
+        render: (a) => a.debug_id ?? '—',
+      },
+      { id: 'type', header: '类型', cellClassName: 'text-xs', render: (a) => a.artifact_type },
+    ],
+    [],
+  );
 
   const releaseColumns = useMemo<TableColumnDef<ReleaseResponse>[]>(
     () => [
@@ -101,9 +132,12 @@ export function ReleasesPage() {
   async function uploadMap(e: React.FormEvent) {
     e.preventDefault();
     if (!projectId || !uploadReleaseId || !file) return;
-    await api.uploadSourceMap(projectId, uploadReleaseId, file);
+    await api.uploadSourceMap(projectId, uploadReleaseId, file, {
+      bundle_url: bundleUrl || undefined,
+    });
     setFile(null);
     void api.listReleases(projectId).then(setReleases);
+    void api.listReleaseArtifacts(projectId, uploadReleaseId).then(setArtifacts);
   }
 
   return (
@@ -147,12 +181,33 @@ export function ReleasesPage() {
               className="block w-full text-xs text-[var(--sg-text-muted)]"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
+            <Input
+              value={bundleUrl}
+              onChange={(e) => setBundleUrl(e.target.value)}
+              placeholder="Bundle URL（可选）"
+            />
             <Button type="submit" variant="primary" size="sm" disabled={!file || !uploadReleaseId}>
               上传
             </Button>
           </form>
         </Card>
       </div>
+
+      {uploadReleaseId && (
+        <Card>
+          <h2 className="mb-2 text-sm font-semibold">制品列表</h2>
+          {artifacts.length === 0 ? (
+            <p className="text-xs text-[var(--sg-text-muted)]">该版本暂无制品</p>
+          ) : (
+            <ReorderableTable
+              tableId="release-artifacts"
+              columns={artifactColumns}
+              rows={artifacts}
+              getRowKey={(a) => a.id}
+            />
+          )}
+        </Card>
+      )}
 
       <Card>
         <h2 className="mb-2 text-sm font-semibold">版本列表</h2>

@@ -4,13 +4,13 @@
  * 向 SentryGuardian Release 上传 Source Map。
  *
  * Usage:
- *   node scripts/upload-sourcemaps.mjs --release 1.0.0 --project-id <id> --token <jwt> --dir ./dist
+ *   node scripts/upload-sourcemaps.mjs --release 1.0.0 --project-id <id> --token <jwt> --dir ./dist [--url-prefix https://cdn/app/]
  */
 import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 const args = Object.fromEntries(
-  process.argv.slice(2).reduce<string[][]>((acc, cur, i, arr) => {
+  process.argv.slice(2).reduce((acc, cur, i, arr) => {
     if (cur.startsWith('--')) {
       acc.push([cur.slice(2), arr[i + 1] ?? '']);
     }
@@ -23,13 +23,44 @@ const projectId = args['project-id'];
 const token = args.token;
 const version = args.release;
 const dir = args.dir ?? './dist';
+const urlPrefix = args['url-prefix'];
 
 if (!projectId || !token || !version) {
-  console.error('Required: --project-id --token --release [--dir]');
+  console.error('Required: --project-id --token --release [--dir] [--url-prefix]');
   process.exit(1);
 }
 
-async function main(): Promise<void> {
+function parseDebugId(json) {
+  try {
+    const parsed = JSON.parse(json);
+    return parsed.debugId ?? parsed['x_google_debugId'];
+  } catch {
+    return undefined;
+  }
+}
+
+function bundleUrlForMap(name) {
+  const js = name.endsWith('.map') ? name.slice(0, -4) : name;
+  if (!urlPrefix) return undefined;
+  const base = js.split('/').pop() ?? js;
+  return `${urlPrefix.replace(/\/$/, '')}/${base}`;
+}
+
+async function collectMaps(root) {
+  const entries = await readdir(root, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const full = join(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await collectMaps(full)));
+    } else if (entry.name.endsWith('.map')) {
+      files.push(full);
+    }
+  }
+  return files;
+}
+
+async function main() {
   const releaseRes = await fetch(`${apiBase}/api/projects/${projectId}/releases`, {
     method: 'POST',
     headers: {
@@ -41,14 +72,23 @@ async function main(): Promise<void> {
   if (!releaseRes.ok) {
     throw new Error(`Create release failed: ${releaseRes.status}`);
   }
-  const release = (await releaseRes.json()) as { id: string };
+  const release = await releaseRes.json();
 
-  const files = await readdir(dir);
-  const maps = files.filter((f) => f.endsWith('.map'));
-  for (const name of maps) {
-    const content = await readFile(join(dir, name), 'utf8');
+  const mapPaths = await collectMaps(dir);
+  let uploaded = 0;
+  let failed = 0;
+
+  for (const path of mapPaths) {
+    const name = relative(dir, path);
+    const content = await readFile(path, 'utf8');
     const form = new FormData();
     form.append('file', new Blob([content], { type: 'application/json' }), name);
+    const debugId = parseDebugId(content);
+    const bundleUrl = bundleUrlForMap(name);
+    if (debugId) form.append('debug_id', debugId);
+    if (bundleUrl) form.append('bundle_url', bundleUrl);
+    form.append('artifact_type', 'map');
+
     const res = await fetch(
       `${apiBase}/api/projects/${projectId}/releases/${release.id}/artifacts`,
       {
@@ -58,10 +98,15 @@ async function main(): Promise<void> {
       },
     );
     if (!res.ok) {
-      throw new Error(`Upload ${name} failed: ${res.status}`);
+      console.error(`FAILED ${name}: ${res.status}`);
+      failed += 1;
+    } else {
+      console.log(`Uploaded ${name}${bundleUrl ? ` (${bundleUrl})` : ''}`);
+      uploaded += 1;
     }
-    console.log(`Uploaded ${name}`);
   }
+
+  console.log(`Done: ${uploaded} uploaded, ${failed} failed, ${mapPaths.length} total`);
 }
 
 main().catch((err) => {

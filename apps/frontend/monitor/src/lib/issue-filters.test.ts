@@ -6,7 +6,6 @@ import {
   getActiveIssueFilters,
   getAvailableAddFilterFields,
   mergeFilterOptions,
-  setIssueFilter,
 } from './issue-filters.js';
 
 describe('issue-filters', () => {

@@ -49,6 +49,21 @@ VITE_DSN='http://localhost:3001/api/sentry/envelope/<projectId>' pnpm dev
 - `GET /mock/asset.js` — 动态 script，用于 `resource.timing` 演示
 - `GET /mock/redirect` — 302 回到 `/perf`，用于 RT / `nav.redirect` 演示
 
+## Source Map 验证
+
+SDK 固定 `release: 'vanilla-example@0.1.0'`（见 `main.js`）。构建已启用 `sourcemap` 并集成 `@sentry-guardian/vite-plugin`。
+
+```bash
+export SG_PROJECT_ID=<projectId> SG_TOKEN=<jwt>   # 控制台登录后获取
+pnpm build    # 上传 dist/*.map（无 token 时 dry-run）
+pnpm dev
+```
+
+1. http://localhost:5174/error — 触发错误
+2. http://localhost:5173/issues — Issue 详情 → 点击 **In App** 帧查看源码
+
+详见 [source-map-guide.md](../../docs/learn/source-map-guide.md)。
+
 ## 故障排查
 
 | 现象 | 处理 |
@@ -61,4 +76,5 @@ VITE_DSN='http://localhost:3001/api/sentry/envelope/<projectId>' pnpm dev
 ## 相关文档
 
 - [examples/README.md](../README.md) — 全量错误类型索引
+- [source-map-guide.md](../../docs/learn/source-map-guide.md) — Source Map 入门与使用
 - [configuration.md](../../docs/configuration.md)

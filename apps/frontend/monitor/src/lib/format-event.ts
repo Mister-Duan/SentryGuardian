@@ -1,5 +1,54 @@
 import type { Breadcrumb, ExceptionValue, IssueStatus, StackFrame } from '@sentry-guardian/types';
 
+/** Paths treated as third-party when inferring from culprit. 从 culprit 推断时视为三方库的路径模式。 */
+const THIRD_PARTY_CULPRIT_PATTERNS = [
+  /^node:/,
+  /^chrome-extension:/,
+  /^moz-extension:/,
+  /node_modules/i,
+  /webpack-internal/i,
+];
+
+/**
+ * Infer whether a culprit string points at application code (fallback when API omits `culprit_in_app`).
+ * 根据 culprit 字符串推断是否为应用代码（API 未返回 `culprit_in_app` 时的回退）。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * inferInAppFromCulprit('http://localhost/src/App.tsx:42')
+ * // Output / 输出
+ * true
+ * inferInAppFromCulprit('webpack:///node_modules/react/index.js:1')
+ * // Output / 输出
+ * false
+ * ```
+ */
+export function inferInAppFromCulprit(culprit: string): boolean {
+  const filename = culprit.replace(/:\d+$/, '');
+  if (filename.startsWith('<')) {
+    return false;
+  }
+  return !THIRD_PARTY_CULPRIT_PATTERNS.some((pattern) => pattern.test(filename));
+}
+
+/**
+ * Resolve in-app flag for issue list display.
+ * 解析 Issue 列表展示用的 in-app 标记。
+ */
+export function resolveIssueCulpritInApp(
+  culprit: string | undefined,
+  stored?: boolean,
+): boolean | undefined {
+  if (stored != null) {
+    return stored;
+  }
+  if (!culprit) {
+    return undefined;
+  }
+  return inferInAppFromCulprit(culprit);
+}
+
 /**
  * Format a stack frame location for the issue detail UI.
  * 将栈帧格式化为 Issue 详情 UI 中的位置字符串。

@@ -130,7 +130,26 @@ ingest 通过 URL 中的 `projectId` 识别项目；`projects.public_key` 仍保
 |------|------|--------|------|
 | `MONITOR_API_URL` | 否 | `http://localhost:3002` | monitor API 根地址 |
 
-CLI 参数：`--project-id`、`--token`（JWT）、`--release`、`--dir`（默认 `./dist`）。
+CLI 参数：
+
+| 参数 | 说明 |
+|------|------|
+| `--project-id` | 项目 ID |
+| `--token` | 控制台 JWT（`localStorage.sg_token`） |
+| `--release` | 版本号，须与 SDK `init({ release })` 一致 |
+| `--dir` | 含 `.map` 的目录，默认 `./dist` |
+| `--url-prefix` | 可选 CDN 前缀，写入 artifact `bundle_url` 便于栈帧匹配 |
+
+### Vite 插件环境变量（`@sentry-guardian/vite-plugin`）
+
+| 变量 | 说明 |
+|------|------|
+| `SG_PROJECT_ID` | 项目 ID |
+| `SG_TOKEN` | JWT；未设置时示例配置为 `dryRun` |
+| `MONITOR_API_URL` | Monitor API，默认 `http://localhost:3002` |
+| `SG_URL_PREFIX` | 可选 CDN 前缀 |
+
+插件选项与 CI 示例见 [learn/source-map-guide.md](./learn/source-map-guide.md)。
 
 ---
 
@@ -326,7 +345,8 @@ app.use(router).mount('#app');
 |------|------|------|
 | `GET` | `/api/projects/:projectId/releases` | Release 列表 |
 | `POST` | `/api/projects/:projectId/releases` | Body: `{ version }` |
-| `POST` | `/api/projects/:projectId/releases/:releaseId/artifacts` | multipart 字段 `file`（`.map`） |
+| `POST` | `/api/projects/:projectId/releases/:releaseId/artifacts` | multipart：`file`（`.map` 或源文件）；可选 `bundle_url`、`debug_id`、`artifact_type`（`map` \| `source`） |
+| `GET` | `/api/projects/:projectId/releases/:releaseId/artifacts` | 制品列表（name、bundle_url、debug_id、artifact_type） |
 | `GET` | `/api/projects/:projectId/trends` | Query: `hours`（默认 24） |
 | `GET` | `/api/projects/:projectId/releases/compare` | 各 Release 错误数对比 |
 | `GET` | `/api/projects/:projectId/performance-summary` | 性能概览（Web Vitals、分布、趋势）；`since`/`until`/`metric` |

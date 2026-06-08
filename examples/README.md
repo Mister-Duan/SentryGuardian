@@ -57,13 +57,41 @@ SDK 通过 `shared/example-performance.js` 从 `@sentry-guardian/browser/perform
 | 用户旅程 | start / end | `perf.measure.*` | User Timing；idle 后回调 |
 | 慢请求 | 慢 Fetch | `http.client` | 非 perfume；fetch 耗时 > 阈值 |
 
+## Source Map 验证（E2E）
+
+**详细文档**：[docs/learn/source-map-guide.md](../docs/learn/source-map-guide.md)
+
+| 示例 | SDK `release` |
+|------|----------------|
+| vanilla | `vanilla-example@0.1.0` |
+| vue-vite | `vue-example@0.1.0` |
+
+### 步骤
+
+1. 控制台登录，获取 **projectId** 与 JWT（`localStorage.sg_token`）。
+2. 构建并上传：
+   ```bash
+   cd examples/vanilla
+   export SG_PROJECT_ID=<id> SG_TOKEN=<jwt>
+   pnpm build    # Vite 插件自动上传；无 token 时为 dry-run
+   # 或：pnpm upload-maps --project-id <id> --token <jwt>
+   ```
+3. `pnpm dev` → 触发 JS 错误。
+4. 控制台 Issue 详情 → 点击 **In App** 栈帧 → 查看源码上下文。
+
+### 预期结果
+
+- 堆栈路径含 `src/...`（非仅 `assets/*.js`）
+- 徽章 **已符号化**；展开后可见 ±5 行源码
+- Releases 页对应版本 **映射** 数量 > 0
+
 ## 快速开始
 
 ```bash
 # 根目录已 pnpm dev（dsn :3001 + 控制台 :5173）
 cd examples/vanilla
 cp .env.example .env   # 填入 seed 输出的 VITE_DSN
-pnpm dev
+pnpm dev               # predev 会自动构建 @sentry-guardian/browser；shared/ 通过 Vite alias 解析子路径
 ```
 
 1. 打开 http://localhost:5174/error（错误）或 http://localhost:5174/perf（性能）；根路径 `/` 自动跳转到 `/error`
@@ -72,4 +100,5 @@ pnpm dev
 ## 相关文档
 
 - [getting-started.md](../docs/getting-started.md)
-- [sdk-guide.md](../docs/learn/sdk-guide.md) — 性能集成说明
+- [sdk-guide.md](../docs/learn/sdk-guide.md) — SDK 接入
+- [source-map-guide.md](../docs/learn/source-map-guide.md) — Source Map 入门与使用

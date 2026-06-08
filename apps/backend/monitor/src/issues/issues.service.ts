@@ -34,6 +34,7 @@ function mapIssue(row: {
   eventCount: number;
   usersSeen: number;
   culprit: string | null;
+  culpritInApp: boolean | null;
   exceptionType: string | null;
   mechanism: string | null;
   environment: string | null;
@@ -52,6 +53,7 @@ function mapIssue(row: {
     event_count: row.eventCount,
     users_seen: row.usersSeen,
     culprit: row.culprit ?? undefined,
+    culprit_in_app: row.culpritInApp ?? undefined,
     exception_type: row.exceptionType ?? undefined,
     mechanism: row.mechanism ?? undefined,
   };

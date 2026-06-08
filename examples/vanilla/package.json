@@ -4,13 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite"
+    "predev": "pnpm --filter @sentry-guardian/browser... run build",
+    "dev": "vite",
+    "build": "vite build",
+    "upload-maps": "node ../../scripts/upload-sourcemaps.mjs --release vanilla-example@0.1.0 --dir dist"
   },
   "dependencies": {
     "@sentry-guardian/browser": "workspace:*",
     "perfume.js": "^9.4.0"
   },
   "devDependencies": {
+    "@sentry-guardian/vite-plugin": "workspace:*",
     "vite": "^6.3.5"
   },
   "license": "ISC"

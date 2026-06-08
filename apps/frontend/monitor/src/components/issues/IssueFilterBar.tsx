@@ -22,7 +22,7 @@ type Props = {
 
 function FilterPill({
   field,
-  value,
+  value: _value,
   displayValue,
   removable,
   onRemove,

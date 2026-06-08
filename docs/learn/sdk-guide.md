@@ -260,21 +260,44 @@ router.listen(() => {
 
 ## Source Map 与 Release
 
-1. SDK `init` 时设置与构建一致的 `release` 版本号
-2. 构建产物目录中的 `.map` 上传到 monitor：
+生产环境压缩代码需配合 Source Map 才能在控制台看到原始文件路径与源码上下文。
 
-```bash
-# 先登录获取 JWT
-node scripts/upload-sourcemaps.mjs \
-  --project-id <projectId> \
-  --token <jwt> \
-  --release my-app@1.2.0 \
-  --dir ./dist
+**完整入门与使用**（5 分钟本地验证、Vite 插件、CLI、控制台、CI、故障排查）→ **[source-map-guide.md](./source-map-guide.md)**
+
+### 快速摘要
+
+1. SDK `init({ release: 'my-app@1.0.0' })` — 版本须与上传一致
+2. 构建 `sourcemap: true`，上传 `dist/**/*.map` 到 Monitor Release
+3. Issue 详情点击 **In App** 栈帧查看源码
+
+**Vite 插件（推荐）**
+
+```ts
+import { sentryGuardianVitePlugin } from '@sentry-guardian/vite-plugin';
+
+export default defineConfig({
+  build: { sourcemap: true },
+  plugins: [
+    sentryGuardianVitePlugin({
+      projectId: process.env.SG_PROJECT_ID!,
+      release: 'my-app@1.0.0',
+      authToken: process.env.SG_TOKEN!,
+      dryRun: !process.env.SG_TOKEN,
+    }),
+  ],
+});
 ```
 
-3. 新错误事件的堆栈在 Issue 详情中经 symbolicator 解析为原始源码位置
+**CLI 脚本**
 
-也可在控制台 **Releases** 页手动上传 `.map` 文件。
+```bash
+node scripts/upload-sourcemaps.mjs \
+  --project-id <id> --token <jwt> \
+  --release my-app@1.0.0 --dir ./dist \
+  --url-prefix https://cdn.example.com/assets
+```
+
+也可在控制台 **Releases** 页手动上传；详见 [source-map-guide.md](./source-map-guide.md)。
 
 ## Tunnel（绕过广告拦截）
 
@@ -315,7 +338,7 @@ Sentry.init({
 |------|------|
 | 本地 CORS | ingest 默认允许跨域；生产收紧 `CORS_ORIGIN` |
 | DSN 里 host 端口 | 开发为 `localhost:3001`，与 monitor `3002` 不同 |
-| Source Map 未符号化 | 确认 `release` 一致且已上传 `.map` 到对应 Release |
+| Source Map 未符号化 | 确认 `release` 一致且已上传 `.map` | [source-map-guide.md](./source-map-guide.md) |
 | 性能页无数据 | 检查是否从 `/performance`、`/tracing` 子路径加入 `performanceIntegration` / `browserTracingIntegration` |
 | ingest 429 | 项目默认 100 次/分钟限流；流量尖峰时 SDK 会按 `Retry-After` 退避 |
 
@@ -324,4 +347,5 @@ Sentry.init({
 ## 下一步
 
 - [console-guide.md](./console-guide.md) — 在控制台查看上报结果
+- [source-map-guide.md](./source-map-guide.md) — Source Map 完整指南
 - [data-flow.md](./data-flow.md) — 理解聚合延迟（约 3s）

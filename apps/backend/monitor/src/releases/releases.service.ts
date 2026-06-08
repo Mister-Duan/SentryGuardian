@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto';
 import { Injectable, NotFoundException, PayloadTooLargeException } from '@nestjs/common';
 import { PrismaService } from '@sentry-guardian/nest-prisma';
-import type { ReleaseResponse } from '@sentry-guardian/types';
+import type { ArtifactResponse, ArtifactType, ReleaseResponse, UploadArtifactMetadata } from '@sentry-guardian/types';
+import { parseDebugIdFromMap } from '../symbolicator/symbolicator.logic.js';
 
 const MAX_MAP_BYTES = 5_242_880;
 
@@ -39,13 +41,32 @@ export class ReleasesService {
     };
   }
 
+  async listArtifacts(projectId: string, releaseId: string): Promise<ArtifactResponse[]> {
+    const release = await this.prisma.release.findFirst({
+      where: { id: releaseId, projectId },
+      include: { artifacts: { orderBy: { createdAt: 'desc' } } },
+    });
+    if (!release) {
+      throw new NotFoundException('Release not found');
+    }
+    return release.artifacts.map((a) => ({
+      id: a.id,
+      name: a.name,
+      bundle_url: a.bundleUrl ?? undefined,
+      debug_id: a.debugId ?? undefined,
+      artifact_type: (a.artifactType as ArtifactType) ?? 'map',
+      created_at: a.createdAt.toISOString(),
+    }));
+  }
+
   async uploadArtifact(
     projectId: string,
     releaseId: string,
     name: string,
-    sourceMap: string,
+    content: string,
+    metadata: UploadArtifactMetadata = {},
   ): Promise<{ name: string }> {
-    if (Buffer.byteLength(sourceMap, 'utf8') > MAX_MAP_BYTES) {
+    if (Buffer.byteLength(content, 'utf8') > MAX_MAP_BYTES) {
       throw new PayloadTooLargeException('Source map too large');
     }
     const release = await this.prisma.release.findFirst({
@@ -54,10 +75,32 @@ export class ReleasesService {
     if (!release) {
       throw new NotFoundException('Release not found');
     }
+
+    const artifactType = metadata.artifact_type ?? 'map';
+    let debugId = metadata.debug_id;
+    if (!debugId && artifactType === 'map') {
+      debugId = parseDebugIdFromMap(content);
+    }
+    const checksum = createHash('sha256').update(content).digest('hex').slice(0, 16);
+
     await this.prisma.artifact.upsert({
       where: { releaseId_name: { releaseId, name } },
-      create: { releaseId, name, sourceMap },
-      update: { sourceMap },
+      create: {
+        releaseId,
+        name,
+        sourceMap: content,
+        bundleUrl: metadata.bundle_url ?? null,
+        debugId: debugId ?? null,
+        artifactType,
+        checksum,
+      },
+      update: {
+        sourceMap: content,
+        bundleUrl: metadata.bundle_url ?? undefined,
+        debugId: debugId ?? undefined,
+        artifactType,
+        checksum,
+      },
     });
     return { name };
   }

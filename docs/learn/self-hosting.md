@@ -163,17 +163,18 @@ https://ingest.example.com/api/sentry/envelope/{projectId}
 
 ### 5. Source Map（可选）
 
-构建后上传至对应 Release：
+生产压缩堆栈需上传 Source Map 才能在控制台看到原始路径与源码上下文。完整步骤见 **[source-map-guide.md](./source-map-guide.md)**。
 
 ```bash
 node scripts/upload-sourcemaps.mjs \
   --project-id <id> \
   --token <jwt> \
   --release 1.2.0 \
-  --dir ./dist
+  --dir ./dist \
+  --url-prefix https://cdn.example.com/assets
 ```
 
-环境变量 `MONITOR_API_URL` 可覆盖 API 根地址（默认 `http://localhost:3002`）。
+或使用 `@sentry-guardian/vite-plugin` 在 CI 构建后自动上传。环境变量见 [configuration.md](../configuration.md#脚本-upload-sourcemapsmjs)。
 
 ## 资源与容量（经验值）
 

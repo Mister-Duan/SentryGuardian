@@ -1,6 +1,7 @@
 import type {
   AlertRuleRequest,
   AlertRuleResponse,
+  ArtifactResponse,
   CreateIssueCommentRequest,
   CreateProjectRequest,
   CreateReleaseRequest,
@@ -194,9 +195,13 @@ export class ApiClient {
     projectId: string,
     releaseId: string,
     file: File,
+    metadata?: { bundle_url?: string; debug_id?: string; artifact_type?: 'map' | 'source' },
   ): Promise<{ name: string }> {
     const form = new FormData();
     form.append('file', file);
+    if (metadata?.bundle_url) form.append('bundle_url', metadata.bundle_url);
+    if (metadata?.debug_id) form.append('debug_id', metadata.debug_id);
+    if (metadata?.artifact_type) form.append('artifact_type', metadata.artifact_type);
     const res = await fetch(
       `${API_BASE}/api/projects/${projectId}/releases/${releaseId}/artifacts`,
       { method: 'POST', headers: this.headers(false), body: form },
@@ -205,6 +210,20 @@ export class ApiClient {
       throw new Error('Upload failed');
     }
     return res.json() as Promise<{ name: string }>;
+  }
+
+  async listReleaseArtifacts(
+    projectId: string,
+    releaseId: string,
+  ): Promise<ArtifactResponse[]> {
+    const res = await fetch(
+      `${API_BASE}/api/projects/${projectId}/releases/${releaseId}/artifacts`,
+      { headers: this.headers() },
+    );
+    if (!res.ok) {
+      throw new Error('Failed to load artifacts');
+    }
+    return res.json() as Promise<ArtifactResponse[]>;
   }
 
   async errorTypeTrends(

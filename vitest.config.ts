@@ -16,6 +16,7 @@ export default defineConfig({
             'packages/browser-utils/**/*.test.ts',
             'apps/backend/**/*.test.ts',
             'apps/backend/**/*.e2e.ts',
+            'scripts/**/*.test.ts',
           ],
           environment: 'node',
         },

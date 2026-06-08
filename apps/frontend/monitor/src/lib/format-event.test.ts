@@ -5,6 +5,8 @@ import {
   formatBreadcrumbTime,
   formatExceptionTitle,
   formatFrameLocation,
+  inferInAppFromCulprit,
+  resolveIssueCulpritInApp,
 } from './format-event.js';
 
 describe('formatFrameLocation', () => {
@@ -61,5 +63,25 @@ describe('displayStackFrames', () => {
       { filename: 'b.js', lineno: 2 },
     ];
     expect(displayStackFrames(frames).map((f) => f.filename)).toEqual(['b.js', 'a.js']);
+  });
+});
+
+describe('inferInAppFromCulprit', () => {
+  it('marks app paths as in-app', () => {
+    expect(inferInAppFromCulprit('http://localhost/src/App.tsx:42')).toBe(true);
+  });
+
+  it('marks node_modules as library', () => {
+    expect(inferInAppFromCulprit('webpack:///node_modules/react/index.js:1')).toBe(false);
+  });
+});
+
+describe('resolveIssueCulpritInApp', () => {
+  it('prefers stored flag over inference', () => {
+    expect(resolveIssueCulpritInApp('node_modules/x.js:1', true)).toBe(true);
+  });
+
+  it('infers when stored flag is missing', () => {
+    expect(resolveIssueCulpritInApp('http://localhost/app.js:10')).toBe(true);
   });
 });

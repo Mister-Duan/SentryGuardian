@@ -169,7 +169,21 @@ throw new Error('Hello SentryGuardian');
 | SDK 上报 429 | 超过项目每分钟限流 | 降低测试频率或调高 DB `rate_limit_per_minute` |
 | Issue 一直为空 | Grouper 未跑 | 确认 monitor 进程与日志 |
 | CORS 错误 | 前端直连错误 API | 开发用 Vite 代理；生产配置 `VITE_API_URL` |
-| 堆栈未符号化 | 未上传 Source Map | 见 [sdk-guide.md](./learn/sdk-guide.md#source-map-与-release) |
+| 堆栈未符号化 | 未上传 Source Map 或 `release` 不一致 | 见 [source-map-guide.md](./learn/source-map-guide.md) |
+
+## 第九步（可选）：验证 Source Map
+
+在已跑通 Issue 列表后，可用仓库示例验证**堆栈符号化 + 源码上下文**：
+
+```bash
+export SG_PROJECT_ID=<projectId> SG_TOKEN=<jwt>
+
+cd examples/vanilla
+pnpm build          # release: vanilla-example@0.1.0
+pnpm dev            # 触发错误 → Issue 详情查看源码面板
+```
+
+完整步骤：[learn/source-map-guide.md](./learn/source-map-guide.md)。
 
 ingest 契约测试（需数据库）：
 
@@ -184,7 +198,7 @@ DATABASE_URL=postgresql://sentryguardian:sentryguardian@localhost:5432/sentrygua
 |------|------|
 | 查环境变量与 SDK 选项 | [configuration.md](./configuration.md) |
 | 理解 Event / Issue / DSN | [learn/concepts.md](./learn/concepts.md) |
-| 深入 SDK、Vue、性能、Source Map | [learn/sdk-guide.md](./learn/sdk-guide.md) |
+| 深入 SDK、Vue、性能、Source Map | [learn/sdk-guide.md](./learn/sdk-guide.md) · [learn/source-map-guide.md](./learn/source-map-guide.md) |
 | 控制台与 API | [learn/console-guide.md](./learn/console-guide.md) |
 | 生产自托管 / Docker 全栈 | [learn/self-hosting.md](./learn/self-hosting.md) |
 | Post-MVP 能力清单 | [plans/post-mvp-roadmap.md](./plans/post-mvp-roadmap.md) |

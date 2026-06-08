@@ -12,14 +12,6 @@ import { examplePerformanceIntegrations } from '../shared/example-performance.js
 import { resolveExampleDsn } from '../shared/example-dsn.js';
 import { buildPerformanceDemoGroups } from '../shared/performance-demos.js';
 
-// import { initPerfume } from 'perfume.js';
-
-// initPerfume({
-//   resourceTiming: true,
-//   analyticsTracker: options => {
-//     console.log('options', options?.metricName, options);
-//   }
-// });
 
 
 

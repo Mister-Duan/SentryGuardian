@@ -1,5 +1,8 @@
-import type { ErrorEvent } from '@sentry-guardian/types';
+import { useMemo, useState } from 'react';
+import type { ErrorEvent, StackFrame } from '@sentry-guardian/types';
 import { Card } from './ui.js';
+import { FrameOriginBadge } from './FrameOriginBadge.js';
+import { StackFramePanel } from './StackFramePanel.js';
 import {
   displayBreadcrumbs,
   displayStackFrames,
@@ -40,6 +43,26 @@ export function EventDetail({ event }: { event: ErrorEvent }) {
   const primary = exceptions[0];
   const errorTypeTag = event.tags?.['error.type'];
   const browserExtra = event.extra?.browser as Record<string, unknown> | undefined;
+
+  const defaultExpandedKey = useMemo(() => {
+    const frames = primary?.stacktrace?.frames ?? [];
+    const displayed = [...frames].reverse();
+    const topInApp = displayed.findIndex((f) => f.in_app !== false);
+    if (topInApp >= 0) {
+      return `0:${topInApp}`;
+    }
+    return displayed.length > 0 ? '0:0' : null;
+  }, [primary]);
+
+  const [expandedKey, setExpandedKey] = useState<string | null>(defaultExpandedKey);
+
+  function toggleFrame(exIndex: number, frameIndex: number, frame: StackFrame) {
+    const key = `${exIndex}:${frameIndex}`;
+    if (frame.in_app === false) {
+      return;
+    }
+    setExpandedKey((prev) => (prev === key ? null : key));
+  }
 
   return (
     <div className="space-y-3">
@@ -155,25 +178,31 @@ export function EventDetail({ event }: { event: ErrorEvent }) {
                   </p>
                 )}
                 {ex.stacktrace?.frames && ex.stacktrace.frames.length > 0 && (
-                  <ol className="mt-1 space-y-0.5 font-mono text-[11px]">
-                    {displayStackFrames(ex.stacktrace.frames).map((frame, frameIndex) => (
-                      <li
-                        key={frameIndex}
-                        className={
-                          frame.in_app
-                            ? 'rounded border border-[var(--sg-border)] bg-[var(--sg-row-selected)] px-1.5 py-0.5'
-                            : 'px-1.5 py-0.5 text-[var(--sg-text-muted)]'
-                        }
-                        style={frame.in_app ? { color: 'var(--sg-accent)' } : undefined}
-                      >
-                        {formatFrameLocation(frame)}
-                        {frame.in_app && (
-                          <span className="ml-1.5 text-[10px] uppercase text-[var(--sg-text-muted)]">
-                            应用内
-                          </span>
-                        )}
-                      </li>
-                    ))}
+                  <ol className="mt-1 space-y-1 font-mono text-[11px]">
+                    {displayStackFrames(ex.stacktrace.frames).map((frame, frameIndex) => {
+                      const key = `${index}:${frameIndex}`;
+                      const isExpanded = expandedKey === key;
+                      const canExpand = frame.in_app !== false;
+                      return (
+                        <li key={frameIndex}>
+                          <button
+                            type="button"
+                            disabled={!canExpand}
+                            onClick={() => toggleFrame(index, frameIndex, frame)}
+                            className={
+                              frame.in_app
+                                ? 'w-full rounded border border-[var(--sg-border)] bg-[var(--sg-row-selected)] px-1.5 py-0.5 text-left'
+                                : 'w-full px-1.5 py-0.5 text-left text-[var(--sg-text-muted)]'
+                            }
+                            style={frame.in_app ? { color: 'var(--sg-accent)' } : undefined}
+                          >
+                            {formatFrameLocation(frame)}
+                            <FrameOriginBadge inApp={frame.in_app} />
+                          </button>
+                          {isExpanded && canExpand && <StackFramePanel frame={frame} />}
+                        </li>
+                      );
+                    })}
                   </ol>
                 )}
               </div>

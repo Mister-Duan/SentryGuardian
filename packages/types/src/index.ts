@@ -5,7 +5,16 @@
  */
 
 export type { Breadcrumb, BreadcrumbLevel } from './breadcrumb.js';
-export type { StackFrame } from './stack.js';
+export type {
+  StackFrame,
+  StackFrameContextLine,
+  StackFrameLocation,
+} from './stack.js';
+export type {
+  ArtifactResponse,
+  ArtifactType,
+  UploadArtifactMetadata,
+} from './artifact.js';
 export type {
   ErrorEvent,
   EventLevel,

@@ -60,7 +60,7 @@
 | 趋势条 | 近 24 小时 Issue 新增趋势（`GET /api/projects/:id/trends`） |
 | DSN 提示 | 当前项目的 ingest 地址，一键复制 |
 | 刷新 | 手动刷新；列表每 10 秒自动轮询 |
-| 表格 | 标题、状态（中文）、次数、最近发生时间；**表头可拖动调整列顺序**（顺序保存在浏览器 localStorage） |
+| 表格 | 标题、状态（中文）、次数、culprit（含 **In App** / **Library** 标签）、最近发生时间；**表头可拖动调整列顺序**（顺序保存在浏览器 localStorage） |
 
 ### Issue 详情 `/issues/:id`
 
@@ -69,7 +69,7 @@
 | 标题与元信息 | 状态（中文）、次数、culprit |
 | 状态按钮 | 标记为已解决 / 已忽略 / 未解决 |
 | 上下文 | 环境、Release、页面 URL |
-| 异常与堆栈 | 可读异常链；已上传 Source Map 时服务端符号化 |
+| 异常与堆栈 | 可读异常链；每帧 **In App** / **Library** 标签；点击 in-app 帧展开 **源码上下文**（符号化位置 + ±5 行）；已上传 Source Map 时服务端符号化 |
 | 面包屑 | 错误前的用户操作时间线 |
 | 事件历史 | 分页列表，可跳转单条事件详情 |
 | 评论 | 添加与查看 Issue 评论（活动流） |
@@ -89,9 +89,12 @@
 ### Releases `/releases`
 
 - 按项目查看 Release 列表（表头可拖动列顺序，localStorage 持久化）
-- 创建版本号
-- 上传 `.map` 文件（multipart `file` 字段）
-- CI 可用 `scripts/upload-sourcemaps.mjs` 批量上传
+- 创建版本号（须与 SDK `release` 一致）
+- 上传 `.map`（可选 **Bundle URL**、自动解析 `debug_id`）
+- 选择版本后查看 **制品列表**（name、bundle_url、debug_id、artifact_type）
+- CI：`scripts/upload-sourcemaps.mjs` 或 `@sentry-guardian/vite-plugin`
+
+上传与符号化完整说明：[source-map-guide.md](./source-map-guide.md)。
 
 ### 性能 `/performance`
 
@@ -170,4 +173,4 @@ VITE_API_URL=https://monitor.example.com \
 
 - 生产部署：[self-hosting.md](./self-hosting.md)
 - 配置索引：[configuration.md](../configuration.md)
-- Source Map 上传：[sdk-guide.md](./sdk-guide.md#source-map-与-release)
+- Source Map 上传与排障：[source-map-guide.md](./source-map-guide.md)

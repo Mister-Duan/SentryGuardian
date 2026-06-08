@@ -4,6 +4,37 @@ const CHROME_LINE =
   /^\s*at (?:(.+?)\s+\()?(?:(.+?):(\d+):(\d+)|([^)]+))\)?\s*$/;
 const FIREFOX_LINE = /^(.*)@(.+?):(\d+):(\d+)$/;
 
+/** Paths treated as third-party / non-application code. 视为三方库或非应用代码的路径模式。 */
+const THIRD_PARTY_PATTERNS = [
+  /^node:/,
+  /^chrome-extension:/,
+  /^moz-extension:/,
+  /node_modules/i,
+  /webpack-internal/i,
+];
+
+/**
+ * Whether a stack frame filename belongs to application code.
+ * 判断栈帧文件名是否属于应用代码。
+ *
+ * @example
+ * ```ts
+ * // Input / 输入
+ * isInAppFrame('http://localhost/src/App.tsx')
+ * // Output / 输出
+ * true
+ * isInAppFrame('webpack:///node_modules/react/index.js')
+ * // Output / 输出
+ * false
+ * ```
+ */
+export function isInAppFrame(filename: string): boolean {
+  if (filename.startsWith('<')) {
+    return false;
+  }
+  return !THIRD_PARTY_PATTERNS.some((pattern) => pattern.test(filename));
+}
+
 /**
  * Parse a JS Error stack string into frames (oldest first).
  * 将 JS Error.stack 解析为栈帧（最旧帧在前）。
@@ -68,7 +99,7 @@ function frameFromParts(
   lineno: number | undefined,
   colno: number | undefined,
 ): StackFrame {
-  const inApp = !/^(node:|https?:\/\/)/.test(filename) && !filename.startsWith('<');
+  const inApp = isInAppFrame(filename);
   return {
     filename,
     function: fn || '?',

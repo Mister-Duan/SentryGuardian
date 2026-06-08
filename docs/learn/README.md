@@ -6,7 +6,7 @@
 
 | 角色 | 目标 | 推荐阅读 |
 |------|------|----------|
-| **业务前端** | 在页面里接入监控 | [入门](../getting-started.md) → [SDK 指南](./sdk-guide.md) → [性能指标参考](./performance-metrics.md) |
+| **业务前端** | 在页面里接入监控 | [入门](../getting-started.md) → [SDK 指南](./sdk-guide.md) → [Source Map](./source-map-guide.md) |
 | **Vue 开发者** | Vue 3 + Router | [SDK 指南：Vue](./sdk-guide.md#vue-3sentry-guardianvue) → `examples/vue-vite` |
 | **运维 / 自托管** | 部署一套 Lite 环境 | [入门](../getting-started.md) → [自托管](./self-hosting.md) → [配置：环境变量](../configuration.md#环境变量) |
 | **后端开发** | 理解 ingest 与聚合 | [核心概念](./concepts.md) → [数据流](./data-flow.md) → [architecture.md](../architecture.md) |
@@ -21,10 +21,11 @@
 2. 数据流 (data-flow)      ← 从点击到控制台的一条线
 3. 动手：getting-started   ← 本地跑通
 4. SDK 指南 (sdk-guide)    ← init、集成、手动上报
-5. 性能指标 (performance-metrics) ← perfume metricName 含义与时间段
-6. 控制台 (console-guide)  ← Issue、项目、Release、性能、告警
-7. 配置参考 (configuration) ← 查表
-8. 自托管 (self-hosting)   ← 生产注意点（需要时）
+5. Source Map (source-map-guide) ← release、上传 map、源码面板（生产排障必读）
+6. 性能指标 (performance-metrics) ← perfume metricName 含义与时间段
+7. 控制台 (console-guide)  ← Issue、项目、Release、性能、告警
+8. 配置参考 (configuration) ← 查表
+9. 自托管 (self-hosting)   ← 生产注意点（需要时）
 ```
 
 ## 文档地图
@@ -34,6 +35,7 @@
 | [concepts.md](./concepts.md) | 领域模型与术语 |
 | [data-flow.md](./data-flow.md) | 端到端数据流与幂等 |
 | [sdk-guide.md](./sdk-guide.md) | 浏览器 SDK 使用详解 |
+| [source-map-guide.md](./source-map-guide.md) | **Source Map 入门与使用**（release、上传、源码面板、CI） |
 | [performance-metrics.md](./performance-metrics.md) | perfume.js 指标全表（metricName、时间段、控制台） |
 | [console-guide.md](./console-guide.md) | 监控控制台与 REST API |
 | [self-hosting.md](./self-hosting.md) | Lite 部署与运维 |

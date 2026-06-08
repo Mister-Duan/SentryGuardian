@@ -3,7 +3,7 @@ import { PrismaService } from '@sentry-guardian/nest-prisma';
 import type { ErrorEvent } from '@sentry-guardian/types';
 import { AlerterService } from '../alerter/alerter.service.js';
 import { primaryMechanism, primaryType } from '../stats/error-breakdown.js';
-import { eventCulprit, eventFingerprint, eventTitle } from './grouper.logic.js';
+import { eventCulpritInfo, eventFingerprint, eventTitle } from './grouper.logic.js';
 
 const BATCH_SIZE = 50;
 const POLL_MS = Number(process.env.GROUPER_POLL_MS ?? 3000);
@@ -53,7 +53,7 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
       const event = row.payload as unknown as ErrorEvent;
       const fingerprint = eventFingerprint(event);
       const title = eventTitle(event);
-      const culprit = eventCulprit(event);
+      const { culprit, culprit_in_app: culpritInApp } = eventCulpritInfo(event);
       const level = event.level ?? 'error';
       const seenAt = new Date(event.timestamp);
       const environment = event.environment ?? null;
@@ -104,6 +104,7 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
           eventCount: 1,
           usersSeen: event.user?.id ? 1 : 0,
           culprit,
+          culpritInApp,
           exceptionType,
           mechanism,
           environment,
@@ -117,6 +118,7 @@ export class GrouperService implements OnApplicationBootstrap, OnModuleDestroy {
           eventCount: { increment: 1 },
           usersSeen: userIncrement ? { increment: userIncrement } : undefined,
           culprit: culprit ?? undefined,
+          culpritInApp: culpritInApp ?? undefined,
           exceptionType,
           mechanism,
           environment: environment ?? undefined,

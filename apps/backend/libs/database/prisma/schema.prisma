@@ -93,6 +93,8 @@ model Issue {
   usersSeen   Int         @default(0) @map("users_seen")
   /// Primary source location for UI. UI 展示的主要来源位置。
   culprit     String?
+  /// Whether culprit frame is application code (vs third-party). culprit 帧是否为应用代码（相对三方库）。
+  culpritInApp Boolean? @map("culprit_in_app")
   /// Latest event exception type (e.g. TypeError). 最近事件的异常类型。
   exceptionType String? @map("exception_type")
   /// Latest event capture mechanism (e.g. onerror). 最近事件的捕获机制。
@@ -171,11 +173,21 @@ model Artifact {
   name       String
   /// Source map JSON content. Source map JSON 内容。
   sourceMap  String   @map("source_map") @db.Text
+  /// Normalized bundle URL for stack frame matching. 用于栈帧匹配的 bundle URL。
+  bundleUrl  String?  @map("bundle_url")
+  /// Debug id from map or upload metadata. 来自 map 或上传元数据的 debug id。
+  debugId    String?  @map("debug_id")
+  /// Artifact kind: map | source. 制品类型。
+  artifactType String @default("map") @map("artifact_type")
+  /// Content checksum for dedup/diagnostics. 内容校验和。
+  checksum   String?
   createdAt  DateTime @default(now()) @map("created_at")
 
   release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
 
   @@unique([releaseId, name])
+  @@index([releaseId, debugId])
+  @@index([releaseId, bundleUrl])
   @@map("artifacts")
 }
 

@@ -11,8 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Browser SDK: **BREAKING CHANGE** — `performanceIntegration`, `browserTracingIntegration`, and perfume.js helpers (`markNTBT`, `markStep`, …) moved to subpath exports `@sentry-guardian/browser/performance` and `@sentry-guardian/browser/tracing`; main entry is error-monitoring only for smaller app bundles
 
+### Fixed
+
+- Monitor: fix issue detail 500 when symbolicating stack frames at `lineno: 1` (source-map expects 1-based generated lines)
+- Scripts: `upload-sourcemaps.mjs` runs under Node without TypeScript syntax in `.mjs`
+- Examples: resolve `@sentry-guardian/browser/performance` and `/tracing` when importing from `examples/shared/` (Vite alias + `predev` SDK build)
+
 ### Added
 
+- Docs: [learn/source-map-guide.md](./docs/learn/source-map-guide.md) — Source Map 入门、上传、控制台源码面板、CI 与故障排查
+- Source Map: artifact metadata (`bundle_url`, `debug_id`, `artifact_type`), improved symbolicator matching, source context (±5 lines) on issue detail stack frames
+- Source Map: `GET .../releases/:id/artifacts`; upload script `--url-prefix`; `@sentry-guardian/vite-plugin` for post-build upload
+- Monitor: stack frames on issue/event detail show **In App** / **Library** badges to distinguish application code from third-party libraries
+- Monitor: issue list culprit row shows **In App** / **Library** badge; backend stores `culprit_in_app` on aggregation
+- Browser SDK: improved `in_app` stack frame detection (same-origin URLs as in-app; excludes `node_modules`, extensions, `node:` internals)
 - Browser SDK: subpath exports `./performance` and `./tracing` with `sideEffects: false` for tree-shaking
 
 - Monitor: performance list drops HTTP status column (available on `http.client` event payload); merges transaction/metric into「类型」and duration/value into「数值」columns

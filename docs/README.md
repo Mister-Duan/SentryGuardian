@@ -18,6 +18,7 @@ SentryGuardian 项目文档索引。
 | [learn/concepts.md](./learn/concepts.md) | Event、Issue、DSN、Envelope |
 | [learn/data-flow.md](./learn/data-flow.md) | 端到端数据流与幂等 |
 | [learn/sdk-guide.md](./learn/sdk-guide.md) | 浏览器 SDK 接入详解 |
+| [learn/source-map-guide.md](./learn/source-map-guide.md) | **Source Map**：符号化、上传、控制台源码面板 |
 | [learn/performance-metrics.md](./learn/performance-metrics.md) | **性能指标参考**（perfume `metricName` 全表与含义） |
 | [learn/packages-source-guide.md](./learn/packages-source-guide.md) | **packages 源码入门**（流程、字段、阅读顺序） |
 | [learn/console-guide.md](./learn/console-guide.md) | 监控控制台与 API |
