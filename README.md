@@ -36,8 +36,8 @@ SentryGuardian 不是单一 SDK 或单一后台，而是一套可独立部署的
 |------|------|
 | **前端 SDK** | 接入 Web 应用，采集 JS 异常、Promise 拒绝、资源加载失败、基础性能指标 |
 | **接收服务（dsn）** | Ingest 网关：DSN 鉴权、校验、限流，写入 Event 明细 |
-| **Issue 引擎（monitor）** | 按堆栈指纹聚合重复错误；管理用户、项目、Source Map、告警 |
-| **监控控制台** | Issue 列表与详情、性能视图、Release 对比、Source Map 管理 |
+| **Issue 引擎（monitor）** | 按堆栈指纹聚合重复错误；符号化堆栈；管理用户、项目、Source Map、告警 |
+| **监控控制台** | Issue 列表与详情（In App / Library 标签）、性能视图、Release 与 artifact 管理、源码上下文 |
 | **告警通道** | 新 Issue、错误激增等场景的轻量通知（可选配置） |
 
 ### 数据流（概要）
@@ -57,19 +57,22 @@ SentryGuardian 不是单一 SDK 或单一后台，而是一套可独立部署的
 
 详见 [docs/architecture.md](./docs/architecture.md)。
 
-## 核心能力（规划）
+## 核心能力
 
-| 阶段 | 能力 |
+| 类别 | 能力 |
 |------|------|
-| **P0** | JS 运行时异常、未捕获 Promise、静态资源加载失败、Issue 聚合 |
-| **P1** | 页面加载与 Web Vitals、慢 XHR/fetch、Source Map 定位、Release 对比 |
-| **P2** | 会话统计、Webhook/邮件告警、简单 UV/PV（辅助排障，非专业统计） |
+| **错误监控** | JS 运行时异常、未捕获 Promise、资源/CSP/HTTP 失败、`console.error` |
+| **Issue 聚合** | 堆栈指纹合并；列表/详情展示 culprit **In App** / **Library** 标签 |
+| **性能** | Web Vitals（LCP/CLS/TTFB 等）、慢 fetch、perfume.js 字段指标（子路径按需引入） |
+| **Release & Source Map** | 版本追踪；上传 map 后堆栈符号化；Issue 详情 ±5 行源码上下文 |
+| **框架** | `@sentry-guardian/vue`（Vue 3）；`@sentry-guardian/vite-plugin` 构建后自动上传 map |
+| **控制台** | Issue 搜索/筛选/趋势、事件历史、评论、Release 对比、性能图表 |
+| **告警 & 运维** | Webhook；ingest 限流；事件 TTL；Docker Lite 全栈 |
 
-- **Issue 聚合**：相同错误自动合并，减少噪音
 - **Release 追踪**：按版本对比错误率，辅助发布回归
 - **低成本部署**：Lite 档单机 Docker，目标 1C2G 可运行
 
-> **当前状态**：MVP 全栈已落地（SDK + PostgreSQL + dsn + monitor + 控制台）。详见 [packages 状态](./docs/packages.md) 与 [实施计划](./docs/plans/mvp-implementation.md)。
+> **当前状态**：MVP + Post-MVP 主链路已落地。包清单见 [docs/packages.md](./docs/packages.md)；分步计划见 [docs/plans/mvp-implementation.md](./docs/plans/mvp-implementation.md)。
 
 ## 为什么选择 SentryGuardian
 
@@ -105,14 +108,18 @@ SentryGuardian/
 │   ├── utils/                # ✅ 指纹、序列化、脱敏
 │   ├── core/                 # ✅ SDK 内核
 │   ├── browser-utils/        # ✅ 内部：getFetch
-│   ├── browser/              # ✅ 浏览器 SDK 主入口
-│   └── vue/                  # ⏳ Vue 适配（MVP 外）
+│   ├── browser/              # ✅ 浏览器 SDK（含 ./performance、./tracing 子路径）
+│   ├── vue/                  # ✅ Vue 3 适配
+│   └── vite-plugin/          # ✅ 构建后上传 Source Map
 ├── apps/
 │   ├── backend/dsn           # ✅ Ingest（3001）
-│   ├── backend/monitor       # ✅ API + Grouper（3002）
+│   ├── backend/monitor       # ✅ API + Grouper + Symbolicator（3002）
 │   └── frontend/monitor      # ✅ React 控制台（5173）
-├── examples/vanilla          # ✅ SDK 示例
+├── examples/
+│   ├── vanilla/              # ✅ 原生 JS + 性能 / Source Map 演示
+│   └── vue-vite/             # ✅ Vue 3 集成演示
 ├── docker/compose.yml        # ✅ PostgreSQL
+├── scripts/upload-sourcemaps.mjs  # ✅ CI / 手动上传 Source Map
 ├── docs/                     # 项目文档
 ├── AGENTS.md
 └── CHANGELOG.md
@@ -164,14 +171,20 @@ SDK 接入（monorepo 内）：
 
 ```javascript
 import * as Sentry from '@sentry-guardian/browser';
+// 性能指标按需从子路径引入（减小主包体积）：
+// import { performanceIntegration } from '@sentry-guardian/browser/performance';
+// import { browserTracingIntegration } from '@sentry-guardian/browser/tracing';
 
 Sentry.init({
   dsn: 'http://localhost:3001/api/sentry/envelope/<projectId>',
   environment: 'production',
+  release: 'my-app@1.0.0', // 与 Source Map 上传的 release 一致
 });
 ```
 
-示例页：`examples/vanilla` · 分步说明见 [docs/getting-started.md](./docs/getting-started.md) · 配置查 [docs/configuration.md](./docs/configuration.md)。
+**Source Map（可选）**：构建产物带 `sourcemap: true` 后，用 `@sentry-guardian/vite-plugin` 或 `pnpm upload-maps` 上传到控制台；详见 [docs/learn/source-map-guide.md](./docs/learn/source-map-guide.md)。
+
+示例页：`examples/vanilla`（:5174）、`examples/vue-vite` · 分步说明见 [docs/getting-started.md](./docs/getting-started.md) · 配置查 [docs/configuration.md](./docs/configuration.md)。
 
 ## 本地开发
 
@@ -201,6 +214,7 @@ pnpm spellcheck
 |------|------|
 | [docs/getting-started.md](./docs/getting-started.md) | **入门**：30 分钟本地跑通 |
 | [docs/configuration.md](./docs/configuration.md) | **配置**：环境变量、DSN、SDK、API |
+| [docs/learn/source-map-guide.md](./docs/learn/source-map-guide.md) | **Source Map**：上传、符号化、控制台源码面板 |
 | [docs/learn/README.md](./docs/learn/README.md) | **学习路径**与概念、数据流、自托管 |
 | [docs/overview.md](./docs/overview.md) | 项目简介、目标用户、路线图 |
 | [docs/architecture.md](./docs/architecture.md) | Monorepo 结构、协议与 MVP 边界 |
